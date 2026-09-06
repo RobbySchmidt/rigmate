@@ -138,6 +138,39 @@ async function seedLine(line: SeedLine): Promise<number> {
   return count
 }
 
+// Renaming an entry in catalog.ts would otherwise leave the old row behind
+// forever, because the seed only ever inserts and updates. Only seeded rows
+// are touched (created_by is null) -- anything a user added stays.
+async function pruneRemovedItems(): Promise<number> {
+  const expected = new Set<string>()
+  for (const line of CATALOG) {
+    for (const name of [line.name, ...(line.variants?.map((v) => v.name) ?? [])]) {
+      expected.add(`${line.brand}::${name}`)
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('catalog_items')
+    .select('id, name, parent_id, brands (name)')
+    .is('created_by', null)
+  if (error) throw new Error(`Aufräumen: ${error.message}`)
+
+  const stale = (data ?? []).filter(
+    (row: any) => !expected.has(`${row.brands?.name}::${row.name}`),
+  )
+  if (stale.length === 0) return 0
+
+  // Variants first: parent_id is "on delete restrict", so a model line can
+  // only go once nothing hangs off it.
+  const ordered = [...stale].sort((a: any, b: any) => (a.parent_id ? 0 : 1) - (b.parent_id ? 0 : 1))
+  for (const row of ordered as any[]) {
+    const { error: deleteError } = await supabase.from('catalog_items').delete().eq('id', row.id)
+    if (deleteError) throw new Error(`Aufräumen "${row.name}": ${deleteError.message}`)
+    console.log(`entfernt: ${row.brands?.name} ${row.name}`)
+  }
+  return stale.length
+}
+
 async function main() {
   let total = 0
   for (const line of CATALOG) {
@@ -145,6 +178,10 @@ async function main() {
     process.stdout.write('.')
   }
   process.stdout.write('\n')
+
+  const pruned = await pruneRemovedItems()
+  if (pruned > 0) console.log(`${pruned} nicht mehr im Katalog geführte Einträge entfernt.`)
+
   console.log(`${total} Katalog-Einträge eingespielt oder aktualisiert.`)
 }
 

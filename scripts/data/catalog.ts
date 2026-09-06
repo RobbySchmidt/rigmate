@@ -9,18 +9,27 @@
 // The brand is always a separate field, and neither the year of manufacture
 // nor a modification ever belongs in a name -- otherwise "Stratocaster 1963"
 // and "63er Strat" become two catalog entries and the overlap that the whole
-// recommendation engine runs on falls apart.
+// recommendation engine runs on falls apart. Names are unique across the
+// WHOLE file, not just per brand: the lookup on the consuming side is keyed
+// by name, so a second "Les Paul Standard" would silently resolve to whichever
+// row was read last.
 //
 // About `rarity`: with roughly 20 demo users the measured rarity (how many
 // people own a thing) is statistically meaningless -- everything looks scarce.
 // This hand-set base value therefore carries the entire recommendation engine
-// on its own. The question to ask for every entry is "how surprising is it
-// that two random guitarists both own this":
+// on its own. The ONLY question to ask for every entry is "how surprising is
+// it that two random guitarists both own this":
 //   mass    -- stands in every rehearsal room
 //   common  -- widespread, but not universal
 //   special -- boutique, reissue, a deliberate choice
 //   rare    -- genuinely scarce
-// Marking a Boss DS-1 as `rare` would rank the wrong people together.
+//
+// Price and prestige are NOT the scale. A Harley Benton cabinet is `mass`
+// because everyone has one, an SVT fridge is `common` because it is the
+// default backline, and a cheap-but-niche Danelectro stays `special` because
+// hardly anyone owns one. Marking a Boss DS-1 as `rare` would rank the wrong
+// people together. Rarity is a property of the item, never of its brand:
+// "all Strymon is special" is a brand judgement, not a scarcity judgement.
 
 export type RarityBase = 'mass' | 'common' | 'special' | 'rare'
 
@@ -73,8 +82,8 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['jazzmaster', 'jm'],
     rarity: 'common',
     variants: [
-      { name: 'American Vintage II Jazzmaster', rarity: 'special' },
-      { name: 'Player Jazzmaster', rarity: 'common' },
+      { name: 'American Vintage II Jazzmaster', synonyms: ['av ii jazzmaster', 'av ii jm'], rarity: 'special' },
+      { name: 'Player Jazzmaster', synonyms: ['player jazzmaster', 'player jm'], rarity: 'common' },
     ],
   },
   {
@@ -92,11 +101,13 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // A short-scale student model that Fender has kept in the cheap Player
+    // series for years -- widespread, not a collector's decision.
     brand: 'Fender',
     name: 'Duo-Sonic',
     category: 'guitar',
     synonyms: ['duo sonic', 'duosonic'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Gibson',
@@ -117,8 +128,8 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['sg'],
     rarity: 'common',
     variants: [
-      { name: 'SG Standard', rarity: 'common' },
-      { name: 'SG Junior', rarity: 'special' },
+      { name: 'SG Standard', synonyms: ['sg standard'], rarity: 'common' },
+      { name: 'SG Junior', synonyms: ['sg junior', 'sg jr'], rarity: 'special' },
     ],
   },
   {
@@ -133,14 +144,14 @@ export const CATALOG: SeedLine[] = [
     name: 'Explorer',
     category: 'guitar',
     synonyms: ['explorer'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Gibson',
     name: 'Flying V',
     category: 'guitar',
     synonyms: ['flying v', 'v'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Gibson',
@@ -157,10 +168,12 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Named "60s" because a bare "Les Paul Standard" already exists as a
+    // Gibson variant and the lookup on the consuming side is keyed by name.
     brand: 'Epiphone',
-    name: 'Les Paul Standard',
+    name: 'Les Paul Standard 60s',
     category: 'guitar',
-    synonyms: ['epi lp', 'epiphone les paul'],
+    synonyms: ['epi lp', 'epiphone les paul', 'les paul standard 60s'],
     rarity: 'mass',
   },
   {
@@ -175,7 +188,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Sheraton',
     category: 'guitar',
     synonyms: ['sheraton', 'sheraton ii'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Squier',
@@ -213,11 +226,13 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // A production signature model that has sold in the tens of thousands
+    // since 1987 -- expensive, but not scarce.
     brand: 'Ibanez',
     name: 'JEM',
     category: 'guitar',
     synonyms: ['jem', 'vai'],
-    rarity: 'rare',
+    rarity: 'special',
   },
   {
     brand: 'Gretsch',
@@ -247,7 +262,7 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['custom 24', 'prs custom'],
     rarity: 'common',
     variants: [
-      { name: 'SE Custom 24', synonyms: ['se custom 24', 'prs se'], rarity: 'mass' },
+      { name: 'SE Custom 24', synonyms: ['se custom 24', 'prs se'], rarity: 'common' },
       { name: 'Core Custom 24', synonyms: ['core custom 24'], rarity: 'special' },
       { name: 'Private Stock Custom 24', synonyms: ['private stock'], rarity: 'rare' },
     ],
@@ -273,7 +288,7 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['soloist'],
     rarity: 'common',
     variants: [
-      { name: 'JS Series Soloist', synonyms: ['js soloist'], rarity: 'mass' },
+      { name: 'JS Series Soloist', synonyms: ['js soloist'], rarity: 'common' },
       { name: 'Pro Series Soloist', synonyms: ['pro soloist'], rarity: 'common' },
       { name: 'USA Soloist', synonyms: ['usa soloist'], rarity: 'special' },
     ],
@@ -286,15 +301,25 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // LTD is its own brand row, like Squier under Fender -- so this line
+    // covers only the ESP-branded Eclipses, which still span the Japanese
+    // E-II and the Original series.
     brand: 'ESP',
     name: 'Eclipse',
     category: 'guitar',
     synonyms: ['eclipse'],
     rarity: 'special',
     variants: [
-      { name: 'LTD EC-1000', synonyms: ['ec1000', 'ltd ec 1000'], rarity: 'common' },
-      { name: 'E-II Eclipse', synonyms: ['eii eclipse'], rarity: 'special' },
+      { name: 'E-II Eclipse', synonyms: ['eii eclipse', 'e ii eclipse'], rarity: 'special' },
+      { name: 'Original Eclipse', synonyms: ['esp original eclipse'], rarity: 'rare' },
     ],
+  },
+  {
+    brand: 'LTD',
+    name: 'EC-1000',
+    category: 'guitar',
+    synonyms: ['ec1000', 'ec 1000', 'ltd ec 1000'],
+    rarity: 'common',
   },
   {
     brand: 'Music Man',
@@ -304,6 +329,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Cheap, but a genuinely niche shape -- almost nobody owns one.
     brand: 'Danelectro',
     name: 'Longhorn',
     category: 'guitar',
@@ -357,7 +383,7 @@ export const CATALOG: SeedLine[] = [
     name: 'So-Cal',
     category: 'guitar',
     synonyms: ['so cal', 'socal'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Schecter',
@@ -422,7 +448,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Jaguar Bass',
     category: 'bass',
     synonyms: ['jaguar bass'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Squier',
@@ -549,6 +575,9 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // The reissue has been in continuous production since 1993 and is what
+    // almost everybody means; the Tone Master is a recent, deliberate pick
+    // (cheaper, but far fewer of them are out there).
     brand: 'Fender',
     name: 'Deluxe Reverb',
     category: 'amp',
@@ -556,7 +585,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
     variants: [
       { name: 'Deluxe Reverb Reissue', synonyms: ['drri'], rarity: 'common' },
-      { name: 'Tone Master Deluxe Reverb', synonyms: ['tone master dr'], rarity: 'common' },
+      { name: 'Tone Master Deluxe Reverb', synonyms: ['tone master dr'], rarity: 'special' },
     ],
   },
   {
@@ -595,6 +624,15 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Practice amps are the amps most guitarists actually own. Leaving them
+    // out is what made this category look like nothing here is `mass`.
+    brand: 'Fender',
+    name: 'Champion',
+    category: 'amp',
+    synonyms: ['champion', 'champion 20', 'champ 20'],
+    rarity: 'mass',
+  },
+  {
     brand: 'Marshall',
     name: 'JCM800',
     category: 'amp',
@@ -630,6 +668,13 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    brand: 'Marshall',
+    name: 'MG',
+    category: 'amp',
+    synonyms: ['mg', 'mg15', 'mg30'],
+    rarity: 'mass',
+  },
+  {
     brand: 'Orange',
     name: 'Rockerverb',
     category: 'amp',
@@ -642,6 +687,13 @@ export const CATALOG: SeedLine[] = [
     category: 'amp',
     synonyms: ['tiny terror'],
     rarity: 'common',
+  },
+  {
+    brand: 'Orange',
+    name: 'Crush',
+    category: 'amp',
+    synonyms: ['crush', 'crush 20rt'],
+    rarity: 'mass',
   },
   {
     brand: 'Mesa/Boogie',
@@ -700,11 +752,12 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // Expensive, but the default high-gain head in a lot of rehearsal rooms.
     brand: 'EVH',
     name: '5150III',
     category: 'amp',
     synonyms: ['5150', '5150 iii'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Friedman',
@@ -714,13 +767,15 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Boutique and pricey, but a current catalogue product you can order.
     brand: 'Two-Rock',
     name: 'Classic Reverb',
     category: 'amp',
     synonyms: ['two rock classic'],
-    rarity: 'rare',
+    rarity: 'special',
   },
   {
+    // Roughly 300 were ever built and Alexander Dumble is dead.
     brand: 'Dumble',
     name: 'Overdrive Special',
     category: 'amp',
@@ -732,14 +787,15 @@ export const CATALOG: SeedLine[] = [
     name: 'DC-30',
     category: 'amp',
     synonyms: ['dc30', 'dc 30'],
-    rarity: 'rare',
+    rarity: 'special',
   },
   {
+    // The fridge is the default backline bass rig, not a statement.
     brand: 'Ampeg',
     name: 'SVT',
     category: 'amp',
     synonyms: ['svt'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Markbass',
@@ -755,7 +811,7 @@ export const CATALOG: SeedLine[] = [
     name: '1960A',
     category: 'cabinet',
     synonyms: ['1960a', '4x12'],
-    rarity: 'common',
+    rarity: 'mass',
   },
   {
     brand: 'Marshall',
@@ -783,14 +839,14 @@ export const CATALOG: SeedLine[] = [
     name: 'Rectifier 4x12',
     category: 'cabinet',
     synonyms: ['recto cab', 'rectifier cab'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Ampeg',
     name: 'SVT-810E',
     category: 'cabinet',
     synonyms: ['810', 'fridge', 'svt 810'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Bogner',
@@ -800,6 +856,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Built to order in small numbers in the UK.
     brand: 'Zilla',
     name: 'Fatboy',
     category: 'cabinet',
@@ -807,11 +864,12 @@ export const CATALOG: SeedLine[] = [
     rarity: 'rare',
   },
   {
+    // The default budget cabinet in the German-speaking market.
     brand: 'Harley Benton',
     name: 'G212 Vintage',
     category: 'cabinet',
     synonyms: ['g212', 'hb 212'],
-    rarity: 'common',
+    rarity: 'mass',
   },
 
   // ---- Pedals ----
@@ -858,6 +916,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // Discontinued in 1982 and hunted down on purpose.
     brand: 'Boss',
     name: 'CE-2 Chorus',
     category: 'pedal',
@@ -965,7 +1024,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Distortion+',
     category: 'pedal',
     synonyms: ['distortion plus', 'dist+'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Dunlop',
@@ -986,25 +1045,27 @@ export const CATALOG: SeedLine[] = [
     ],
   },
   {
+    // Strymon's big three are pedalboard furniture at this point; the Flint
+    // sells noticeably less than the delay and the reverb.
     brand: 'Strymon',
     name: 'Timeline',
     category: 'pedal',
     synonyms: ['timeline'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Strymon',
     name: 'BigSky',
     category: 'pedal',
     synonyms: ['big sky', 'bigsky'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Strymon',
     name: 'El Capistan',
     category: 'pedal',
     synonyms: ['el cap', 'el capistan'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Strymon',
@@ -1046,7 +1107,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Morning Glory',
     category: 'pedal',
     synonyms: ['morning glory'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'JHS',
@@ -1074,7 +1135,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Dispatch Master',
     category: 'pedal',
     synonyms: ['dispatch master'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Fulltone',
@@ -1098,6 +1159,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Built in limited runs and usually sold out.
     brand: 'Chase Bliss',
     name: 'Mood',
     category: 'pedal',
@@ -1105,6 +1167,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'rare',
   },
   {
+    // Years-long waiting list, two people building them.
     brand: 'Analog Man',
     name: 'King of Tone',
     category: 'pedal',
@@ -1140,11 +1203,12 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Loud and weird, but a current production pedal anyone can buy.
     brand: 'Death By Audio',
     name: 'Fuzz War',
     category: 'pedal',
     synonyms: ['fuzz war'],
-    rarity: 'rare',
+    rarity: 'special',
   },
   {
     brand: 'Origin Effects',
@@ -1209,7 +1273,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Evolution',
     category: 'pickup',
     synonyms: ['evolution', 'dp158'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'EMG',
@@ -1275,11 +1339,13 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    // Harry Häussel winds these in Bavaria and they are a normal shop item
+    // in the German-speaking market -- boutique, not unobtainable.
     brand: 'Häussel',
     name: 'Vintage Plus',
     category: 'pickup',
     synonyms: ['haeussel vintage plus', 'haussel'],
-    rarity: 'rare',
+    rarity: 'special',
   },
 
   // ---- Preamps and modelers ----
@@ -1339,6 +1405,15 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['sansamp', 'gt2'],
     rarity: 'common',
   },
+  {
+    // Everybody's first multi-effect, and the reason this category is not
+    // made up exclusively of four-figure modelers.
+    brand: 'Zoom',
+    name: 'G1 Four',
+    category: 'preamp',
+    synonyms: ['g1 four', 'g1x four', 'zoom g1'],
+    rarity: 'mass',
+  },
 
   // ---- Strings (consumable) ----
   {
@@ -1391,6 +1466,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // Elixir IS the coated-string market, not the exception to it.
     brand: 'Elixir',
     name: 'Nanoweb',
     category: 'strings',
@@ -1402,7 +1478,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Optiweb',
     category: 'strings',
     synonyms: ['optiweb'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     // Flatwounds are a deliberate choice, never an accident -- exactly the
@@ -1462,7 +1538,7 @@ export const CATALOG: SeedLine[] = [
     name: 'Primetone',
     category: 'pick',
     synonyms: ['primetone'],
-    rarity: 'special',
+    rarity: 'common',
   },
   {
     brand: 'Fender',
@@ -1472,6 +1548,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'mass',
   },
   {
+    // Hand-finished, roughly fifty euros for one pick.
     brand: 'BlueChip',
     name: 'TAD',
     category: 'pick',
