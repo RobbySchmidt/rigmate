@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { CATALOG, type RarityBase } from '../../scripts/data/catalog'
+import {
+  findPruneBlockers,
+  orderForDeletion,
+  selectOrphans,
+  type SeededRow,
+} from '../../scripts/prune-plan'
 import { adminClient } from '../helpers/supabase'
 
 const admin = adminClient()
@@ -131,6 +137,59 @@ describe('Katalog-Daten', () => {
   it('enthält jeden Namen, den spätere Tasks nachschlagen', () => {
     const all = new Set(ALL_NAMES)
     expect(PROTECTED_NAMES.filter((name) => !all.has(name))).toEqual([])
+  })
+})
+
+describe('Aufräum-Logik des Seeds', () => {
+  // Beide Rechner arbeiten gegen dieselbe Instanz, deshalb ist eine
+  // unbekannte Zeile nicht automatisch Müll -- sie kann neuer sein als
+  // dieser Checkout.
+  const row = (over: Partial<SeededRow>): SeededRow => ({
+    id: 'id',
+    name: 'Name',
+    parentId: null,
+    brand: 'Dunlop',
+    ...over,
+  })
+
+  it('hält nur Zeilen für verwaist, die der Katalog nicht mehr nennt', () => {
+    const rows = [
+      row({ id: 'l1', name: 'Fuzz Face' }),
+      row({ id: 'v1', name: 'Fuzz Face Mini', parentId: 'l1' }),
+      row({ id: 'x1', name: 'Vom anderen Rechner', brand: 'Fender' }),
+    ]
+    expect(selectOrphans(rows, CATALOG).map((r) => r.name)).toEqual(['Vom anderen Rechner'])
+  })
+
+  it('unterscheidet nach Marke, nicht nur nach Name', () => {
+    // "Fuzz Face" gibt es bei Dunlop, aber nicht bei Boss.
+    const rows = [row({ id: 'x2', name: 'Fuzz Face', brand: 'Boss' })]
+    expect(selectOrphans(rows, CATALOG)).toHaveLength(1)
+  })
+
+  it('löscht Ausführungen vor ihren Modell-Linien', () => {
+    const line = row({ id: 'l9', name: 'Weg' })
+    const variant = row({ id: 'v9', name: 'Weg Deluxe', parentId: 'l9' })
+    expect(orderForDeletion([line, variant]).map((r) => r.name)).toEqual(['Weg Deluxe', 'Weg'])
+  })
+
+  it('verweigert das Aufräumen, wenn eine verwaiste Linie noch gültige Ausführungen trägt', () => {
+    // parent_id steht auf "on delete restrict": das Löschen bräche mittendrin
+    // ab und hinterliesse einen halb aufgeräumten Katalog.
+    const staleLine = row({ id: 'l8', name: 'Nicht mehr im Katalog' })
+    const survivor = row({ id: 'v8', name: 'Fuzz Face Mini', parentId: 'l8' })
+    const rows = [staleLine, survivor]
+    const blockers = findPruneBlockers(rows, selectOrphans(rows, CATALOG))
+    expect(blockers).toHaveLength(1)
+    expect(blockers[0].line.name).toBe('Nicht mehr im Katalog')
+    expect(blockers[0].survivors.map((r) => r.name)).toEqual(['Fuzz Face Mini'])
+  })
+
+  it('blockiert nicht, wenn Linie und Ausführung beide verwaist sind', () => {
+    const staleLine = row({ id: 'l7', name: 'Weg' })
+    const staleVariant = row({ id: 'v7', name: 'Weg Deluxe', parentId: 'l7' })
+    const rows = [staleLine, staleVariant]
+    expect(findPruneBlockers(rows, selectOrphans(rows, CATALOG))).toEqual([])
   })
 })
 

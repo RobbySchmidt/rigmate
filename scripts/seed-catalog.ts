@@ -1,6 +1,13 @@
 import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
 import { CATALOG, type SeedLine, type SeedVariant } from './data/catalog'
+import {
+  findPruneBlockers,
+  label,
+  orderForDeletion,
+  selectOrphans,
+  type SeededRow,
+} from './prune-plan'
 
 function required(name: string): string {
   const value = process.env[name]
@@ -138,51 +145,80 @@ async function seedLine(line: SeedLine): Promise<number> {
   return count
 }
 
-// Renaming an entry in catalog.ts would otherwise leave the old row behind
-// forever, because the seed only ever inserts and updates. Only seeded rows
-// are touched (created_by is null) -- anything a user added stays.
-async function pruneRemovedItems(): Promise<number> {
-  const expected = new Set<string>()
-  for (const line of CATALOG) {
-    for (const name of [line.name, ...(line.variants?.map((v) => v.name) ?? [])]) {
-      expected.add(`${line.brand}::${name}`)
-    }
-  }
-
+/** Every row the seed itself owns. Anything a user created stays untouched. */
+async function loadSeededRows(): Promise<SeededRow[]> {
   const { data, error } = await supabase
     .from('catalog_items')
     .select('id, name, parent_id, brands (name)')
     .is('created_by', null)
-  if (error) throw new Error(`Aufräumen: ${error.message}`)
+  if (error) throw new Error(`Katalog lesen: ${error.message}`)
 
-  const stale = (data ?? []).filter(
-    (row: any) => !expected.has(`${row.brands?.name}::${row.name}`),
-  )
-  if (stale.length === 0) return 0
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    parentId: row.parent_id,
+    brand: row.brands?.name ?? '',
+  }))
+}
 
-  // Variants first: parent_id is "on delete restrict", so a model line can
-  // only go once nothing hangs off it.
-  const ordered = [...stale].sort((a: any, b: any) => (a.parent_id ? 0 : 1) - (b.parent_id ? 0 : 1))
-  for (const row of ordered as any[]) {
-    const { error: deleteError } = await supabase.from('catalog_items').delete().eq('id', row.id)
-    if (deleteError) throw new Error(`Aufräumen "${row.name}": ${deleteError.message}`)
-    console.log(`entfernt: ${row.brands?.name} ${row.name}`)
+async function deleteOrphans(orphans: SeededRow[]): Promise<void> {
+  for (const row of orderForDeletion(orphans)) {
+    const { error } = await supabase.from('catalog_items').delete().eq('id', row.id)
+    if (error) throw new Error(`Entfernen "${label(row)}": ${error.message}`)
+    console.log(`entfernt: ${label(row)}`)
   }
-  return stale.length
+  console.log(`${orphans.length} nicht mehr im Katalog geführte Einträge entfernt.`)
 }
 
 async function main() {
+  const shouldPrune = process.argv.slice(2).includes('--prune')
+
   let total = 0
   for (const line of CATALOG) {
     total += await seedLine(line)
     process.stdout.write('.')
   }
   process.stdout.write('\n')
-
-  const pruned = await pruneRemovedItems()
-  if (pruned > 0) console.log(`${pruned} nicht mehr im Katalog geführte Einträge entfernt.`)
-
   console.log(`${total} Katalog-Einträge eingespielt oder aktualisiert.`)
+
+  // Renaming an entry in catalog.ts leaves the old row behind, because the
+  // seed only inserts and updates. Deleting it is a separate decision though:
+  // the operator asked for a seed, not for a delete, and on a shared instance
+  // an unknown row may simply be newer than this checkout.
+  const rows = await loadSeededRows()
+  const orphans = selectOrphans(rows, CATALOG)
+  if (orphans.length === 0) return
+
+  console.error('')
+  console.error(`${orphans.length} Einträge stehen in der Datenbank, aber nicht mehr im Katalog:`)
+  for (const row of orderForDeletion(orphans)) console.error(`  ${label(row)}`)
+
+  const blockers = findPruneBlockers(rows, orphans)
+  if (blockers.length > 0) {
+    console.error('')
+    console.error('Aufräumen nicht möglich, es wurde nichts gelöscht:')
+    for (const { line, survivors } of blockers) {
+      console.error(
+        `  "${label(line)}" steht nicht mehr im Katalog, trägt aber noch ` +
+          `${survivors.map(label).join(', ')}.`,
+      )
+    }
+    console.error('Erst die Ausführungen umhängen -- sonst bricht das Löschen mittendrin ab')
+    console.error('und hinterlässt einen halb aufgeräumten Katalog.')
+    process.exit(1)
+  }
+
+  if (!shouldPrune) {
+    console.error('')
+    console.error('Es wurde nichts gelöscht. Diese Zeilen können von einem anderen Rechner')
+    console.error('stammen, der mit einem neueren Katalog gegen dieselbe Supabase-Instanz')
+    console.error('gearbeitet hat -- beide Rechner teilen sich eine Instanz (siehe CLAUDE.md).')
+    console.error('Erst den eigenen Stand prüfen (git pull), dann bei Absicht erneut aufrufen:')
+    console.error('  yarn seed:catalog --prune')
+    process.exit(1)
+  }
+
+  await deleteOrphans(orphans)
 }
 
 main().catch((error) => {
