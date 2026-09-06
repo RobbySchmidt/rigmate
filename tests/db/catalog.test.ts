@@ -103,6 +103,43 @@ describe('catalog_items Hierarchie', () => {
     expect(error).not.toBeNull()
     expect(error!.code).toBe('23505')
   })
+
+  it('lehnt das Umhängen einer Modell-Linie mit Ausführungen ab', async () => {
+    const { data: lineA } = await admin
+      .from('catalog_items')
+      .insert({ brand_id: brandId, category_id: 'guitar', name: 'Linie A' })
+      .select('id')
+      .single()
+    await admin
+      .from('catalog_items')
+      .insert({ brand_id: brandId, category_id: 'guitar', name: 'Linie A Variante', parent_id: lineA!.id })
+
+    const { data: lineB } = await admin
+      .from('catalog_items')
+      .insert({ brand_id: brandId, category_id: 'guitar', name: 'Linie B' })
+      .select('id')
+      .single()
+
+    const { error } = await admin.from('catalog_items').update({ parent_id: lineB!.id }).eq('id', lineA!.id)
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/two levels/i)
+  })
+
+  it('erlaubt das Umhängen einer kinderlosen Modell-Linie', async () => {
+    const { data: lineC } = await admin
+      .from('catalog_items')
+      .insert({ brand_id: brandId, category_id: 'guitar', name: 'Linie C' })
+      .select('id')
+      .single()
+    const { data: lineD } = await admin
+      .from('catalog_items')
+      .insert({ brand_id: brandId, category_id: 'guitar', name: 'Linie D' })
+      .select('id')
+      .single()
+
+    const { error } = await admin.from('catalog_items').update({ parent_id: lineD!.id }).eq('id', lineC!.id)
+    expect(error).toBeNull()
+  })
 })
 
 describe('Slug', () => {
@@ -142,6 +179,52 @@ describe('Slug', () => {
 
     await admin.from('catalog_items').delete().eq('brand_id', other!.id)
     await admin.from('brands').delete().eq('id', other!.id)
+  })
+})
+
+describe('Markennormalisierung', () => {
+  it('überschreibt eine vom Client mitgeschickte normalized_name', async () => {
+    const { data, error } = await admin
+      .from('brands')
+      .insert({ name: 'Fender Test', normalized_name: 'komplett-falsch' })
+      .select('id, normalized_name')
+      .single()
+    expect(error).toBeNull()
+    expect(data!.normalized_name).toBe('fender test')
+
+    await admin.from('brands').delete().eq('id', data!.id)
+  })
+
+  it('lehnt eine zweite Marke ab, deren Name auf denselben Wert normalisiert', async () => {
+    const { data: first, error: firstError } = await admin
+      .from('brands')
+      .insert({ name: 'Fender Test', normalized_name: 'irrelevant' })
+      .select('id')
+      .single()
+    expect(firstError).toBeNull()
+
+    const { error: secondError } = await admin
+      .from('brands')
+      .insert({ name: 'fender-test', normalized_name: 'auch-irrelevant' })
+    expect(secondError).not.toBeNull()
+    expect(secondError!.code).toBe('23505')
+
+    await admin.from('brands').delete().eq('id', first!.id)
+  })
+
+  it('normalize_brand_name stimmt mit der JS-Referenzimplementierung überein', async () => {
+    const cases: Array<[string, string]> = [
+      ["D'Addario", 'd addario'],
+      ['Electro-Harmonix', 'electro harmonix'],
+      ['Thomastik-Infeld', 'thomastik infeld'],
+      ['Größe', 'grosse'],
+    ]
+
+    for (const [input, expected] of cases) {
+      const { data, error } = await admin.rpc('normalize_brand_name', { input })
+      expect(error).toBeNull()
+      expect(data).toBe(expected)
+    }
   })
 })
 
