@@ -103,4 +103,26 @@ export const de = {
     errorConsumableAsGear:
       'Das ist Verbrauchsmaterial. Saiten und Plektren trägst du später in deinem Rig ein.',
   },
+  suggestions: {
+    title: 'Leute, die dasselbe spielen',
+    reasonKind: {
+      gear: 'Spielt auch',
+      consumable: 'Benutzt auch',
+      wish: 'Hat, was du suchst',
+    },
+    reasonDepth: {
+      line: '',
+      variant: 'genau diese Ausführung',
+      variant_year: 'diese Ausführung, sogar aus demselben Baujahr',
+    },
+    reasonMore: 'und weitere Übereinstimmungen: {count}',
+    emptyTitle: 'Hier ist noch nichts.',
+    // Die Leere erklaeren statt kaschieren.
+    emptyBody:
+      'Du siehst gerade Zufälliges. Trag dein Equipment ein, dann stehen hier Leute, die dasselbe spielen.',
+    emptyCta: 'Equipment eintragen',
+    fallbackBadge: 'Zufällig ausgewählt',
+    refineHint:
+      'Je vollständiger dein Rig, desto genauer diese Vorschläge. Seltene Geräte zählen mehr als verbreitete.',
+  },
 } as const

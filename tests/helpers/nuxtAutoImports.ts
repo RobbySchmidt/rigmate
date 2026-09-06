@@ -67,3 +67,15 @@ export function stubUseAsyncData(): void {
     return { data, refresh }
   })
 }
+
+/**
+ * Bildet nach, wie sich Nuxts echtes useFetch() von aussen verhaelt:
+ * `await useFetch(url)` liefert `{ data }` mit dem schon aufgeloesten
+ * Ergebnis als Ref. Anders als useAsyncData nimmt useFetch keinen Handler
+ * entgegen, sondern eine URL - fuer eine Seite wie index.vue, die genau
+ * einen Endpunkt ohne weitere Optionen laedt, reicht es, das uebergebene
+ * Ergebnis direkt zurueckzugeben.
+ */
+export function stubUseFetch(response: unknown): void {
+  vi.stubGlobal('useFetch', async () => ({ data: ref(response) }))
+}
