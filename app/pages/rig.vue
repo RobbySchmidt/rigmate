@@ -6,6 +6,9 @@ const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 
 const pendingItem = ref<any | null>(null)
+const gearError = ref('')
+const preferencesError = ref('')
+const wishlistError = ref('')
 
 const { data: gear, refresh: refreshGear } = await useAsyncData('rig-gear', async () => {
   const { data } = await supabase
@@ -43,17 +46,31 @@ const ownedGear = computed(() =>
 )
 
 async function addPreference(result: any) {
-  await supabase.from('preferences').insert({ user_id: user.value!.id, catalog_item_id: result.id })
+  preferencesError.value = ''
+  const { error } = await supabase.from('preferences').insert({ user_id: user.value!.id, catalog_item_id: result.id })
+  if (error) {
+    // Der Picker filtert hier zwar schon auf Saiten/Plektren, aber die
+    // Datenbank bleibt die letzte Instanz - ein generischer Fehlschlag statt
+    // stiller Nichtigkeit.
+    preferencesError.value = t.rig.errorGeneric
+    return
+  }
   await refreshPreferences()
 }
 
 async function addWish(result: any) {
-  await supabase.from('wishlist_items').insert({ user_id: user.value!.id, catalog_item_id: result.id })
+  wishlistError.value = ''
+  const { error } = await supabase.from('wishlist_items').insert({ user_id: user.value!.id, catalog_item_id: result.id })
+  if (error) {
+    wishlistError.value = t.rig.errorGeneric
+    return
+  }
   await refreshWishlist()
 }
 
 async function saveGear(details: any) {
-  await supabase.from('gear_items').insert({
+  gearError.value = ''
+  const { error } = await supabase.from('gear_items').insert({
     owner_id: user.value!.id,
     catalog_item_id: pendingItem.value.id,
     year: details.year,
@@ -62,20 +79,49 @@ async function saveGear(details: any) {
     notes: details.notes,
     installed_in_id: details.installedInId,
   })
+  if (error) {
+    // Der Gear-Picker filtert bewusst keine Kategorie heraus (Abschnitt 6),
+    // deshalb kann hier echtes Verbrauchsmaterial ankommen. Der Trigger
+    // enforce_gear_item_rules() lehnt das ab - und genau dieser Fall bekommt
+    // eine eigene, ehrliche Erklaerung statt eines generischen Fehlschlags.
+    gearError.value =
+      classifyGearWriteError(error) === 'consumable' ? t.rig.errorConsumableAsGear : t.rig.errorGeneric
+    return
+  }
   pendingItem.value = null
   await refreshGear()
 }
 
 async function createCatalogItem(input: { brand: string; name: string; categoryId: string }) {
-  const created = await $fetch<{ id: string }>('/api/catalog/items', { method: 'POST', body: input })
-  const body = await $fetch<{ results: any[] }>(
-    `/api/catalog/search?q=${encodeURIComponent(`${input.brand} ${input.name}`)}`,
-  )
-  pendingItem.value = body.results.find((r) => r.id === created.id) ?? null
+  try {
+    const created = await $fetch<{ id: string }>('/api/catalog/items', { method: 'POST', body: input })
+    const body = await $fetch<{ results: any[] }>(
+      `/api/catalog/search?q=${encodeURIComponent(`${input.brand} ${input.name}`)}`,
+    )
+    const item = body.results.find((r) => r.id === created.id)
+    if (!item) {
+      // Sollte nicht vorkommen, aber ein Treffer, der sich selbst nicht
+      // wiederfindet, ist kein Erfolg, den man dem Formular vorspielen darf.
+      return { success: false as const, message: t.picker.createGenericError }
+    }
+    return { success: true as const, item }
+  } catch (error) {
+    const kind = classifyCatalogCreateError(error)
+    return {
+      success: false as const,
+      message: kind === 'duplicate' ? t.picker.createDuplicateError : t.picker.createGenericError,
+    }
+  }
 }
 
 async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items', id: string) {
-  await supabase.from(table).delete().eq('id', id)
+  const { error } = await supabase.from(table).delete().eq('id', id)
+  if (error) {
+    if (table === 'gear_items') gearError.value = t.rig.errorGeneric
+    if (table === 'preferences') preferencesError.value = t.rig.errorGeneric
+    if (table === 'wishlist_items') wishlistError.value = t.rig.errorGeneric
+    return
+  }
   if (table === 'gear_items') await refreshGear()
   if (table === 'preferences') await refreshPreferences()
   if (table === 'wishlist_items') await refreshWishlist()
@@ -88,7 +134,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
 
     <section class="flex flex-col gap-4">
       <h2 class="text-f-2xl font-semibold">{{ t.rig.gear }}</h2>
-      <CatalogPicker v-if="!pendingItem" @select="pendingItem = $event" @create="createCatalogItem" />
+      <CatalogPicker v-if="!pendingItem" :create-handler="createCatalogItem" @select="pendingItem = $event" />
       <GearItemForm
         v-else
         :catalog-item-label="`${pendingItem.brandName} ${pendingItem.name}`"
@@ -97,6 +143,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
         @save="saveGear"
         @cancel="pendingItem = null"
       />
+      <p v-if="gearError" class="text-sm text-red-600">{{ gearError }}</p>
       <p v-if="(gear ?? []).length === 0" class="text-neutral-500">{{ t.rig.empty }}</p>
       <ul v-else class="divide-y rounded border">
         <li v-for="row in gear" :key="row.id" class="flex items-center gap-2 px-3 py-2">
@@ -112,8 +159,9 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
 
     <section class="flex flex-col gap-4">
       <h2 class="text-f-2xl font-semibold">{{ t.rig.preferences }}</h2>
-      <CatalogPicker category-id="strings" @select="addPreference" />
-      <CatalogPicker category-id="pick" @select="addPreference" />
+      <CatalogPicker category-id="strings" :create-handler="createCatalogItem" @select="addPreference" />
+      <CatalogPicker category-id="pick" :create-handler="createCatalogItem" @select="addPreference" />
+      <p v-if="preferencesError" class="text-sm text-red-600">{{ preferencesError }}</p>
       <ul class="divide-y rounded border">
         <li v-for="row in preferences" :key="row.id" class="flex items-center px-3 py-2">
           <span>{{ label(row) }}</span>
@@ -126,7 +174,8 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
 
     <section class="flex flex-col gap-4">
       <h2 class="text-f-2xl font-semibold">{{ t.rig.wishlist }}</h2>
-      <CatalogPicker @select="addWish" />
+      <CatalogPicker :create-handler="createCatalogItem" @select="addWish" />
+      <p v-if="wishlistError" class="text-sm text-red-600">{{ wishlistError }}</p>
       <ul class="divide-y rounded border">
         <li v-for="row in wishlist" :key="row.id" class="flex items-center px-3 py-2">
           <span>{{ label(row) }}</span>

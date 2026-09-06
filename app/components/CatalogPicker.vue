@@ -15,26 +15,46 @@ interface CatalogSearchResult {
   needsPrecisionHint: boolean
 }
 
-const props = defineProps<{ categoryId?: string; placeholder?: string }>()
+type CreateOutcome =
+  | { success: true; item: CatalogSearchResult }
+  | { success: false; message: string }
+
+const props = defineProps<{
+  categoryId?: string
+  placeholder?: string
+  // Fuehrt POST /api/catalog/items aus und liefert Erfolg oder Fehler
+  // zurueck, statt dass die Elternkomponente per Fire-and-forget-Event raet,
+  // ob es geklappt hat. Liegt bei der Elternkomponente (rig.vue), weil nur
+  // sie weiss, wie sie aus der ID wieder ein CatalogSearchResult macht.
+  createHandler: (input: { brand: string; name: string; categoryId: string }) => Promise<CreateOutcome>
+}>()
 const emit = defineEmits<{
   select: [CatalogSearchResult]
-  create: [{ brand: string; name: string; categoryId: string }]
 }>()
 
 const t = useText()
 const term = ref('')
 const results = ref<CatalogSearchResult[]>([])
+const searchError = ref(false)
 const showCreate = ref(false)
 const newBrand = ref('')
 const newName = ref('')
 const newCategory = ref(props.categoryId ?? 'guitar')
 const createError = ref('')
+const creating = ref(false)
 
 let debounce: ReturnType<typeof setTimeout> | undefined
+// clearTimeout() stoppt nur einen Timer, der noch nicht gefeuert hat - eine
+// bereits laufende Anfrage laesst sich damit nicht abbrechen. Die Wache
+// sorgt dafuer, dass nur die zuletzt ausgeloeste Anfrage ihr Ergebnis noch
+// anwenden darf; alles Aeltere wird stillschweigend verworfen.
+const guard = createRequestGuard()
 
-// Resolution happens while typing, not as a follow-up question afterwards.
+// Die Aufloesung passiert waehrend des Tippens, nicht als Rueckfrage danach.
 watch(term, (value) => {
   clearTimeout(debounce)
+  const ticket = guard.next()
+  searchError.value = false
   if (value.trim() === '') {
     results.value = []
     return
@@ -42,8 +62,17 @@ watch(term, (value) => {
   debounce = setTimeout(async () => {
     const query = new URLSearchParams({ q: value })
     if (props.categoryId) query.set('category', props.categoryId)
-    const body = await $fetch<{ results: CatalogSearchResult[] }>(`/api/catalog/search?${query}`)
-    results.value = body.results
+    try {
+      const body = await $fetch<{ results: CatalogSearchResult[] }>(`/api/catalog/search?${query}`)
+      // Inzwischen kam ein neuerer Tastendruck oder das Feld wurde geleert -
+      // diese Antwort ist Vergangenheit und darf nichts mehr ueberschreiben.
+      if (!guard.isCurrent(ticket)) return
+      results.value = body.results
+    } catch {
+      if (!guard.isCurrent(ticket)) return
+      results.value = []
+      searchError.value = true
+    }
   }, 120)
 })
 
@@ -54,17 +83,28 @@ function choose(result: CatalogSearchResult) {
   showCreate.value = false
 }
 
-function submitCreate() {
+async function submitCreate() {
   createError.value = ''
   if (nameContainsYear(newName.value)) {
     createError.value = t.picker.createYearError
     return
   }
-  emit('create', {
+  creating.value = true
+  const outcome = await props.createHandler({
     brand: newBrand.value.trim(),
     name: newName.value.trim(),
     categoryId: newCategory.value,
   })
+  creating.value = false
+  if (!outcome.success) {
+    // Das Formular bleibt stehen, mit allem, was schon eingetippt war -
+    // sonst verschwindet der Fehler spurlos und die Eingabe gleich mit.
+    createError.value = outcome.message
+    return
+  }
+  // Ausgewaehlt oder neu angelegt fuehrt zum selben Ergebnis: die
+  // Elternkomponente bekommt ein fertiges CatalogSearchResult.
+  emit('select', outcome.item)
   newBrand.value = ''
   newName.value = ''
   showCreate.value = false
@@ -89,9 +129,9 @@ const categoryEntries = computed(() =>
       <li v-for="result in results" :key="result.id">
         <button type="button" class="flex w-full items-baseline gap-2 px-3 py-2 text-left" @click="choose(result)">
           <span class="font-medium">{{ result.brandName }} {{ result.name }}</span>
-          <!-- Both catalogue levels side by side: the casual user clicks
-               the top line, the enthusiast sees their exact variant next
-               to it. -->
+          <!-- Beide Katalogebenen nebeneinander: der Gelegenheitsnutzer
+               klickt oben, der Kenner sieht daneben seine genaue
+               Ausfuehrung. -->
           <span class="text-xs text-neutral-500">
             {{ result.level === 'line' ? t.picker.levelLine : t.picker.levelVariant }}
           </span>
@@ -100,11 +140,12 @@ const categoryEntries = computed(() =>
       </li>
     </ul>
 
+    <p v-else-if="searchError" class="mt-1 text-sm text-red-600">{{ t.picker.searchError }}</p>
     <p v-else-if="term.trim() !== ''" class="mt-1 text-sm text-neutral-500">
       {{ t.picker.noResults }}
     </p>
 
-    <!-- Deliberately quiet exit: the exception, not the normal path. -->
+    <!-- Bewusst unauffaelliger Ausgang: die Ausnahme, nicht der Normalweg. -->
     <button
       v-if="term.trim() !== '' && !showCreate"
       type="button"
@@ -130,7 +171,9 @@ const categoryEntries = computed(() =>
         </select>
       </label>
       <p v-if="createError" class="text-sm text-red-600">{{ createError }}</p>
-      <button type="submit" class="rounded bg-neutral-900 px-3 py-1 text-white">{{ t.picker.createSubmit }}</button>
+      <button type="submit" :disabled="creating" class="rounded bg-neutral-900 px-3 py-1 text-white">
+        {{ t.picker.createSubmit }}
+      </button>
     </form>
   </div>
 </template>

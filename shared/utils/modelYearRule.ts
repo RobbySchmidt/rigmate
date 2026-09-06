@@ -1,19 +1,19 @@
-// Single home for the rule "a model name never contains a year" (design
-// spec section 4.1): without it, "Stratocaster 1963" and "63er Strat" would
-// become two catalog entries for the same guitar, and the whole point of a
-// shared catalog - no duplicates - breaks.
+// Einziger Ort fuer die Regel "ein Modellname enthaelt nie ein Baujahr"
+// (Design-Spec Abschnitt 4.1): ohne sie wuerden "Stratocaster 1963" und
+// "63er Strat" zwei Katalog-Eintraege fuer dieselbe Gitarre, und der ganze
+// Sinn eines gemeinsamen Katalogs - keine Dubletten - bricht.
 //
-// Both sides enforce the same rule from here instead of keeping their own
-// copy: the client (CatalogPicker.vue) checks before it even sends a create
-// request, and the server (POST /api/catalog/items) checks again because
-// the client can never be trusted to be the only guard.
+// Beide Seiten pruefen von hier aus dieselbe Regel statt ihre eigene Kopie
+// zu pflegen: der Client (CatalogPicker.vue) prueft schon, bevor er eine
+// Anlegen-Anfrage abschickt, und der Server (POST /api/catalog/items) prueft
+// erneut, weil der Client nie die einzige Waechterin sein darf.
 //
-// Deliberately broader than a plain four-digit check so it also catches the
-// German "63er" shorthand and the English "'63" reissue shorthand, while
-// staying narrow enough to accept real catalog names that merely contain
-// digits (AC30, DS-1, 4003, EXL110, TS808, ...). A four-digit run is only
-// treated as a year when it forms a whole word - "1960A" (a real Marshall
-// cabinet name) does not match, because "A" is directly attached.
+// Bewusst weiter gefasst als ein reiner Vierstellig-Check, damit auch die
+// deutsche Kurzform "63er" und die englische Kurzform "'63" erfasst werden -
+// aber eng genug, um echte Katalognamen mit blossen Ziffern zuzulassen
+// (AC30, DS-1, 4003, EXL110, TS808, ...). Eine vierstellige Zahl zaehlt nur
+// als eigenstaendiges Baujahr, wenn sie ein ganzes Wort bildet - "1960A"
+// (ein echtes Marshall-Cabinet) passt nicht, weil das "A" direkt anschliesst.
 const YEAR_IN_NAME_PATTERN = /\b(19|20)\d{2}\b|\b\d{2}er\b|['’]\d{2}\b/
 
 export function nameContainsYear(name: string): boolean {

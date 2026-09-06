@@ -7,8 +7,8 @@ async function search(query: string, extra = ''): Promise<any> {
   return response.json()
 }
 
-describe('contract for the catalog picker', () => {
-  it('returns every field the list renders', async () => {
+describe('Vertrag fuer das Auswahlfeld', () => {
+  it('liefert alle Felder, die die Liste anzeigt', async () => {
     const body = await search('strat')
     const first = body.results[0]
     expect(Object.keys(first).sort()).toEqual(
@@ -19,18 +19,18 @@ describe('contract for the catalog picker', () => {
     )
   })
 
-  it('copes with a single letter', async () => {
-    // Every keystroke fires a request - the first letter must not blow up.
+  it('kommt mit einem einzelnen Buchstaben zurecht', async () => {
+    // Bei jedem Tastendruck - der erste Buchstabe darf nichts umbringen.
     const body = await search('s')
     expect(Array.isArray(body.results)).toBe(true)
   })
 
-  it('caps the list at eight entries', async () => {
+  it('begrenzt die Liste auf acht Eintraege', async () => {
     const body = await search('a')
     expect(body.results.length).toBeLessThanOrEqual(8)
   })
 
-  it('returns only strings for a strings query', async () => {
+  it('liefert fuer Saiten nur Saiten', async () => {
     const body = await search('slinky', '&category=strings')
     expect(body.results.every((r: any) => r.categoryId === 'strings')).toBe(true)
   })

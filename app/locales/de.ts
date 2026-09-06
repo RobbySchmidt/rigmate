@@ -56,6 +56,9 @@ export const de = {
     createCategory: 'Kategorie',
     createSubmit: 'Anlegen',
     createYearError: 'Das Baujahr gehört ins Exemplar, nicht in den Modellnamen.',
+    createDuplicateError: 'Der Eintrag existiert schon im Katalog.',
+    createGenericError: 'Das hat nicht geklappt. Versuch es noch einmal.',
+    searchError: 'Suche gerade nicht möglich. Versuch es gleich noch einmal.',
   },
   precisionHint: {
     // Nie ein Pflichtfeld - nur ein Hinweis nach der Auswahl.
@@ -74,6 +77,9 @@ export const de = {
     remove: 'Entfernen',
     save: 'Speichern',
     cancel: 'Abbrechen',
+    errorGeneric: 'Das hat nicht geklappt. Versuch es noch einmal.',
+    errorConsumableAsGear:
+      'Das ist Verbrauchsmaterial. Trag es weiter unten bei „Saiten und Plektren" ein statt hier als Equipment.',
   },
   gearForm: {
     optionalHint: 'Alles hier ist freiwillig. Je genauer, desto besser die Treffer.',

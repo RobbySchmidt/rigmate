@@ -38,7 +38,7 @@ function submit() {
   <form class="flex flex-col gap-3 rounded border p-4" @submit.prevent="submit">
     <p class="font-medium">{{ catalogItemLabel }}</p>
 
-    <!-- The hint appears after picking, and is never a required field. -->
+    <!-- Der Hinweis erscheint erst nach der Auswahl und ist nie ein Pflichtfeld. -->
     <p v-if="showPrecisionHint && !hintDismissed" class="rounded bg-amber-50 p-2 text-sm">
       {{ t.precisionHint.text }}
       <button type="button" class="ml-2 underline" @click="hintDismissed = true">
