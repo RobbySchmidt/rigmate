@@ -141,16 +141,33 @@ Ein **zentraler Dienst mit drei Aufgaben und zwei Einsatzorten**.
 
 Einmal bauen, zweimal nutzen.
 
-### Ablauf beim Auflösen
+### Ablauf beim Auflösen — Autovervollständigung, keine Rückfrage
 
-1. Eingabe normalisieren — Kleinschreibung, Sonderzeichen, Leerzeichen, Füll- und Fragewörter entfernen
+Die Auflösung passiert **während des Tippens**, nicht als Rückfrage danach:
+
+1. Eingabe bei jedem Tastendruck normalisieren — Kleinschreibung, Sonderzeichen, Leerzeichen, Füll- und Fragewörter entfernen
 2. Gegen Marke, Modell und Synonyme abgleichen (unscharfe Suche)
-3. Treffer als „Meinst du …?" anbieten
-4. Nur wenn nichts passt: neuer Eintrag, markiert als ungeprüft
+3. Treffer direkt als Auswahlliste anzeigen, **beide Katalogebenen nebeneinander**
+4. Klick übernimmt den Eintrag — fertig
+5. Nur wenn wirklich nichts passt: „Nicht dabei? Neu anlegen" als bewusster Notausgang, neuer Eintrag wird als ungeprüft markiert
+
+```
+strat
+  Fender Stratocaster                    · Modell-Linie
+  Fender American Professional II Strat  · Ausführung
+  Fender Player Stratocaster             · Ausführung
+  Squier Bullet Stratocaster             · Ausführung
+```
+
+**Warum das wichtig ist:** So gibt es **keine Freitext-Eingabe mehr** — es wird immer aus dem Katalog gewählt. Dubletten entstehen dadurch gar nicht erst, statt hinterher zusammengeführt werden zu müssen. Das Anlegen eines neuen Eintrags ist der Ausnahmefall, nicht der Normalweg.
+
+**Nebeneffekt:** Die Katalogtiefe wird sichtbar, ohne dass jemand danach fragen muss. Der Gelegenheitsnutzer klickt auf die Modell-Linie und ist fertig; der Nerd sieht daneben seine Ausführung. Die Präzision liegt sichtbar bereit, ohne erzwungen zu werden — das ist die Umsetzung der gestaffelten Tiefe aus Abschnitt 6, und angenehmer als eine Rückfrage, die sich wie ein Formularfehler anfühlt.
 
 **Keine KI nötig.** Normalisierung plus Synonymtabelle plus unscharfer Abgleich decken den Großteil ab.
 
 ### Nachfragen — die Regel
+
+Greift **nach** der Auswahl aus der Liste, nicht anstelle davon: Wer die Modell-Linie gewählt hat, bekommt anschließend einen dezenten Hinweis auf die fehlende Genauigkeit — nie als Pflichtfeld.
 
 Der Checker fragt nach, wenn die **Seltenheit innerhalb eines Eintrags stark streut**:
 
