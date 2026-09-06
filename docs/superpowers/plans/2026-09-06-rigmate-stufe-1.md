@@ -1188,7 +1188,7 @@ function normalizeBrand(name: string): string {
     .toLowerCase()
     .replace(/ß/g, 'ss')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
     .replace(/\s+/g, ' ')
@@ -1444,7 +1444,7 @@ export function normalize(input: string): string {
     .toLowerCase()
     .replace(/ß/g, 'ss')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     // Alles, was kein Buchstabe und keine Ziffer ist, trennt Wörter.
     .replace(/[^a-z0-9]+/g, ' ')
     // Buchstabe/Ziffer-Grenzen trennen ebenfalls, damit AC30 zu "ac 30" wird.
@@ -6228,7 +6228,7 @@ function emailFor(displayName: string): string {
     .toLowerCase()
     .replace(/ß/g, 'ss')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
   return `${DEMO_EMAIL_PREFIX}${slug}${DEMO_EMAIL_DOMAIN}`
