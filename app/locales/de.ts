@@ -125,4 +125,20 @@ export const de = {
     refineHint:
       'Je vollständiger dein Rig, desto genauer diese Vorschläge. Seltene Geräte zählen mehr als verbreitete.',
   },
+  gearPage: {
+    players: 'Wer spielt das',
+    playersCount: 'Spieler: {count}',
+    wishCount: 'Auf Wunschlisten: {count}',
+    variants: 'Ausführungen',
+    partOf: 'Gehört zu',
+    unverified: 'Dieser Eintrag wurde von einem Nutzer angelegt und ist noch ungeprüft.',
+    signInToSeePlayers: 'Melde dich an, um zu sehen, wer das spielt.',
+    rarity: {
+      mass: 'Massenware',
+      common: 'verbreitet',
+      special: 'speziell',
+      rare: 'rar',
+    },
+    noPlayers: 'Hier hat es noch niemand eingetragen.',
+  },
 } as const
