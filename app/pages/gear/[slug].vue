@@ -7,12 +7,34 @@ const t = useText()
 const route = useRoute()
 const user = useSupabaseUser()
 
-const { data } = await useFetch<any>(`/api/gear/${route.params.slug}`)
+const { data, error } = await useFetch<any>(`/api/gear/${route.params.slug}`)
+
+// Fix-Runde (Abschluss), das schwerste der fuenf verschluckten { error }:
+// das Template war "<article v-if=\"data\">" ohne v-else - ein fehlgeschlagener
+// Fetch ODER ein echtes 404 rendern beide dieselbe komplett leere Seite,
+// ausgeliefert mit HTTP 200 und dem Titel "undefined undefined - Rigmate".
+// Genau diese Seite ist laut Abschnitt 10 die einzige oeffentliche,
+// suchmaschinen-auffindbare - ein Crawler saehe einen leeren 200er. Die
+// Route wirft bei einem echten 404 den Statuscode 404, bei jedem anderen
+// Lesefehler 502 (server/api/gear/[slug].get.ts) - useFetch reicht das in
+// error.value.statusCode unveraendert durch, die Seite uebernimmt ihn 1:1
+// statt neu zu raten, und gibt ihn auch an die eigene Antwort weiter.
+const notFound = computed(() => error.value?.statusCode === 404)
+
+if (error.value) {
+  setResponseStatus(error.value.statusCode ?? 500)
+}
 
 useSeoMeta({
-  title: () => `${data.value?.item.brandName} ${data.value?.item.name} - ${t.app.name}`,
+  title: () => {
+    if (notFound.value) return `${t.gearPage.notFoundTitle} - ${t.app.name}`
+    if (error.value) return `${t.gearPage.loadErrorTitle} - ${t.app.name}`
+    return `${data.value?.item.brandName} ${data.value?.item.name} - ${t.app.name}`
+  },
   description: () =>
-    `${data.value?.item.brandName} ${data.value?.item.name}: ${t.gearPage.playersCount.replace('{count}', String(data.value?.stats.ownerCount ?? 0))}`,
+    data.value
+      ? `${data.value.item.brandName} ${data.value.item.name}: ${t.gearPage.playersCount.replace('{count}', String(data.value.stats.ownerCount ?? 0))}`
+      : undefined,
 })
 
 const categoryLabel = computed(
@@ -59,4 +81,6 @@ const categoryLabel = computed(
       </ul>
     </section>
   </article>
+  <p v-else-if="notFound" class="text-neutral-600">{{ t.gearPage.notFound }}</p>
+  <p v-else class="text-red-600">{{ t.gearPage.loadError }}</p>
 </template>

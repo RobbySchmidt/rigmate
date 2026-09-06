@@ -115,6 +115,12 @@ describe('settings.vue - Links validieren', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain(de.settings.saved)
-    expect(supabase.inserts.profiles).toBeUndefined()
+    // Statt der immer wahren Pruefung "es gab nie ein insert" (save() ruft
+    // ohnehin nur .update() auf) hier gegen den tatsaechlich uebergebenen
+    // Payload pruefen: die eine eingegebene Zeile muss als Label/URL-Paar
+    // im update() der eigenen Nutzer-Id ankommen.
+    expect(supabase.updates.profiles[0]).toMatchObject({
+      links: [{ label: 'example.com/alice', url: 'https://example.com/alice' }],
+    })
   })
 })

@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import { CATALOG, type SeedLine, type SeedVariant } from './data/catalog'
 import {
@@ -8,6 +8,13 @@ import {
   selectOrphans,
   type SeededRow,
 } from './prune-plan'
+
+// "import 'dotenv/config'" laedt dotenv 17 mit seinen Standardeinstellungen,
+// und die geben beim Laden eine zufaellige Werbezeile auf stdout aus (siehe
+// _getRandomTip in node_modules/dotenv/lib/main.js) - das Skript hier gibt
+// aber Zahlen maschinenlesbar auf stdout aus, und eine Werbezeile dazwischen
+// macht das unzuverlaessig. `quiet: true` unterdrueckt genau diese Ausgabe.
+loadEnv({ quiet: true })
 
 function required(name: string): string {
   const value = process.env[name]

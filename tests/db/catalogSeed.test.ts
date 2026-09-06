@@ -6,6 +6,7 @@ import {
   selectOrphans,
   type SeededRow,
 } from '../../scripts/prune-plan'
+import { nameContainsYear } from '../../shared/utils/modelYearRule'
 import { adminClient } from '../helpers/supabase'
 
 const admin = adminClient()
@@ -60,8 +61,11 @@ describe('Katalog-Daten', () => {
   })
 
   it('trägt kein Baujahr im Modellnamen', () => {
-    // Regel aus Abschnitt 4.1: Baujahr gehört ins Exemplar, nie in den Katalog.
-    const withYear = ALL_NAMES.filter((name) => /\b(19|20)\d{2}\b|\b\d{2}er\b/.test(name))
+    // Regel aus Abschnitt 4.1: Baujahr gehört ins Exemplar, nie in den
+    // Katalog. Einzige Quelle fuer die Regel ist shared/utils/modelYearRule.ts
+    // (siehe dortiger Kommentar) - eine eigene Kopie hier haette die kurze
+    // Anfuehrungsform ("'63") verpasst, die die gemeinsame Regel abdeckt.
+    const withYear = ALL_NAMES.filter((name) => nameContainsYear(name))
     expect(withYear).toEqual([])
   })
 

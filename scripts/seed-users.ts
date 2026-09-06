@@ -14,9 +14,16 @@
 // halb eingespielter Demo-Datenbestand ist schlimmer als gar keiner -- die
 // Empfehlungsliste saehe danach einfach nur duenn aus, ohne Hinweis darauf,
 // dass die Daten fehlen.
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import { DEMO_USERS, type DemoUser } from './data/demoUsers'
+
+// "import 'dotenv/config'" laedt dotenv 17 mit seinen Standardeinstellungen,
+// und die geben beim Laden eine zufaellige Werbezeile auf stdout aus (siehe
+// _getRandomTip in node_modules/dotenv/lib/main.js) - dieses Skript meldet
+// aber maschinenlesbare Zahlen ueber stdout, und eine Werbezeile dazwischen
+// macht das unzuverlaessig. `quiet: true` unterdrueckt genau diese Ausgabe.
+loadEnv({ quiet: true })
 
 function required(name: string): string {
   const value = process.env[name]

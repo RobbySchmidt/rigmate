@@ -10,28 +10,52 @@ const gearError = ref('')
 const preferencesError = ref('')
 const wishlistError = ref('')
 
+// Fix-Runde (Abschluss): dieselbe Datei hatte ihre SCHREIB-Pfade schon aus
+// einer frueheren Runde gehaertet (siehe gearError/preferencesError/
+// wishlistError oben), aber die drei Lese-Zugriffe darunter wurden nie
+// nachgezogen - derselbe Fehler im selben File. Ein verschlucktes { error }
+// liess einen fehlgeschlagenen Read wie "du hast noch nichts eingetragen"
+// aussehen und damit wie einen Datenverlust. Eigene Flags, Muster wie in
+// app/pages/profile/[id].vue: Fehler und "leer" sind zwei verschiedene
+// Zustaende.
+const gearLoadError = ref(false)
+const preferencesLoadError = ref(false)
+const wishlistLoadError = ref(false)
+
 const { data: gear, refresh: refreshGear } = await useAsyncData('rig-gear', async () => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('gear_items')
     .select('id, year, finish, installed_in_id, catalog_items ( id, name, category_id, brands ( name ) )')
     .eq('owner_id', userId.value!)
     .order('created_at')
+  if (error) {
+    gearLoadError.value = true
+    return []
+  }
   return data ?? []
 })
 
 const { data: preferences, refresh: refreshPreferences } = await useAsyncData('rig-preferences', async () => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('preferences')
     .select('id, catalog_items ( id, name, brands ( name ) )')
     .eq('user_id', userId.value!)
+  if (error) {
+    preferencesLoadError.value = true
+    return []
+  }
   return data ?? []
 })
 
 const { data: wishlist, refresh: refreshWishlist } = await useAsyncData('rig-wishlist', async () => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('wishlist_items')
     .select('id, note, catalog_items ( id, name, brands ( name ) )')
     .eq('user_id', userId.value!)
+  if (error) {
+    wishlistLoadError.value = true
+    return []
+  }
   return data ?? []
 })
 
@@ -144,7 +168,8 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
         @cancel="pendingItem = null"
       />
       <p v-if="gearError" class="text-sm text-red-600">{{ gearError }}</p>
-      <p v-if="(gear ?? []).length === 0" class="text-neutral-500">{{ t.rig.empty }}</p>
+      <p v-if="gearLoadError" class="text-sm text-red-600">{{ t.rig.loadError }}</p>
+      <p v-else-if="(gear ?? []).length === 0" class="text-neutral-500">{{ t.rig.empty }}</p>
       <ul v-else class="divide-y rounded border">
         <li v-for="row in gear" :key="row.id" class="flex items-center gap-2 px-3 py-2">
           <span>{{ label(row) }}</span>
@@ -162,7 +187,9 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       <CatalogPicker category-id="strings" :create-handler="createCatalogItem" @select="addPreference" />
       <CatalogPicker category-id="pick" :create-handler="createCatalogItem" @select="addPreference" />
       <p v-if="preferencesError" class="text-sm text-red-600">{{ preferencesError }}</p>
-      <ul class="divide-y rounded border">
+      <p v-if="preferencesLoadError" class="text-sm text-red-600">{{ t.rig.loadError }}</p>
+      <p v-else-if="(preferences ?? []).length === 0" class="text-neutral-500">{{ t.rig.emptyPreferences }}</p>
+      <ul v-else class="divide-y rounded border">
         <li v-for="row in preferences" :key="row.id" class="flex items-center px-3 py-2">
           <span>{{ label(row) }}</span>
           <button type="button" class="ml-auto text-sm underline" @click="removeRow('preferences', row.id)">
@@ -176,7 +203,9 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       <h2 class="text-f-2xl font-semibold">{{ t.rig.wishlist }}</h2>
       <CatalogPicker :create-handler="createCatalogItem" @select="addWish" />
       <p v-if="wishlistError" class="text-sm text-red-600">{{ wishlistError }}</p>
-      <ul class="divide-y rounded border">
+      <p v-if="wishlistLoadError" class="text-sm text-red-600">{{ t.rig.loadError }}</p>
+      <p v-else-if="(wishlist ?? []).length === 0" class="text-neutral-500">{{ t.rig.emptyWishlist }}</p>
+      <ul v-else class="divide-y rounded border">
         <li v-for="row in wishlist" :key="row.id" class="flex items-center px-3 py-2">
           <span>{{ label(row) }}</span>
           <button type="button" class="ml-auto text-sm underline" @click="removeRow('wishlist_items', row.id)">

@@ -59,6 +59,14 @@ describe('GET /api/recommendations', () => {
     // Bob teilt ein rares Pedal plus einen Amp, Carol nur Massenware.
     const body = await recommendationsFor(alice)
     const ids = body.suggestions.map((s: any) => s.userId)
+    // Erst pruefen, dass beide ueberhaupt in der Liste stehen: indexOf gibt
+    // -1 zurueck, wenn eine Id fehlt, und -1 ist "kleiner als" jeder echte
+    // Index - ein komplett fehlender Bob haette die reine
+    // toBeLessThan-Pruefung unbemerkt bestehen lassen, obwohl genau das der
+    // schlimmste denkbare Ausgang fuer die Rangfolge ist, die dieser Test
+    // absichern soll.
+    expect(ids).toContain(bob.id)
+    expect(ids).toContain(carol.id)
     expect(ids.indexOf(bob.id)).toBeLessThan(ids.indexOf(carol.id))
   })
 

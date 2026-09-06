@@ -74,12 +74,20 @@ export const de = {
     addPreference: 'Saiten oder Plektrum hinzufügen',
     addWish: 'Auf die Wunschliste',
     empty: 'Hier ist noch nichts. Trag dein erstes Gerät ein.',
+    // Eigene Leer-Texte fuer Praeferenzen und Wunschliste statt einer leeren
+    // umrandeten Liste ohne jeden Hinweis (Fix-Runde Abschluss).
+    emptyPreferences: 'Hier ist noch nichts. Trag deine ersten Saiten oder dein Plektrum ein.',
+    emptyWishlist: 'Hier steht noch nichts auf der Wunschliste.',
     remove: 'Entfernen',
     save: 'Speichern',
     cancel: 'Abbrechen',
     errorGeneric: 'Das hat nicht geklappt. Versuch es noch einmal.',
     errorConsumableAsGear:
       'Das ist Verbrauchsmaterial. Trag es weiter unten bei „Saiten und Plektren" ein statt hier als Equipment.',
+    // Eigener Text statt eines stillen leeren Abschnitts - ein Fehlschlag
+    // beim Laden von Equipment, Praeferenzen oder Wunschliste soll nicht wie
+    // "du hast noch nichts eingetragen" aussehen (Fix-Runde Abschluss).
+    loadError: 'Das konnte gerade nicht geladen werden. Versuch es noch einmal.',
   },
   gearForm: {
     optionalHint: 'Alles hier ist freiwillig. Je genauer, desto besser die Treffer.',
@@ -124,6 +132,10 @@ export const de = {
     fallbackBadge: 'Zufällig ausgewählt',
     refineHint:
       'Je vollständiger dein Rig, desto genauer diese Vorschläge. Seltene Geräte zählen mehr als verbreitete.',
+    // Ein fehlgeschlagener Request sah bisher wie "keine Vorschlaege" oder
+    // wie "echte Treffer, aber gerade keine da" aus - beides falsch
+    // (Fix-Runde Abschluss).
+    loadError: 'Vorschläge gerade nicht ladbar. Versuch es gleich noch einmal.',
   },
   gearPage: {
     players: 'Wer spielt das',
@@ -140,6 +152,15 @@ export const de = {
       rare: 'rar',
     },
     noPlayers: 'Hier hat es noch niemand eingetragen.',
+    // Diese Seite ist laut Abschnitt 10 oeffentlich und suchmaschinen-
+    // auffindbar - ein Fehlschlag oder ein echtes 404 muessen sich sowohl im
+    // Text als auch im <title> vom Erfolgsfall unterscheiden, statt als
+    // leere Seite mit "undefined undefined" durchzugehen (Fix-Runde
+    // Abschluss).
+    notFound: 'Dieser Eintrag existiert nicht.',
+    notFoundTitle: 'Nicht gefunden',
+    loadError: 'Das konnte gerade nicht geladen werden. Versuch es noch einmal.',
+    loadErrorTitle: 'Fehler beim Laden',
   },
   search: {
     title: 'Suche',

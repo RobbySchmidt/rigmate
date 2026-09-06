@@ -77,8 +77,17 @@ export function matchScore(kind: MatchKind, depth: MatchDepth, rarity: number): 
 export function pairScore(matches: SharedMatch[]): number {
   const base = matches.reduce((sum, match) => sum + match.score, 0)
   const gearCount = matches.filter((match) => match.kind === 'gear').length
-  const combo = gearCount >= 2 ? COMBO_FACTOR * base * (gearCount - 1) : 0
-  return base + combo
+  // Ohne Deckel waechst der Multiplikator linear mit gearCount, und weil
+  // `base` selbst schon mit jedem weiteren geteilten Geraet waechst, der
+  // Gesamt-Score ungefaehr quadratisch - ohne Obergrenze. Ab genug geteilten
+  // Massenware-Treffern (ab etwa elf) schlaegt das einen einzelnen echt
+  // seltenen, praezisen Treffer (Baujahr + Ausfuehrung) und dreht damit die
+  // Kernaussage aus Abschnitt 6 der Spec um: Seltenheit und Praezision
+  // sollen sich auszahlen, nicht schiere Menge. Der Deckel bei 2 begrenzt
+  // den Kombinationsbonus auf hoechstens eine Verdopplung der Basis, egal
+  // wie viele Geraete zwei Leute teilen.
+  const multiplier = gearCount >= 2 ? Math.min(2, 1 + COMBO_FACTOR * (gearCount - 1)) : 1
+  return base * multiplier
 }
 
 /** Eine geteilte Modell-Linie zaehlt einmal, auf der tiefsten erreichten Ebene. */

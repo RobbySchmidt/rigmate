@@ -6,6 +6,7 @@ import {
   matchScore,
   pairScore,
   type OwnedEntry,
+  type SharedMatch,
   type UserRig,
 } from '../../server/utils/scoring'
 
@@ -98,6 +99,23 @@ describe('pairScore', () => {
 
   it('ist null ohne Treffer', () => {
     expect(pairScore([])).toBe(0)
+  })
+
+  it('deckelt den Kombinationsbonus bei einem Multiplikator von 2', () => {
+    // Ab genug geteilten Massenware-Treffern waechst der Multiplikator ohne
+    // Deckel ueber 2 - hier mit zwoelf geteilten Geraeten bewusst so weit
+    // getrieben, dass die Deckelung tatsaechlich greift (2.65 ungedeckelt).
+    const many: SharedMatch[] = Array.from({ length: 12 }, (_, i) => ({
+      kind: 'gear',
+      depth: 'variant',
+      catalogItemId: `g${i}`,
+      lineId: `g${i}`,
+      score: 1,
+    }))
+    const base = many.length
+    const uncappedMultiplier = 1 + COMBO_FACTOR * (many.length - 1)
+    expect(uncappedMultiplier).toBeGreaterThan(2)
+    expect(pairScore(many)).toBeCloseTo(base * 2)
   })
 })
 
