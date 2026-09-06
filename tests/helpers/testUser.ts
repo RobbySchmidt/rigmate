@@ -35,14 +35,41 @@ export async function createTestUser(displayName = 'Testnutzer'): Promise<TestUs
   return { id: data.user!.id, email, client }
 }
 
-/** Löscht ausschließlich Nutzer mit dem Testpräfix. */
+/**
+ * Entscheidet, ob eine E-Mail-Adresse zu einem Testnutzer gehört.
+ * Bewusst case-sensitiv: createTestUser() erzeugt Adressen ausnahmslos
+ * klein geschrieben, ein Gross-Klein-Vergleich würde beim Löschen nur
+ * unnötig mehr treffen, ohne echte Testnutzer besser zu finden.
+ */
+export function isTestUserEmail(email: string | null | undefined): boolean {
+  return typeof email === 'string' && email.startsWith(TEST_EMAIL_PREFIX)
+}
+
+/**
+ * Löscht ausschließlich Nutzer mit dem Testpräfix — und zwar ALLE, nicht nur
+ * die vom aktuellen Testlauf angelegten. Das räumt auch Reste eines
+ * abgebrochenen Laufs weg. Sicher ist das nur, weil vitest.config.ts
+ * `fileParallelism: false` setzt (siehe Kommentar dort) — bei paralleler
+ * Ausführung würden sich Testdateien sonst gegenseitig mitten im Lauf die
+ * Nutzer löschen.
+ */
 export async function deleteTestUsers(): Promise<void> {
   const admin = adminClient()
-  const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-  if (error) throw new Error(`Testnutzer auflisten: ${error.message}`)
+  const perPage = 1000
+  let page = 1
 
-  for (const user of data.users) {
-    if (!user.email?.startsWith(TEST_EMAIL_PREFIX)) continue
-    await admin.auth.admin.deleteUser(user.id)
+  // Seitenweise weiterblättern, bis eine Seite nicht mehr voll ist -
+  // andernfalls blieben Testnutzer ab der 1001. Adresse unentdeckt liegen.
+  while (true) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage })
+    if (error) throw new Error(`Testnutzer auflisten: ${error.message}`)
+
+    for (const user of data.users) {
+      if (!isTestUserEmail(user.email)) continue
+      await admin.auth.admin.deleteUser(user.id)
+    }
+
+    if (data.users.length < perPage) break
+    page += 1
   }
 }

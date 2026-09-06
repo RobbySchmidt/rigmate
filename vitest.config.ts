@@ -9,6 +9,10 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 30000,
     // Testnutzer sind globaler Zustand auf einer geteilten Instanz.
+    // Haengt an deleteTestUsers() in tests/helpers/testUser.ts: die raeumt
+    // JEDEN rigmate-test-* Account ab, nicht nur die eigenen. Mit
+    // Parallelitaet wuerden sich Testdateien gegenseitig mitten im Lauf die
+    // Nutzer wegloeschen.
     fileParallelism: false,
   },
 })
