@@ -141,4 +141,12 @@ export const de = {
     },
     noPlayers: 'Hier hat es noch niemand eingetragen.',
   },
+  search: {
+    title: 'Suche',
+    placeholder: 'Gerät, Marke oder Name — „Wer hat hier einen AC30?" geht auch',
+    gearHeading: 'Equipment',
+    peopleHeading: 'Leute',
+    peopleLoginHint: 'Melde dich an, um auch Leute zu finden.',
+    noResults: 'Nichts gefunden.',
+  },
 } as const
