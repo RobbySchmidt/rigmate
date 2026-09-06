@@ -25,3 +25,7 @@ logs
 
 # MCP-Konfiguration mit Token - nur die Vorlage gehoert ins Repo
 .mcp.json
+
+# Supabase CLI - lokaler Verbindungszustand, gehoert nicht ins Repo
+supabase/.temp
+supabase/.branches

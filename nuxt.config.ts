@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     // Gear-Seiten sollen laut Spec öffentlich sein, deshalb steuern wir den
     // Schutz selbst statt global umzuleiten.
     redirect: false,
+    // Nur in server/ verfügbar, landet nicht im Client-Bundle.
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   },
 
   vite: {
