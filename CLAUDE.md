@@ -10,7 +10,13 @@ Soziales Netzwerk für Gitarristen, bei dem **das Equipment den sozialen Graphen
 
 Das ist die **Quelle der Wahrheit** für alles Inhaltliche: Datenmodell, Empfehlungslogik, Beziehungen, Feed, Sichtbarkeit, Ausbaustufen. Der Anhang listet jede Entscheidung mit Begründung — **vor dem Ändern einer Designentscheidung dort nachsehen, warum sie so getroffen wurde.** Vieles wirkt beliebig und ist es nicht.
 
-Die Spec entstand in einem Brainstorming und wartet noch auf das Review durch Robby. Sie ist noch nicht in einen Implementierungsplan überführt.
+Die Spec entstand in einem Brainstorming und wartet noch auf das Review durch Robby.
+
+Für Ausbaustufe 1 gibt es inzwischen einen Implementierungsplan:
+
+> **[docs/superpowers/plans/2026-09-06-rigmate-stufe-1.md](docs/superpowers/plans/2026-09-06-rigmate-stufe-1.md)**
+
+18 Tasks, TDD, jeder mit eigenem Testzyklus. Der Abschnitt „Was dieser Plan über die Spec hinaus festlegt" am Ende listet die Entscheidungen, die beim Planen dazukamen — dort nachsehen, bevor eine davon geändert wird. Stufe 2 und 3 bekommen eigene Pläne.
 
 ## Stack
 
@@ -41,14 +47,16 @@ Auth: E-Mail/Passwort, **Mail-Bestätigung ist verpflichtend**. Demo-Nutzer desh
 ## Was noch aussteht
 
 - Review der Spec durch Robby
-- Implementierungsplan (die Spec ist noch keiner)
-- Supabase-CLI als Dev-Dependency, `supabase init` und `link`
-- Offene Punkte siehe Abschnitt 14 der Spec — darunter die **Oberflächensprache (Deutsch oder Englisch)**, die noch nicht entschieden ist
+- Ausführung des Plans für Stufe 1 (noch keine Zeile Code)
+- Pläne für Stufe 2 und 3
+- `supabase init` und `link` (die CLI ist als Dev-Dependency da, aber nicht initialisiert) — Task 1 des Plans
+- Offene Punkte aus Abschnitt 14 der Spec, soweit der Plan sie nicht entschieden hat: **Hosting des Frontends**, **Reaktionstypen** und **Bild-Limits** (die letzten beiden betreffen erst Stufe 2)
 - shadcn-nuxt fehlt noch (Registry war beim Aufsetzen nicht erreichbar). Die fluiden Tailwind-Klassen in [app/assets/css/main.css](app/assets/css/main.css) sind schon da, die shadcn-Farbtokens noch nicht.
 
 ## Arbeitsweise
 
 - Auf Deutsch, locker im Ton.
+- **Oberflächensprache ist entschieden:** Bezeichner, Tabellen, Spalten und Routen englisch, sichtbare Texte deutsch über `app/locales/de.ts`. Ein deutscher String direkt im Template ist ein Fehler — ein Test in `tests/unit/locale.test.ts` hält das durch.
 - Vor Umsetzung erst Konzept klären — dieses Projekt ist aus einem Brainstorming entstanden und lebt davon, dass Entscheidungen begründet sind.
 - Was bewusst **nicht** gebaut wird: Marktplatz, Ortsdaten, eigenes Audio- und Video-Hosting. Gründe in Abschnitt 2 der Spec.
 - Datenschutz und Moderation laufen im Prototyp bewusst auf Sparflamme. Die zurückgestellten Punkte stehen gesammelt in Abschnitt 15 und sind vor jedem Produktivbetrieb abzuarbeiten — nichts davon stillschweigend übergehen.
