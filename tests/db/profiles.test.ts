@@ -55,6 +55,39 @@ describe('Profil-Anlage', () => {
     expect(data!.display_name).toMatch(/^Rigmate /)
   })
 
+  it('kappt einen Anzeigenamen von genau 41 Zeichen auf 40', async () => {
+    const { data: created } = await admin.auth.admin.createUser({
+      email: `rigmate-test-${crypto.randomUUID()}@example.invalid`,
+      password: 'rigmate-test-passwort-2026',
+      email_confirm: true,
+      user_metadata: { display_name: 'A'.repeat(41) },
+    })
+    const { data } = await admin.from('profiles').select('display_name').eq('id', created.user!.id).single()
+    expect(data!.display_name).toHaveLength(40)
+  })
+
+  it('vergibt den Ersatznamen bei einem Anzeigenamen von genau 1 Zeichen', async () => {
+    const { data: created } = await admin.auth.admin.createUser({
+      email: `rigmate-test-${crypto.randomUUID()}@example.invalid`,
+      password: 'rigmate-test-passwort-2026',
+      email_confirm: true,
+      user_metadata: { display_name: 'A' },
+    })
+    const { data } = await admin.from('profiles').select('display_name').eq('id', created.user!.id).single()
+    expect(data!.display_name).toMatch(/^Rigmate /)
+  })
+
+  it('vergibt den Ersatznamen bei einem leeren Anzeigenamen', async () => {
+    const { data: created } = await admin.auth.admin.createUser({
+      email: `rigmate-test-${crypto.randomUUID()}@example.invalid`,
+      password: 'rigmate-test-passwort-2026',
+      email_confirm: true,
+      user_metadata: { display_name: '' },
+    })
+    const { data } = await admin.from('profiles').select('display_name').eq('id', created.user!.id).single()
+    expect(data!.display_name).toMatch(/^Rigmate /)
+  })
+
   it('löscht das Profil mit dem Nutzer', async () => {
     const doomed = await createTestUser('Kurzlebig')
     await admin.auth.admin.deleteUser(doomed.id)

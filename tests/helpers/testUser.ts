@@ -57,19 +57,29 @@ export async function deleteTestUsers(): Promise<void> {
   const admin = adminClient()
   const perPage = 1000
   let page = 1
+  const idsToDelete: string[] = []
 
-  // Seitenweise weiterblättern, bis eine Seite nicht mehr voll ist -
-  // andernfalls blieben Testnutzer ab der 1001. Adresse unentdeckt liegen.
+  // Erst vollständig durchblättern und sammeln, dann erst löschen.
+  // listUsers() paginiert über einen Offset - würde man schon während des
+  // Blätterns löschen, verschöbe jede gelöschte Zeile das Fenster der
+  // nächsten Seite um eins nach vorn, und Einträge rutschen unbemerkt aus
+  // dem Fenster heraus. Das trifft besonders hart, weil dieser Sweep JEDEN
+  // rigmate-test-* Account trifft statt nur die des laufenden Tests - eine
+  // Seite kann also grossteils aus Treffern bestehen.
   while (true) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage })
     if (error) throw new Error(`Testnutzer auflisten: ${error.message}`)
 
     for (const user of data.users) {
       if (!isTestUserEmail(user.email)) continue
-      await admin.auth.admin.deleteUser(user.id)
+      idsToDelete.push(user.id)
     }
 
     if (data.users.length < perPage) break
     page += 1
+  }
+
+  for (const id of idsToDelete) {
+    await admin.auth.admin.deleteUser(id)
   }
 }
