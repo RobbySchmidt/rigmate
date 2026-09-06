@@ -20,8 +20,7 @@ async function submit() {
     error.value = t.auth.errorInvalidCredentials
     return
   }
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-  await navigateTo(redirect)
+  await navigateTo(safeRedirect(route.query.redirect))
 }
 </script>
 

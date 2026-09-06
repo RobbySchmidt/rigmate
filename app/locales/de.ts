@@ -37,11 +37,11 @@ export const de = {
     toLogin: 'Schon ein Konto? Hier anmelden.',
     confirmSent:
       'Wir haben dir eine E-Mail geschickt. Klick den Link darin, dann geht es weiter.',
+    confirmSentLoginHint: 'Schon registriert? Dann einfach anmelden.',
     confirmTitle: 'Konto bestätigt',
     confirmBody: 'Alles klar. Jetzt fehlt nur noch dein Equipment.',
     confirmCta: 'Rig eintragen',
     errorGeneric: 'Das hat nicht geklappt. Versuch es noch einmal.',
     errorInvalidCredentials: 'E-Mail oder Passwort stimmt nicht.',
-    errorEmailInUse: 'Für diese E-Mail gibt es schon ein Konto.',
   },
 } as const
