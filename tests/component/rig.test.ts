@@ -96,6 +96,10 @@ describe('rig.vue - abgelehntes Schreiben', () => {
     expect(wrapper.text()).toContain(de.rig.errorGeneric)
     // Das Formular bleibt offen stehen statt so zu tun, als waere es geglueckt.
     expect(wrapper.findComponent(GearItemForm).exists()).toBe(true)
+    // Der Fehlschlag aendert nichts daran, DASS bereits mit der echten
+    // (aus den Claims normalisierten) Nutzer-Id geschrieben wurde - genau
+    // das war project-weit undefined, bevor useUserId() das behob.
+    expect(supabase.inserts.gear_items[0]).toMatchObject({ owner_id: 'test-user' })
   })
 
   it('zeigt die eigene Meldung, wenn Verbrauchsmaterial als Equipment abgelehnt wird', async () => {
@@ -112,6 +116,47 @@ describe('rig.vue - abgelehntes Schreiben', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain(de.rig.errorConsumableAsGear)
+    expect(supabase.inserts.gear_items[0]).toMatchObject({ owner_id: 'test-user' })
+  })
+})
+
+describe('rig.vue - eigene Nutzer-Id in jedem Schreibzugriff', () => {
+  // Regressionstest fuer Fix-Runde 2: createSupabaseStub()s insert()
+  // akzeptierte bisher jede Nutzlast ungeprueft, deshalb blieben acht
+  // Stellen im Projekt unbemerkt undefined statt der echten Nutzer-Id
+  // schreiben (siehe task-14-report.md, Fix-Runde 1). Hier wird das
+  // aufgezeichnete Argument jedes .insert()-Aufrufs geprueft - fuer
+  // Praeferenz und Wunschliste gab es dafuer bislang gar keinen Test.
+  it('schreibt die eigene Nutzer-Id in Praeferenz- und Wunschlisten-Eintraege', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: EMPTY_RIG,
+      writes: {
+        preferences: [{ error: null }],
+        wishlist_items: [{ error: null }],
+      },
+    })
+    const wrapper = await mountRig(supabase)
+
+    // Reihenfolge im Template: Equipment(0), Saiten-Praeferenz(1),
+    // Plektrum-Praeferenz(2), Wunschliste(3) - siehe app/pages/rig.vue.
+    const preferencePicker = wrapper.findAllComponents(CatalogPicker)[1]!
+    vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({ results: [fakeSearchResult({ id: 'slinky-1', name: 'Regular Slinky', categoryId: 'strings' })] }))
+    await preferencePicker.get('input').setValue('Slinky')
+    await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_WAIT_MS))
+    await flushPromises()
+    await preferencePicker.get('li button').trigger('click')
+    await flushPromises()
+
+    const wishlistPicker = wrapper.findAllComponents(CatalogPicker)[3]!
+    vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({ results: [fakeSearchResult({ id: 'wish-1', name: 'Traumgitarre' })] }))
+    await wishlistPicker.get('input').setValue('Traum')
+    await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_WAIT_MS))
+    await flushPromises()
+    await wishlistPicker.get('li button').trigger('click')
+    await flushPromises()
+
+    expect(supabase.inserts.preferences[0]).toMatchObject({ user_id: 'test-user' })
+    expect(supabase.inserts.wishlist_items[0]).toMatchObject({ user_id: 'test-user' })
   })
 })
 

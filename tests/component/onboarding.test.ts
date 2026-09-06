@@ -89,6 +89,11 @@ describe('onboarding.vue - erfolgreicher Eintrag', () => {
     expect(wrapper.text()).toContain('Fender Stratocaster')
     expect(wrapper.text()).toContain(de.onboarding.addedOne)
     expect(wrapper.text()).toContain(de.onboarding.done)
+    // Regressionstest fuer Fix-Runde 2: das aufgezeichnete Argument des
+    // insert()-Aufrufs traegt die echte (aus den Claims normalisierte)
+    // Nutzer-Id, nicht undefined - genau das war project-weit kaputt, bevor
+    // useUserId() das behob (siehe task-14-report.md, Fix-Runde 1).
+    expect(supabase.inserts.gear_items[0]).toMatchObject({ owner_id: 'test-user' })
   })
 })
 

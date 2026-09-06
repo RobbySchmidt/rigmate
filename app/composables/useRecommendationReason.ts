@@ -1,9 +1,8 @@
-interface SuggestionReason {
-  kind: 'gear' | 'consumable' | 'wish'
-  depth: 'line' | 'variant' | 'variant_year'
-  brandName: string
-  name: string
-}
+// Einzige Deklaration in shared/utils/suggestionReason.ts - dieselbe Form,
+// die server/api/recommendations.get.ts erzeugt und exportiert. Vorher gab
+// es hier eine eigene, unabhaengige Kopie; zwei Deklarationen eines
+// Vertrags sind, wie sie auseinanderdriften.
+import type { SuggestionReason } from '#shared/utils/suggestionReason'
 
 /**
  * Bewusst ohne Artikel: das Geschlecht eines beliebigen Geraetenamens

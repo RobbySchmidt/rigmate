@@ -1,23 +1,16 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { RarityBase } from '#shared/utils/rarityBase'
+import type { SuggestionReason } from '#shared/utils/suggestionReason'
 import { normalizeUserId } from '../utils/authUser'
 import { rarityWeight } from '../utils/rarity'
-import {
-  comparePair,
-  type MatchDepth,
-  type MatchKind,
-  type OwnedEntry,
-  type UserRig,
-  type WishEntry,
-} from '../utils/scoring'
+import { comparePair, type OwnedEntry, type UserRig, type WishEntry } from '../utils/scoring'
 
-export interface SuggestionReason {
-  kind: MatchKind
-  depth: MatchDepth
-  catalogItemId: string
-  brandName: string
-  name: string
-}
+// Re-exportiert, damit `Consumes/Produces: export interface SuggestionReason`
+// (siehe Task-Brief) weiterhin von dieser Route aus importierbar bleibt -
+// die einzige Deklaration liegt jetzt aber in shared/utils/suggestionReason.ts,
+// gemeinsam mit app/composables/useRecommendationReason.ts genutzt statt
+// zweimal unabhaengig gepflegt (siehe dortiger Kommentar).
+export type { SuggestionReason }
 
 export interface Suggestion {
   userId: string

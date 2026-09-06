@@ -1,5 +1,9 @@
-export type MatchKind = 'gear' | 'consumable' | 'wish'
-export type MatchDepth = 'line' | 'variant' | 'variant_year'
+// Einziger Ort fuer diese beiden Typen ist shared/utils/suggestionReason.ts
+// (dieselbe Behandlung wie RarityBase) - hier nur re-exportiert, damit
+// bestehende Importe aus scoring.ts (comparePair, matchScore, ...) weiter
+// funktionieren, ohne die Deklaration doppelt zu pflegen.
+import type { MatchKind, MatchDepth } from '#shared/utils/suggestionReason'
+export type { MatchKind, MatchDepth }
 
 export interface OwnedEntry {
   catalogItemId: string
