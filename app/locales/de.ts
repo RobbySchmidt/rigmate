@@ -150,4 +150,39 @@ export const de = {
     noResults: 'Nichts gefunden.',
     searchError: 'Suche gerade nicht möglich. Versuch es gleich noch einmal.',
   },
+  profile: {
+    rig: 'Rig',
+    wishlist: 'Sucht',
+    preferences: 'Saiten und Plektren',
+    bands: 'Bands',
+    links: 'Links',
+    emptyRig: 'Hier steht noch kein Equipment.',
+    ownProfile: 'Das bist du.',
+    editCta: 'Profil bearbeiten',
+    notFound: 'Dieses Profil gibt es nicht.',
+    // Eigener Text statt eines stillen leeren Abschnitts - ein Fehlschlag
+    // beim Laden von Profil, Rig, Praeferenzen oder Wunschliste soll nicht
+    // wie ein legitim leerer Bereich aussehen.
+    loadError: 'Das konnte gerade nicht geladen werden. Versuch es noch einmal.',
+  },
+  settings: {
+    title: 'Einstellungen',
+    displayName: 'Anzeigename',
+    displayNameHint: 'Das Einzige, was wir brauchen.',
+    realName: 'Echter Name',
+    bio: 'Über dich',
+    bands: 'Bands, kommagetrennt',
+    links: 'Links, einer pro Zeile',
+    avatar: 'Foto',
+    save: 'Speichern',
+    saved: 'Gespeichert.',
+    optionalHint: 'Alles außer dem Anzeigenamen ist freiwillig. Ort fragen wir bewusst nicht ab.',
+    loadError: 'Dein Profil konnte gerade nicht geladen werden. Versuch es noch einmal.',
+    saveError: 'Das Speichern hat nicht geklappt. Versuch es noch einmal.',
+    // {value} statt eines generischen Textes - wer falsch abgetippt hat,
+    // soll sofort sehen, welche Zeile gemeint ist.
+    linkInvalid: 'Das ist keine gültige Adresse und wird nicht gespeichert: {value}',
+    linksTooMany: 'Nicht mehr als 20 Links auf einmal — bitte die Liste kürzen.',
+    avatarError: 'Das Hochladen hat nicht geklappt. Versuch es noch einmal.',
+  },
 } as const
