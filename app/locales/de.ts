@@ -148,5 +148,6 @@ export const de = {
     peopleHeading: 'Leute',
     peopleLoginHint: 'Melde dich an, um auch Leute zu finden.',
     noResults: 'Nichts gefunden.',
+    searchError: 'Suche gerade nicht möglich. Versuch es gleich noch einmal.',
   },
 } as const

@@ -70,12 +70,15 @@ export function stubUseAsyncData(): void {
 
 /**
  * Bildet nach, wie sich Nuxts echtes useFetch() von aussen verhaelt:
- * `await useFetch(url)` liefert `{ data }` mit dem schon aufgeloesten
+ * `await useFetch(url)` liefert `{ data, error }` mit dem schon aufgeloesten
  * Ergebnis als Ref. Anders als useAsyncData nimmt useFetch keinen Handler
  * entgegen, sondern eine URL - fuer eine Seite wie index.vue, die genau
  * einen Endpunkt ohne weitere Optionen laedt, reicht es, das uebergebene
- * Ergebnis direkt zurueckzugeben.
+ * Ergebnis direkt zurueckzugeben. `error` ist standardmaessig `null` (der
+ * Erfolgsfall) - search.vue liest es beim ersten Laden, um einen
+ * Netzwerkfehler von einer echten Null-Treffer-Antwort zu unterscheiden
+ * (siehe Fix-Runde 1 in task-16-report.md).
  */
-export function stubUseFetch(response: unknown): void {
-  vi.stubGlobal('useFetch', async () => ({ data: ref(response) }))
+export function stubUseFetch(response: unknown, error: unknown = null): void {
+  vi.stubGlobal('useFetch', async () => ({ data: ref(response), error: ref(error) }))
 }
