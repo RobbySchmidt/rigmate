@@ -3,7 +3,7 @@ definePageMeta({ middleware: 'auth' })
 
 const t = useText()
 const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+const userId = useUserId()
 const added = ref<string[]>([])
 const addError = ref('')
 
@@ -11,7 +11,7 @@ async function add(result: any) {
   addError.value = ''
   const { error } = await supabase
     .from('gear_items')
-    .insert({ owner_id: user.value!.id, catalog_item_id: result.id })
+    .insert({ owner_id: userId.value!, catalog_item_id: result.id })
   if (error) {
     // Wie auf /rig filtert der Picker hier keine Kategorie heraus - deshalb
     // kann Verbrauchsmaterial ankommen, das der Trigger

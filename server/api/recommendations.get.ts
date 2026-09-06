@@ -1,5 +1,6 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { RarityBase } from '#shared/utils/rarityBase'
+import { normalizeUserId } from '../utils/authUser'
 import { rarityWeight } from '../utils/rarity'
 import {
   comparePair,
@@ -41,42 +42,36 @@ interface EntryRow {
  * Anfrage kennt. Ein Aufrufer, der stattdessen ein Bearer-Token mitschickt
  * (dieser Test hier, oder ein zukuenftiger Nicht-Browser-Client), hat kein
  * Cookie zu bieten - getUser(jwt) prueft ein explizit uebergebenes Token
- * unabhaengig von Cookies und deckt genau diesen Fall ab.
+ * unabhaengig von Cookies und deckt genau diesen Fall ab. Diese Route ist
+ * bislang die einzige mit einem echten HTTP-Test unter Bearer-Auth, deshalb
+ * bleibt der Bearer-Zweig hier lokal statt im gemeinsamen Server-Helper
+ * server/utils/authUser.ts.
  *
- * Zweite, unabhaengige Falle: serverSupabaseUser() liefert in dieser Version
- * von @nuxtjs/supabase nicht mehr ein User-Objekt, sondern das dekodierte
- * JWT (getClaims().claims) - die Nutzer-Id steckt dort unter "sub", nicht
- * unter "id" (empirisch geprueft: claims.id ist undefined, claims.sub die
- * echte UUID). Ohne diese Normalisierung waere user.id im Cookie-Pfad immer
- * undefined, rigs.get(undefined) faende nie das eigene Rig, und JEDE
- * angemeldete Person saehe faelschlich den Ersatzmodus - ein Fehler, den die
- * Tests hier nicht faengen, weil sie ausschliesslich per Bearer-Token
- * anfragen. Der Bearer-Pfad liefert dagegen ein echtes User-Objekt mit
- * "id" direkt von auth.getUser().
+ * Die Id-Normalisierung selbst (sub vs. id - siehe authUser.ts fuer die
+ * ausfuehrliche Begruendung) kommt aus genau diesem einen gemeinsamen
+ * Helfer, damit es dafuer nur eine Regel im Projekt gibt, nicht zwei.
  */
-async function resolveUser(
+async function resolveUserId(
   event: Parameters<typeof serverSupabaseUser>[0],
   admin: ReturnType<typeof serverSupabaseServiceRole>,
-): Promise<{ id: string } | null> {
+): Promise<string | null> {
   const authHeader = getHeader(event, 'authorization')
   const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]
   if (bearerToken) {
     const { data, error } = await admin.auth.getUser(bearerToken)
     if (error || !data.user) return null
-    return { id: data.user.id }
+    return normalizeUserId(data.user)
   }
   const claims = await serverSupabaseUser(event)
-  if (!claims) return null
-  const id = (claims as { id?: string; sub?: string }).id ?? (claims as { id?: string; sub?: string }).sub
-  return id ? { id } : null
+  return normalizeUserId(claims as { id?: string; sub?: string } | null)
 }
 
 export default defineEventHandler(async (event) => {
   // Aggregation ueber alle Nutzer - das rechnet der Browser nicht.
   const admin = serverSupabaseServiceRole(event)
 
-  const user = await resolveUser(event, admin)
-  if (!user) throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
+  const userId = await resolveUserId(event, admin)
+  if (!userId) throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
 
   const limit = Math.min(50, Math.max(1, Number(getQuery(event).limit) || 12))
 
@@ -160,13 +155,13 @@ export default defineEventHandler(async (event) => {
     rigs.set(row.user_id, rig)
   }
 
-  const me = rigs.get(user.id) ?? { userId: user.id, owned: [], wished: [] }
+  const me = rigs.get(userId) ?? { userId, owned: [], wished: [] }
   const hasRig = me.owned.length > 0 || me.wished.length > 0
 
   const scored: { userId: string; score: number; matchCount: number; reason: SuggestionReason | null }[] = []
   if (hasRig) {
     for (const [otherId, otherRig] of rigs) {
-      if (otherId === user.id) continue
+      if (otherId === userId) continue
       const { score, matches } = comparePair(me, otherRig, rarityOf)
       if (score <= 0) continue
       const top = matches[0]!
@@ -195,7 +190,7 @@ export default defineEventHandler(async (event) => {
     const { data: others, error: othersError } = await admin
       .from('profiles')
       .select('id')
-      .neq('id', user.id)
+      .neq('id', userId)
       .limit(limit * 3)
     if (othersError) {
       throw createError({ statusCode: 502, statusMessage: `Profile nicht ladbar: ${othersError.message}` })

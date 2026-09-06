@@ -3,7 +3,7 @@ definePageMeta({ middleware: 'auth' })
 
 const t = useText()
 const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+const userId = useUserId()
 
 const pendingItem = ref<any | null>(null)
 const gearError = ref('')
@@ -14,7 +14,7 @@ const { data: gear, refresh: refreshGear } = await useAsyncData('rig-gear', asyn
   const { data } = await supabase
     .from('gear_items')
     .select('id, year, finish, installed_in_id, catalog_items ( id, name, category_id, brands ( name ) )')
-    .eq('owner_id', user.value!.id)
+    .eq('owner_id', userId.value!)
     .order('created_at')
   return data ?? []
 })
@@ -23,7 +23,7 @@ const { data: preferences, refresh: refreshPreferences } = await useAsyncData('r
   const { data } = await supabase
     .from('preferences')
     .select('id, catalog_items ( id, name, brands ( name ) )')
-    .eq('user_id', user.value!.id)
+    .eq('user_id', userId.value!)
   return data ?? []
 })
 
@@ -31,7 +31,7 @@ const { data: wishlist, refresh: refreshWishlist } = await useAsyncData('rig-wis
   const { data } = await supabase
     .from('wishlist_items')
     .select('id, note, catalog_items ( id, name, brands ( name ) )')
-    .eq('user_id', user.value!.id)
+    .eq('user_id', userId.value!)
   return data ?? []
 })
 
@@ -47,7 +47,7 @@ const ownedGear = computed(() =>
 
 async function addPreference(result: any) {
   preferencesError.value = ''
-  const { error } = await supabase.from('preferences').insert({ user_id: user.value!.id, catalog_item_id: result.id })
+  const { error } = await supabase.from('preferences').insert({ user_id: userId.value!, catalog_item_id: result.id })
   if (error) {
     // Der Picker filtert hier zwar schon auf Saiten/Plektren, aber die
     // Datenbank bleibt die letzte Instanz - ein generischer Fehlschlag statt
@@ -60,7 +60,7 @@ async function addPreference(result: any) {
 
 async function addWish(result: any) {
   wishlistError.value = ''
-  const { error } = await supabase.from('wishlist_items').insert({ user_id: user.value!.id, catalog_item_id: result.id })
+  const { error } = await supabase.from('wishlist_items').insert({ user_id: userId.value!, catalog_item_id: result.id })
   if (error) {
     wishlistError.value = t.rig.errorGeneric
     return
@@ -71,7 +71,7 @@ async function addWish(result: any) {
 async function saveGear(details: any) {
   gearError.value = ''
   const { error } = await supabase.from('gear_items').insert({
-    owner_id: user.value!.id,
+    owner_id: userId.value!,
     catalog_item_id: pendingItem.value.id,
     year: details.year,
     finish: details.finish,

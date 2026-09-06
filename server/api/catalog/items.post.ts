@@ -1,6 +1,7 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient } from '#supabase/server'
 import { normalize } from '../../utils/normalize'
 import { invalidateCatalogSnapshot } from '../../utils/catalogSnapshot'
+import { requireUserId } from '../../utils/authUser'
 import { nameContainsYear } from '#shared/utils/modelYearRule'
 
 interface Body {
@@ -11,8 +12,7 @@ interface Body {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
+  const userId = await requireUserId(event)
 
   const body = await readBody<Body>(event)
   const brand = body.brand?.trim()
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
       category_id: categoryId,
       name,
       parent_id: body.parentId ?? null,
-      created_by: user.id,
+      created_by: userId,
       is_verified: false,
     })
     .select('id')

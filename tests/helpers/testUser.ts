@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import { adminClient } from './supabase'
 
 const TEST_EMAIL_PREFIX = 'rigmate-test-'
@@ -33,6 +34,39 @@ export async function createTestUser(displayName = 'Testnutzer'): Promise<TestUs
   if (signInError) throw new Error(`Testnutzer anmelden: ${signInError.message}`)
 
   return { id: data.user!.id, email, client }
+}
+
+/**
+ * Meldet sich wie ein echter Browser an — über @supabase/ssr's
+ * createBrowserClient() mit einem eigenen In-Memory-Cookie-Jar statt per
+ * Bearer-Token. Das ist der Pfad, den server/utils/authUser.ts (und davor
+ * server/api/recommendations.get.ts) tatsächlich bedient: serverSupabaseUser()
+ * liest ausschließlich Cookies. Ein Test, der stattdessen wie `client` oben
+ * einen Bearer-Header schickt, übt diesen Pfad nie aus — und genau das war
+ * die Lücke, durch die acht Schreibstellen im Projekt unbemerkt blieben
+ * (`user.value!.id` / `user.id` war project-weit `undefined`, weil
+ * @nuxtjs/supabase serverseitig UND clientseitig das dekodierte JWT liefert,
+ * dessen Nutzer-Id unter `sub` steckt, nicht unter `id`; siehe
+ * `.superpowers/sdd/2026-09-06-rigmate-stufe-1/task-14-report.md`,
+ * Fix-Runde 1, und `server/utils/authUser.ts` für die Details).
+ */
+export async function cookieHeaderFor(email: string): Promise<string> {
+  const jar = new Map<string, string>()
+  const browserClient = createBrowserClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!, {
+    isSingleton: false,
+    cookies: {
+      getAll: () => Array.from(jar.entries()).map(([name, value]) => ({ name, value })),
+      setAll: (cookiesToSet: { name: string; value: string }[]) => {
+        for (const { name, value } of cookiesToSet) jar.set(name, value)
+      },
+    },
+  })
+  const { error } = await browserClient.auth.signInWithPassword({ email, password: TEST_PASSWORD })
+  if (error) throw new Error(`Cookie-Anmeldung: ${error.message}`)
+
+  return Array.from(jar.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join('; ')
 }
 
 /**

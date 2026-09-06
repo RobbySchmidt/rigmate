@@ -8,6 +8,7 @@ import { installNuxtAutoImports, stubDefinePageMeta } from '../helpers/nuxtAutoI
 import { createRequestGuard } from '../../app/utils/requestGuard'
 import { classifyGearWriteError } from '../../app/utils/gearWriteError'
 import { classifyCatalogCreateError } from '../../app/utils/catalogCreateError'
+import { useUserId } from '../../app/composables/useUserId'
 import { createSupabaseStub } from '../helpers/supabaseStub'
 import { de } from '../../app/locales/de'
 
@@ -47,7 +48,13 @@ function mountOnboarding(supabase: ReturnType<typeof createSupabaseStub>) {
   vi.stubGlobal('classifyGearWriteError', classifyGearWriteError)
   vi.stubGlobal('classifyCatalogCreateError', classifyCatalogCreateError)
   vi.stubGlobal('useSupabaseClient', () => supabase)
-  vi.stubGlobal('useSupabaseUser', () => vueRef({ id: 'test-user' }))
+  // Claims-Form wie das echte @nuxtjs/supabase-Modul sie liefert (sub, kein
+  // id - siehe app/composables/useUserId.ts) statt eines erfundenen
+  // User-Objekts. useUserId() ist die echte Implementierung, nur ihre
+  // Bausteine (useSupabaseUser, computed) sind gestubbt - der Test prueft
+  // damit tatsaechlich die reale Normalisierung statt sie zu umgehen.
+  vi.stubGlobal('useSupabaseUser', () => vueRef({ sub: 'test-user' }))
+  vi.stubGlobal('useUserId', useUserId)
 
   return mount(OnboardingPage, {
     global: { components: { CatalogPicker, NuxtLink: NuxtLinkStub } },
