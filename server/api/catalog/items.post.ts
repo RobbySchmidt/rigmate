@@ -1,6 +1,7 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import { normalize } from '../../utils/normalize'
 import { invalidateCatalogSnapshot } from '../../utils/catalogSnapshot'
+import { nameContainsYear } from '#shared/utils/modelYearRule'
 
 interface Body {
   brand?: string
@@ -21,8 +22,10 @@ export default defineEventHandler(async (event) => {
   if (!brand || !name || !categoryId) {
     throw createError({ statusCode: 400, statusMessage: 'brand, name und categoryId sind Pflicht' })
   }
-  // Regel aus Abschnitt 4.1: Baujahr gehört ins Exemplar, nie in den Katalog.
-  if (/\b(19|20)\d{2}\b/.test(name)) {
+  // Design spec section 4.1: a build year belongs on the individual gear
+  // item, never in the catalog name. See shared/utils/modelYearRule.ts for
+  // why this check lives there instead of a local copy.
+  if (nameContainsYear(name)) {
     throw createError({ statusCode: 400, statusMessage: 'Baujahr gehört nicht in den Modellnamen' })
   }
 
