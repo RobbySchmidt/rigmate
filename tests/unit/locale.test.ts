@@ -35,7 +35,21 @@ interface TemplateOffense {
 // angefasst - nur ein woertlicher Wert im Template ist ein Defekt.
 function collectTemplateOffenses(file: string): TemplateOffense[] {
   const source = readFileSync(file, 'utf8')
-  const { descriptor } = parseSFC(source, { filename: file })
+  const { descriptor, errors } = parseSFC(source, { filename: file })
+
+  // An unparseable template is not "no offences" - that is exactly the
+  // failure mode this guard exists to prevent. A broken <template> (e.g. a
+  // missing end tag) makes descriptor.template.content come back empty,
+  // which would otherwise let the file pass silently. Surface the parse
+  // errors as offences of their own instead.
+  if (errors.length > 0) {
+    return errors.map((error) => ({ file, text: `parse error: ${error.message}` }))
+  }
+
+  // Deliberate choice: a .vue file with no <template> block at all (e.g. a
+  // pure logic / renderless component) is legitimate and has nothing to
+  // check here - that is different from a template block that exists but
+  // failed to parse, which is handled above.
   if (!descriptor.template) return []
 
   const root = parseTemplate(descriptor.template.content, {})
