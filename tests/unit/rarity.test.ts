@@ -24,7 +24,12 @@ describe('measuredWeight', () => {
     expect(weights).toEqual([...weights].sort((a, b) => b - a))
   })
 
-  it('stürzt bei null Nutzern nicht ab', () => {
+  it('liefert bei null Nutzern bewusst 0 - keine Messung, kein Signal', () => {
+    // Fix Runde 1: vorher unspezifiziert ("stuerzt nicht ab", jeder endliche
+    // Wert waere durchgefallen) - jetzt eine gepinnte Entscheidung statt
+    // eines Zufallstreffers. 0/0 ist undefiniert; measuredWeight() traegt
+    // hier keine geliehene Konstante mehr, sondern explizit 0.
+    expect(measuredWeight(0, 0)).toBe(0)
     expect(Number.isFinite(measuredWeight(0, 0))).toBe(true)
   })
 })

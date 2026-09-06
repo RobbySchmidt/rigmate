@@ -66,17 +66,45 @@ describe('catalog_item_stats', () => {
     expect(Number(data!.wish_count)).toBeGreaterThanOrEqual(1)
   })
 
-  it('liefert auch für Einträge ohne Besitzer eine Zeile', async () => {
-    const { data: unused } = await admin
+  it('stimmt für einen Eintrag mit dem überein, was die Rohtabellen wirklich enthalten', async () => {
+    // Fix Runde 1: der alte Test hat "White Falcon" fest auf owner_count === 0
+    // verdrahtet - das bricht lautlos, sobald die naechste Aufgabe 20
+    // Demo-Nutzer mit echten Rigs seedet und zufaellig jemand eine White
+    // Falcon besitzt. Stattdessen rechnet dieser Test die Wahrheit live aus
+    // den drei Rohtabellen nach und vergleicht sie mit der View - eine
+    // Eigenschaft, die bei jedem Fuellstand der Datenbank gilt, nicht nur
+    // heute. Das deckt nebenbei weiterhin den eigentlichen Zweck des LEFT
+    // JOIN in der Migration ab: gaebe es fuer einen unbesessenen Eintrag gar
+    // keine Zeile (INNER statt LEFT JOIN), wuerde .single() unten mit einem
+    // "no rows"-Fehler fehlschlagen statt mit 0 zu vergleichen.
+    const { data: item } = await admin
       .from('catalog_items')
       .select('id')
       .eq('name', 'White Falcon')
       .single()
-    const { data } = await admin
+    const catalogItemId = item!.id
+
+    const [gear, prefs, wishes] = await Promise.all([
+      admin.from('gear_items').select('owner_id').eq('catalog_item_id', catalogItemId),
+      admin.from('preferences').select('user_id').eq('catalog_item_id', catalogItemId),
+      admin.from('wishlist_items').select('user_id').eq('catalog_item_id', catalogItemId),
+    ])
+
+    // Distinct ueber Nutzer, nicht Zeilenzahl - deckt sich so auch, falls ein
+    // Nutzer mehrfach dasselbe Katalog-Item besitzt oder darauf wartet.
+    const expectedOwners = new Set([
+      ...(gear.data ?? []).map((row: any) => row.owner_id),
+      ...(prefs.data ?? []).map((row: any) => row.user_id),
+    ])
+    const expectedWishes = new Set((wishes.data ?? []).map((row: any) => row.user_id))
+
+    const { data: stats } = await admin
       .from('catalog_item_stats')
-      .select('owner_count')
-      .eq('catalog_item_id', unused!.id)
+      .select('owner_count, wish_count')
+      .eq('catalog_item_id', catalogItemId)
       .single()
-    expect(Number(data!.owner_count)).toBe(0)
+
+    expect(Number(stats!.owner_count)).toBe(expectedOwners.size)
+    expect(Number(stats!.wish_count)).toBe(expectedWishes.size)
   })
 })

@@ -1,4 +1,4 @@
-export type RarityBase = 'mass' | 'common' | 'special' | 'rare'
+import type { RarityBase } from '#shared/utils/rarityBase'
 
 /**
  * Gepflegter Grundwert am Katalog-Eintrag. Bei wenigen Nutzern ist statistisch
@@ -21,12 +21,20 @@ export const MEASURED_CONFIDENCE_USERS = 200
 /**
  * Inverse Haeufigkeit: haben es 400 von 500, ist es als Signal wertlos;
  * haben es 3, ist es hochinteressant.
+ *
+ * Fix Runde 1: ohne Nutzer ist die Frequenz 0/0 undefiniert - keine
+ * Entscheidung "wie ein bestimmter Grundwert", sondern bewusst 0: keine
+ * Messung heisst kein gemessenes Signal. Der genaue Wert erreicht
+ * rarityWeight() ohnehin nie, weil dessen confidence bei totalUsers <= 0
+ * ebenfalls 0 ist - aber measuredWeight() ist eine eigene, exportierte
+ * Funktion und muss auch isoliert aufgerufen einen definierten, endlichen
+ * Wert liefern statt eine fremde Konstante zu leihen, die inhaltlich nichts
+ * mit "gemessen" zu tun hat.
  */
 export function measuredWeight(ownerCount: number, totalUsers: number): number {
-  if (totalUsers <= 0) return BASE_WEIGHTS.common
+  if (totalUsers <= 0) return 0
   const inverseFrequency = Math.log(1 + totalUsers / (1 + ownerCount))
   const maximum = Math.log(1 + totalUsers)
-  if (maximum <= 0) return BASE_WEIGHTS.common
   return (inverseFrequency / maximum) * MAX_WEIGHT
 }
 

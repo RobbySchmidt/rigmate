@@ -31,7 +31,12 @@
 // people together. Rarity is a property of the item, never of its brand:
 // "all Strymon is special" is a brand judgement, not a scarcity judgement.
 
-export type RarityBase = 'mass' | 'common' | 'special' | 'rare'
+// Re-Export statt eigener Definition: `scripts/` laeuft standalone ueber
+// tsx, ausserhalb der Nuxt-Build-Pipeline, deshalb ein relativer Pfad statt
+// des #shared-Alias. Einzige Quelle bleibt shared/utils/rarityBase.ts.
+// tests/db/catalogSeed.test.ts importiert RarityBase weiterhin von hier.
+import type { RarityBase } from '../../shared/utils/rarityBase'
+export type { RarityBase }
 
 export interface SeedVariant {
   name: string

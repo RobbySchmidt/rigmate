@@ -1,7 +1,7 @@
 import { levenshtein } from './levenshtein'
 import { meaningfulTokens, tokenize } from './normalize'
+import type { RarityBase } from '#shared/utils/rarityBase'
 
-export type RarityBase = 'mass' | 'common' | 'special' | 'rare'
 export type CatalogLevel = 'line' | 'variant'
 
 export interface CatalogEntry {

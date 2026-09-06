@@ -1,0 +1,14 @@
+-- Fix Runde 1 zu Task 12: das grant aus 20260906141706_stats.sql war an die
+-- falschen Rollen gerichtet. Gelesen werden beide Views ausschliesslich mit
+-- service_role (Tests hier, und die Server-Routen der naechsten Aufgaben) -
+-- weder anon noch authenticated brauchen direkten Zugriff.
+--
+-- Der eigentliche Grund, das zu entfernen: mit security_invoker liefert
+-- catalog_item_stats fuer anon keine leere Zeilenmenge, sondern fuer JEDEN
+-- Katalog-Eintrag eine Zeile mit owner_count = 0 / wish_count = 0 - der LEFT
+-- JOIN auf die (fuer anon per RLS unsichtbare) user_catalog_entries-Seite
+-- zieht einfach keine Treffer. Die oeffentliche Gear-Seite zeigt "Spieler: N"
+-- direkt aus dieser Zahl; ein Aufruf mit dem anon-Key saehe fuer JEDES Item
+-- 0 und nichts wuerde offensichtlich kaputt aussehen. Ein Berechtigungsfehler
+-- ist hier der ehrlichere Fehlschlag als eine plausible falsche Null.
+revoke select on user_catalog_entries, catalog_item_stats from anon, authenticated;
