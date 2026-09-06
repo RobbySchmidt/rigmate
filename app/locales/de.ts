@@ -90,4 +90,17 @@ export const de = {
     installedIn: 'Verbaut in',
     installedInNone: 'Nicht verbaut',
   },
+  onboarding: {
+    title: 'Was spielst du?',
+    intro:
+      'Trag ein, was du hast. Ein Modellname reicht — „Fender Stratocaster" ist ein vollständiger Eintrag. Genauer geht immer, muss aber nicht.',
+    addedOne: 'Ein Gerät eingetragen.',
+    addedMany: 'Geräte eingetragen: {count}',
+    keepGoing: 'Noch eins?',
+    done: 'Fertig, zeig mir Leute',
+    skip: 'Später',
+    errorGeneric: 'Das hat nicht geklappt. Versuch es noch einmal.',
+    errorConsumableAsGear:
+      'Das ist Verbrauchsmaterial. Saiten und Plektren trägst du später in deinem Rig ein.',
+  },
 } as const
