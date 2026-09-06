@@ -54,11 +54,22 @@ export function buildSearchable(entries: CatalogEntry[]): SearchableEntry[] {
 
 function tokenScore(query: string, target: string): number {
   if (query === target) return 1
-  if (target.startsWith(query)) return 0.85
+  // Unter drei Buchstaben ist ein Präfix kein Signal mehr: "p" ist Präfix von
+  // fast jedem Wort, das mit p beginnt (auch "professional"). Kürzere
+  // Suchwörter sind ohnehin Synonyme und treffen exakt.
+  if (query.length >= 3 && target.startsWith(query)) return 0.85
   // Kurze Wörter nicht unscharf vergleichen: bei drei Buchstaben ist jedes
   // andere Wort einen Schritt entfernt.
   const tolerance = query.length >= 5 ? 2 : query.length >= 4 ? 1 : 0
-  if (tolerance > 0 && levenshtein(query, target) <= tolerance) return 0.6
+  // Zusätzlich die Längendifferenz begrenzen: sonst frisst sich "strat" per
+  // Löschungen in das kürzere, unverwandte "rat" hinein.
+  if (
+    tolerance > 0 &&
+    Math.abs(query.length - target.length) <= 1 &&
+    levenshtein(query, target) <= tolerance
+  ) {
+    return 0.6
+  }
   return 0
 }
 
