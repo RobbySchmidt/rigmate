@@ -56,6 +56,7 @@ describe('gear_items', () => {
       .from('gear_items')
       .insert({ owner_id: alice.id, catalog_item_id: stratId, year: 1234 })
     expect(error).not.toBeNull()
+    expect(error!.code).toBe('23514') // check_violation
   })
 
   it('lehnt Verbrauchsmaterial als Exemplar ab', async () => {
@@ -72,6 +73,7 @@ describe('gear_items', () => {
       .from('gear_items')
       .insert({ owner_id: alice.id, catalog_item_id: stratId })
     expect(error).not.toBeNull()
+    expect(error!.code).toBe('42501') // RLS with-check violation
   })
 })
 
@@ -121,6 +123,102 @@ describe('installed_in', () => {
       .insert({ owner_id: alice.id, catalog_item_id: pickupId, installed_in_id: pickup!.id })
     expect(error).not.toBeNull()
     expect(error!.message).toMatch(/one level/i)
+  })
+
+  // Fix round 1: die urspruengliche Pruefung schaute nur auf das ZIEL der
+  // geschriebenen Zeile, nie darauf, ob schon etwas auf die geschriebene
+  // Zeile zeigt. Ein UPDATE konnte so die Ein-Ebene-Regel unterlaufen.
+  it('lehnt es ab, ein Elternteil mit Kindern per UPDATE zu verschieben', async () => {
+    const { data: parent } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: stratId, finish: 'Update Parent' })
+      .select('id')
+      .single()
+    await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: pickupId, installed_in_id: parent!.id })
+    const { data: freeSlot } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: ac30Id })
+      .select('id')
+      .single()
+
+    const { error } = await alice.client
+      .from('gear_items')
+      .update({ installed_in_id: freeSlot!.id })
+      .eq('id', parent!.id)
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/one level/i)
+  })
+
+  it('erlaubt das nachträgliche Verbauen eines kinderlosen Exemplars per UPDATE', async () => {
+    const { data: guitar } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: stratId, finish: 'Update Childless Guitar' })
+      .select('id')
+      .single()
+    const { data: pickup } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: pickupId })
+      .select('id')
+      .single()
+
+    const { error } = await alice.client
+      .from('gear_items')
+      .update({ installed_in_id: guitar!.id })
+      .eq('id', pickup!.id)
+    expect(error).toBeNull()
+  })
+
+  it('lehnt eine Besitzeränderung an einem Elternteil mit Kindern ab', async () => {
+    const { data: parent } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: stratId, finish: 'Owner Change Parent' })
+      .select('id')
+      .single()
+    await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: pickupId, installed_in_id: parent!.id })
+
+    // RLS blockiert eine Besitzeraenderung fuer normale Nutzer bereits -
+    // hier geht es darum, dass der Trigger selbst die Regel durchsetzt,
+    // nicht nur die Policy. Deshalb ueber den Admin-Client.
+    const { error } = await admin
+      .from('gear_items')
+      .update({ owner_id: bob.id })
+      .eq('id', parent!.id)
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/same owner/i)
+  })
+
+  it('erlaubt das erneute Verbauen eines Elternteils, nachdem das Kind entfernt wurde', async () => {
+    const { data: parent } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: stratId, finish: 'Detach Then Reinstall' })
+      .select('id')
+      .single()
+    const { data: child } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: pickupId, installed_in_id: parent!.id })
+      .select('id')
+      .single()
+    const { data: freeSlot } = await alice.client
+      .from('gear_items')
+      .insert({ owner_id: alice.id, catalog_item_id: ac30Id })
+      .select('id')
+      .single()
+
+    const { error: detachError } = await alice.client
+      .from('gear_items')
+      .update({ installed_in_id: null })
+      .eq('id', child!.id)
+    expect(detachError).toBeNull()
+
+    const { error } = await alice.client
+      .from('gear_items')
+      .update({ installed_in_id: freeSlot!.id })
+      .eq('id', parent!.id)
+    expect(error).toBeNull()
   })
 })
 
