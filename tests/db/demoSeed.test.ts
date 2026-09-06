@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { CATALOG } from '../../scripts/data/catalog'
 import { DEMO_USERS } from '../../scripts/data/demoUsers'
 import { adminClient } from '../helpers/supabase'
@@ -47,18 +47,62 @@ describe('Demo-Daten', () => {
 })
 
 describe('Demo-Nutzer nach dem Seed', () => {
-  it('steht vollständig in der Datenbank', async () => {
+  // Diese drei Tests legen ihre Daten bewusst NICHT selbst an, anders als jeder
+  // andere Datenbank-Test im Projekt. Die Demo-Nutzer sind kein Fixture, sondern
+  // das Ergebnis dieser Aufgabe, und sie liegen auf der geteilten, gehosteten
+  // Instanz - ein lokales Supabase ueber Docker ist laut Abschnitt 12 der Spec
+  // bewusst ausgeschlossen. Wuerde der Test sie selbst anlegen und wieder
+  // loeschen, pruefte er seine eigene Einbildung statt den Bestand, den die
+  // Anwendung tatsaechlich vorfuehrt.
+  //
+  // Der Preis dafuer: wer das Repository frisch klont und `yarn test` laufen
+  // laesst, sieht sie fehlschlagen. Ein nacktes "expected 20 to be 0" schickt
+  // denjenigen auf die Suche nach einer Regression, die es nicht gibt - deshalb
+  // die Vorabpruefung unten, die stattdessen den fehlenden Schritt benennt.
+  // Bewusst kein `skip`: ein stillschweigend uebersprungener Test ist schlimmer
+  // als ein fehlschlagender, weil er auch dann schweigt, wenn wirklich etwas
+  // kaputt ist.
+  let seededDisplayNames: string[] = []
+  let probeError: string | null = null
+
+  beforeAll(async () => {
     const { data, error } = await admin
       .from('profiles')
       .select('display_name')
       .in('display_name', DEMO_USERS.map((u) => u.displayName))
-    // Ein verschlucktes { error } saehe hier wie "keine Demo-Nutzer" aus -
-    // der haeufigste Fehler in diesem Projekt.
-    expect(error).toBeNull()
-    expect(data!.length).toBe(DEMO_USERS.length)
+    if (error) probeError = error.message
+    seededDisplayNames = (data ?? []).map((row) => row.display_name as string)
+  })
+
+  function requireSeededDemoUsers(): void {
+    // Ein Datenbankfehler darf nicht als "Seed fehlt" durchgehen - das waere
+    // dieselbe irrefuehrende Diagnose in die andere Richtung.
+    if (probeError !== null) {
+      throw new Error(
+        `Die Demo-Nutzer konnten nicht geprüft werden, die Datenbank hat den Zugriff ` +
+          `abgelehnt: ${probeError}. Das ist kein fehlender Seed — erst SUPABASE_URL und ` +
+          `SUPABASE_SERVICE_ROLE_KEY in .env prüfen.`,
+      )
+    }
+    if (seededDisplayNames.length > 0) return
+    throw new Error(
+      'In der Datenbank steht kein einziger Demo-Nutzer. Das ist keine Regression, ' +
+        'sondern ein fehlender Schritt: Die drei Tests in "Demo-Nutzer nach dem Seed" ' +
+        'prüfen den Bestand, den `yarn seed:users` anlegt, und legen ihn bewusst nicht ' +
+        'selbst an. Einmal `yarn seed:users` ausführen, danach laufen sie. ' +
+        'Erwartet werden ' +
+        `${DEMO_USERS.length} Profile aus scripts/data/demoUsers.ts, gefunden wurden 0.`,
+    )
+  }
+
+  it('steht vollständig in der Datenbank', () => {
+    requireSeededDemoUsers()
+    // Die eigentliche Prüfung bleibt scharf: nicht "irgendwelche", sondern alle.
+    expect(seededDisplayNames.length).toBe(DEMO_USERS.length)
   })
 
   it('hat bestätigte E-Mail-Adressen', async () => {
+    requireSeededDemoUsers()
     // Die Mail-Bestaetigung bleibt projektweit Pflicht; Demo-Nutzer entstehen
     // deshalb ueber die Admin-API mit email_confirm.
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
@@ -69,6 +113,10 @@ describe('Demo-Nutzer nach dem Seed', () => {
   })
 
   it('hat jedem Demo-Nutzer Equipment gegeben', async () => {
+    // Ohne diese Vorabpruefung waere der Test der harmloseste der drei und
+    // zugleich der gefaehrlichste: bei leerer Datenbank vergleicht er 0 mit 0
+    // und geht gruen durch.
+    requireSeededDemoUsers()
     const { data: profiles, error: profilesError } = await admin
       .from('profiles')
       .select('id')

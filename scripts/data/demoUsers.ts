@@ -89,7 +89,13 @@ export const DEMO_USERS: DemoUser[] = [
       { item: 'Precision Bass' },
       { item: 'Big Muff Pi' },
     ],
-    preferences: ['Jazz Swing'],
+    // Fix Runde 1: hier stand "Jazz Swing" -- die Thomastik-Infeld-Flatwounds
+    // sind ein GITARREN-Satz, und Tamara ist Bassistin. Die Kategorie
+    // `strings` trennt Gitarre und Bass nicht, es haette also nichts
+    // dagegengehalten; falsch ist es trotzdem, und diese Daten werden
+    // Gitarristen gezeigt. "Swing Bass 66" ist der einzige eindeutige
+    // Bass-Satz im Katalog (siehe Bericht zu Task 18, Fix Runde 1).
+    preferences: ['Swing Bass 66'],
     wishlist: ['4003', 'Thunderbird'],
   },
   {
