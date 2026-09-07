@@ -139,6 +139,14 @@ Die Schwester davon: **Tests, die aus dem falschen Grund grün sind.** Ebenfalls
 
 ### Zuerst: der Profilumbau auf `feature/profil-umbau`
 
+> **Wiedereinstieg (Stand 7. September 2026).** Der Branch ist fertig umgesetzt und **nicht gemergt** — bewusst, weil der visuelle Durchgang noch aussteht. In dieser Reihenfolge weitermachen:
+>
+> 1. `yarn dev`, dann die sieben umgestellten Seiten plus `/gear/<slug>` und `/rig` **je einmal hell und einmal dunkel** ansehen. Dunkel erreichst du über die System-Einstellung oder mit `data-theme="dark"` am `<html>` in den DevTools.
+> 2. Die Kontrastfrage zu `--rm-muted` entscheiden (siehe unten). Sie trifft die ganze App, also besser vor dem Merge.
+> 3. Danach mergen oder die drei übrigen Punkte unten noch mitnehmen.
+>
+> **Achtung beim Testen:** `yarn test:api` zeigt fest auf Port 3000. Ist der belegt, weicht Nuxt auf 3001 aus, und die Tests befragen still, was auf 3000 antwortet. Vorher mit einem HTTP-Aufruf belegen, wer da ist — Einzelheiten unter „Fallstricke".
+
 **Alle 20 Tasks sind durch.** `app/` enthält keine fest verdrahtete Palettenfarbe mehr — geprüft über einen Scan aller Tailwind-Farbfamilien, nicht über die vier Muster aus dem Plan (die ließen `amber-*`, `green-700` und `neutral-400` durch). Der Dunkelmodus ist damit durchgängig statt halb, der Branch ist auslieferbar.
 
 Offen ist noch **das Ansehen mit eigenen Augen.** Messbar geprüft sind: alle Utilities existieren im generierten CSS, die beiden Dunkel-Blöcke sind zeichengleich, jedes benutzte Farbpaar hat einen Kontrastwert. Nicht geprüft ist, ob es gut aussieht — dafür braucht es einen Menschen vor `yarn dev`, hell und dunkel.
