@@ -153,6 +153,16 @@ darunter Baujahr und Finish.
 Die Knoten benutzen dieselbe Sprache wie die Punkte im Equipment-Reiter: gefüllt bei `rare`, hohl bei
 `special`. Zwischen den Ansichten muss niemand umlernen.
 
+**Beide Darstellungen sind verkabelt.** Beim Ansehen trägt ein durchgehender senkrechter Strang die
+Knoten. Im Bearbeitungsmodus, wo die Stationen zu Kästen werden, sitzt zwischen je zwei Kästen ein
+kurzes **Patchkabel** — eine Kurve, die leicht nach rechts durchhängt, wie eines zwischen zwei Pedalen.
+Zwei Regeln dazu:
+
+- **Nur zwischen zwei Stationen, nie hinter der letzten.** Ein Kabel ins Nichts liest sich als fehlendes
+  Glied.
+- **Während des Ziehens treten die Kabel zurück** (etwa 20 % Deckkraft). Sonst konkurrieren sie mit der
+  Einfügemarke an genau der Stelle, auf die man schaut — und in dem Moment muss die Marke führen.
+
 **Die Stationen tragen Kategorien, keine Rollen.** „Gitarre" und „Pedal" kennt die Datenbank; ob ein Pedal
 Drive oder Modulation ist, weiß sie nicht. Rollen wären ein neues Pflegefeld ohne erkennbaren Gegenwert.
 
@@ -429,6 +439,7 @@ getroffen wurde.
 | Eine `chain_position`-Spalte statt Kanten | Eine Signalkette ist linear. Eine Ordnung genügt. |
 | Bearbeiten tauscht die rechte Spalte | Kein eigener Screen, kein Overlay. Die Fläche ist da, und Kette und Geräteliste gehören beim Bauen nebeneinander. *(Robbys Vorschlag.)* |
 | Der Reiter allein tauscht sie nicht | Ansehen soll nicht den Feed kosten. Nur bei leerer Kette entfällt der Umweg, weil es nichts anzusehen gibt. |
+| Patchkabel zwischen den Kästen | *(Robbys Ergänzung.)* Die Ansicht hatte einen durchgehenden Strang, dem Bearbeitungsmodus fehlte das Bild. Ein durchhängendes Kabel ist zudem das Ding, das die Kette in der echten Welt ausmacht. |
 | `vuedraggable` fürs Ziehen | *(Robbys Entscheidung.)* SortableJS beherrscht Touch, was HTML5-Drag-and-Drop nicht kann. |
 | Pfeile bleiben trotz Bibliothek | Auch SortableJS ist per Tastatur nicht bedienbar. „Anhängen" und die Pfeile sind Grundbedienung, kein Zusatz. |
 | „✕" nimmt heraus, löscht nicht | Ein Löschen an dieser Stelle wäre ein teurer Irrtum. |
