@@ -20,12 +20,13 @@ const pipClass = computed(() => {
 
 // Kein vertikaler Versatz im Template, und das mit Absicht: die Komponente
 // beschreibt nur, WAS sie ist (ein Punkt in einer bestimmten Farbe), nicht
-// WO sie sitzt. Der noetige Versatz haengt am Kontext - in einer Liste an
-// "items-baseline" braucht der Punkt einen anderen als in einer Legende an
-// "items-center", wo die Ausrichtung schon der Flex-Container erledigt.
-// Stand hier ein festes "mt-[.45rem]", sass der Punkt in der Legende zu
-// tief und trieb ueber seine Margin-Box zusaetzlich die Zeilenhoehe hoch.
-// Wer ausrichten will, gibt den Versatz an der Aufrufstelle mit -
+// WO sie sitzt. Ausgerichtet wird er vom Flex-Container, in dem er steht -
+// "items-baseline" in einer Liste, "items-center" in einer Legende. Hier
+// stand einmal ein festes "mt-[.45rem]": in der Legende sass der Punkt
+// dadurch 3,59px zu tief und blies die Zeile von 13,00px auf 17,19px auf,
+// in der Liste verschob es ihn um 0,00px und kostete nur Zeilenhoehe (im
+// Browser nachgemessen). Es half also nirgends.
+// Wer trotzdem ausrichten muss, gibt den Versatz an der Aufrufstelle mit:
 // ein dort gesetztes class-Attribut reicht Vue ans Wurzelelement durch und
 // ERGAENZT die eigenen Klassen, statt sie zu ersetzen (abgesichert in
 // tests/component/rarityPip.test.ts). Achtung: das gilt nur, solange das

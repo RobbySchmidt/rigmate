@@ -59,7 +59,14 @@ function nameClass(rarity: RarityBase | null): string {
       </div>
       <ul class="flex list-none flex-col p-0">
         <li v-for="entry in group.entries" :key="entry.id" class="flex items-baseline gap-[.45rem] py-[.28rem]">
-          <RarityPip :rarity="entry.rarity" class="mt-[.45rem]" />
+          <!--
+            Bewusst ohne "mt-*": das "items-baseline" der Zeile richtet einen
+            textlosen Kasten an seiner unteren Margin-Kante aus, ein
+            margin-top verschiebt den Punkt daran um exakt 0,00px und treibt
+            nur die Zeilenhoehe um 2,19px hoch (im Browser nachgemessen) -
+            bei 40 Geraeten knapp 90px umsonst.
+          -->
+          <RarityPip :rarity="entry.rarity" />
           <NuxtLink
             :to="`/gear/${entry.slug}`"
             class="border-b border-transparent text-[.9rem] leading-snug no-underline hover:border-current hover:text-accent"
