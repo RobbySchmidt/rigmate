@@ -167,14 +167,14 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
         @save="saveGear"
         @cancel="pendingItem = null"
       />
-      <p v-if="gearError" class="text-sm text-red-600">{{ gearError }}</p>
-      <p v-if="gearLoadError" class="text-sm text-red-600">{{ t.rig.loadError }}</p>
-      <p v-else-if="(gear ?? []).length === 0" class="text-neutral-500">{{ t.rig.empty }}</p>
-      <ul v-else class="divide-y rounded border">
+      <p v-if="gearError" class="text-sm text-danger">{{ gearError }}</p>
+      <p v-if="gearLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
+      <p v-else-if="(gear ?? []).length === 0" class="text-muted">{{ t.rig.empty }}</p>
+      <ul v-else class="divide-y divide-line-soft rounded border border-line">
         <li v-for="row in gear" :key="row.id" class="flex items-center gap-2 px-3 py-2">
           <span>{{ label(row) }}</span>
-          <span v-if="row.year" class="text-sm text-neutral-500">{{ row.year }}</span>
-          <span v-if="row.finish" class="text-sm text-neutral-500">{{ row.finish }}</span>
+          <span v-if="row.year" class="text-sm text-muted">{{ row.year }}</span>
+          <span v-if="row.finish" class="text-sm text-muted">{{ row.finish }}</span>
           <button type="button" class="ml-auto text-sm underline" @click="removeRow('gear_items', row.id)">
             {{ t.rig.remove }}
           </button>
@@ -186,10 +186,10 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       <h2 class="text-f-2xl font-semibold">{{ t.rig.preferences }}</h2>
       <CatalogPicker category-id="strings" :create-handler="createCatalogItem" @select="addPreference" />
       <CatalogPicker category-id="pick" :create-handler="createCatalogItem" @select="addPreference" />
-      <p v-if="preferencesError" class="text-sm text-red-600">{{ preferencesError }}</p>
-      <p v-if="preferencesLoadError" class="text-sm text-red-600">{{ t.rig.loadError }}</p>
-      <p v-else-if="(preferences ?? []).length === 0" class="text-neutral-500">{{ t.rig.emptyPreferences }}</p>
-      <ul v-else class="divide-y rounded border">
+      <p v-if="preferencesError" class="text-sm text-danger">{{ preferencesError }}</p>
+      <p v-if="preferencesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
+      <p v-else-if="(preferences ?? []).length === 0" class="text-muted">{{ t.rig.emptyPreferences }}</p>
+      <ul v-else class="divide-y divide-line-soft rounded border border-line">
         <li v-for="row in preferences" :key="row.id" class="flex items-center px-3 py-2">
           <span>{{ label(row) }}</span>
           <button type="button" class="ml-auto text-sm underline" @click="removeRow('preferences', row.id)">
@@ -202,10 +202,10 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
     <section class="flex flex-col gap-4">
       <h2 class="text-f-2xl font-semibold">{{ t.rig.wishlist }}</h2>
       <CatalogPicker :create-handler="createCatalogItem" @select="addWish" />
-      <p v-if="wishlistError" class="text-sm text-red-600">{{ wishlistError }}</p>
-      <p v-if="wishlistLoadError" class="text-sm text-red-600">{{ t.rig.loadError }}</p>
-      <p v-else-if="(wishlist ?? []).length === 0" class="text-neutral-500">{{ t.rig.emptyWishlist }}</p>
-      <ul v-else class="divide-y rounded border">
+      <p v-if="wishlistError" class="text-sm text-danger">{{ wishlistError }}</p>
+      <p v-if="wishlistLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
+      <p v-else-if="(wishlist ?? []).length === 0" class="text-muted">{{ t.rig.emptyWishlist }}</p>
+      <ul v-else class="divide-y divide-line-soft rounded border border-line">
         <li v-for="row in wishlist" :key="row.id" class="flex items-center px-3 py-2">
           <span>{{ label(row) }}</span>
           <button type="button" class="ml-auto text-sm underline" @click="removeRow('wishlist_items', row.id)">

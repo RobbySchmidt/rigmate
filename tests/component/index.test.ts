@@ -57,7 +57,7 @@ describe('index.vue - Ersatzmodus', () => {
     // Begruendungszeile.
     const card = wrapper.findComponent(PersonSuggestion)
     expect(card.props('reason')).toBeNull()
-    const badge = card.find('.text-neutral-400')
+    const badge = card.find('[data-fallback]')
     expect(badge.exists()).toBe(true)
     expect(badge.text()).toBe(de.suggestions.fallbackBadge)
   })

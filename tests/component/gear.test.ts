@@ -67,6 +67,32 @@ describe('gear/[slug].vue - abgemeldet', () => {
   })
 })
 
+describe('gear/[slug].vue - Seltenheit', () => {
+  // Die oeffentliche Gear-Seite ist neben dem Profil-Panel der einzige Ort,
+  // an dem Bernstein auftauchen darf. Beide Richtungen werden geprueft: dass
+  // es bei einer Rarissime kommt UND dass es bei Massenware ausbleibt. Ohne
+  // die zweite Haelfte wuerde ein 'text-rare' auf jedem Eintrag den Test
+  // bestehen lassen - und damit genau die Auszeichnung unlesbar machen,
+  // deretwegen die Farbe reserviert ist.
+  it('faerbt eine Rarissime in Bernstein', async () => {
+    const wrapper = await mountGearPage(fakeGearPageData({ item: { ...fakeGearPageData().item, rarityBase: 'rare' } }), null)
+
+    const badge = wrapper.find('[data-rarity]')
+    expect(badge.exists()).toBe(true)
+    expect(badge.text()).toBe(de.rarity.rare)
+    expect(badge.classes()).toContain('text-rare')
+  })
+
+  it('laesst Massenware ohne Bernstein', async () => {
+    const wrapper = await mountGearPage(fakeGearPageData(), null)
+
+    const badge = wrapper.find('[data-rarity]')
+    expect(badge.text()).toBe(de.rarity.mass)
+    expect(badge.classes()).not.toContain('text-rare')
+    expect(badge.classes()).not.toContain('text-special')
+  })
+})
+
 describe('gear/[slug].vue - angemeldet', () => {
   it('listet die Spieler beim Namen', async () => {
     const wrapper = await mountGearPage(

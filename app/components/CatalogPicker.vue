@@ -122,26 +122,26 @@ const categoryEntries = computed(() =>
       v-model="term"
       type="text"
       :placeholder="placeholder ?? t.picker.placeholder"
-      class="w-full rounded border px-3 py-2"
+      class="w-full rounded border border-line px-3 py-2"
     />
 
-    <ul v-if="results.length > 0" class="mt-1 divide-y rounded border bg-white">
+    <ul v-if="results.length > 0" class="mt-1 divide-y divide-line-soft rounded border border-line bg-surface">
       <li v-for="result in results" :key="result.id">
-        <button type="button" class="flex w-full items-baseline gap-2 px-3 py-2 text-left" @click="choose(result)">
+        <button type="button" class="flex w-full items-baseline gap-2 px-3 py-2 text-left hover:bg-surface-2 focus-visible:bg-surface-2" @click="choose(result)">
           <span class="font-medium">{{ result.brandName }} {{ result.name }}</span>
           <!-- Beide Katalogebenen nebeneinander: der Gelegenheitsnutzer
                klickt oben, der Kenner sieht daneben seine genaue
                Ausfuehrung. -->
-          <span class="text-xs text-neutral-500">
+          <span class="text-xs text-muted">
             {{ result.level === 'line' ? t.picker.levelLine : t.picker.levelVariant }}
           </span>
-          <span v-if="!result.isVerified" class="text-xs text-amber-600">{{ t.picker.unverified }}</span>
+          <span v-if="!result.isVerified" class="rounded border border-line px-1 text-xs text-muted">{{ t.picker.unverified }}</span>
         </button>
       </li>
     </ul>
 
-    <p v-else-if="searchError" class="mt-1 text-sm text-red-600">{{ t.picker.searchError }}</p>
-    <p v-else-if="term.trim() !== ''" class="mt-1 text-sm text-neutral-500">
+    <p v-else-if="searchError" class="mt-1 text-sm text-danger">{{ t.picker.searchError }}</p>
+    <p v-else-if="term.trim() !== ''" class="mt-1 text-sm text-muted">
       {{ t.picker.noResults }}
     </p>
 
@@ -155,23 +155,23 @@ const categoryEntries = computed(() =>
       {{ t.picker.createHint }}
     </button>
 
-    <form v-if="showCreate" class="mt-2 flex flex-col gap-2 rounded border p-3" @submit.prevent="submitCreate">
+    <form v-if="showCreate" class="mt-2 flex flex-col gap-2 rounded border border-line p-3" @submit.prevent="submitCreate">
       <label class="flex flex-col gap-1">
         <span class="text-xs">{{ t.picker.createBrand }}</span>
-        <input v-model="newBrand" type="text" required class="rounded border px-2 py-1" />
+        <input v-model="newBrand" type="text" required class="rounded border border-line px-2 py-1" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-xs">{{ t.picker.createName }}</span>
-        <input v-model="newName" type="text" required class="rounded border px-2 py-1" />
+        <input v-model="newName" type="text" required class="rounded border border-line px-2 py-1" />
       </label>
       <label v-if="!categoryId" class="flex flex-col gap-1">
         <span class="text-xs">{{ t.picker.createCategory }}</span>
-        <select v-model="newCategory" class="rounded border px-2 py-1">
+        <select v-model="newCategory" class="rounded border border-line px-2 py-1">
           <option v-for="entry in categoryEntries" :key="entry.id" :value="entry.id">{{ entry.label }}</option>
         </select>
       </label>
-      <p v-if="createError" class="text-sm text-red-600">{{ createError }}</p>
-      <button type="submit" :disabled="creating" class="rounded bg-neutral-900 px-3 py-1 text-white">
+      <p v-if="createError" class="text-sm text-danger">{{ createError }}</p>
+      <button type="submit" :disabled="creating" class="rounded bg-accent px-3 py-1 text-accent-ink">
         {{ t.picker.createSubmit }}
       </button>
     </form>
