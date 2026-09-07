@@ -1903,6 +1903,16 @@ git commit -m "test: Luecken schliessen, die der Spec-Review gefunden hat"
 - Create: `app/components/GearPanel.vue`
 - Create: `tests/component/gearPanel.test.ts`
 
+**Aus Task 11 — das Ziehen zwischen den Spalten funktioniert noch nicht.** `GearPool.vue` setzt
+`:group="{ name: 'chain', pull: true, put: true }"`, `SignalChainEditor.vue` setzt **gar keine `group`**.
+Ohne passende Gruppe auf beiden Seiten nimmt die Kette nichts an, was aus dem Pool kommt — und der Zug
+laeuft ins Leere, ohne Fehlermeldung. Der Panel-Task muss dem Editor dieselbe Gruppe geben.
+
+**Ebenfalls aus Task 11:** `SignalChainEditor.vue` rendert bei `stations: []` eine leere Liste — kein
+Rahmen, keine Hoehe, nichts zum Hineinziehen. Der Text `profile.chainEmptyDrop` liegt in `de.ts` bereit
+und wird bisher von niemandem benutzt. **Das Panel muss die Drop-Zone fuer die leere Kette stellen**,
+sonst kann man die erste Station gar nicht per Ziehen setzen (nur ueber „Anhaengen").
+
 **Aus Task 8:** `useChainOrder` liefert neben `status` auch `lastError` mit dem SQLSTATE-Code. Zwei davon
 sagen dem Nutzer etwas und verdienen einen eigenen Text in `app/locales/de.ts` (echte Umlaute, es ist eine
 `.ts`-Datei):
