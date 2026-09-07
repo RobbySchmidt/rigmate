@@ -10,10 +10,10 @@ async function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-neutral-50 text-neutral-900">
-    <header class="border-b border-neutral-200 bg-white">
+  <div class="min-h-screen bg-bg font-sans text-ink">
+    <header class="border-b border-line bg-surface">
       <nav class="mx-auto flex max-w-5xl items-center gap-f-6 px-f-6 py-4">
-        <NuxtLink to="/" class="text-f-xl font-semibold">{{ t.app.name }}</NuxtLink>
+        <NuxtLink to="/" class="text-f-xl font-display font-semibold">{{ t.app.name }}</NuxtLink>
         <NuxtLink to="/search" class="text-sm">{{ t.nav.search }}</NuxtLink>
         <template v-if="user">
           <NuxtLink to="/rig" class="text-sm">{{ t.nav.rig }}</NuxtLink>

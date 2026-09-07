@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+/* Farbwelt: Verstaerkerfrontplatte, Pedalgehaeuse, Werkstatt.
+   Zwei Akzente mit strikt getrennten Rollen - Petrol fuehrt durch die
+   Oberflaeche, Bernstein gehoert AUSSCHLIESSLICH der Seltenheit. Sie ist
+   bei Rigmate keine Verzierung, sondern die Mechanik, ueber die Menschen
+   einander finden. Wer Bernstein woanders benutzt, macht sie unlesbar. */
+:root {
+  --rm-bg: #e9e7e1;
+  --rm-surface: #faf9f6;
+  --rm-surface-2: #f1efe9;
+  --rm-ink: #191c1e;
+  --rm-muted: #6a7175;
+  --rm-line: #cfccc4;
+  --rm-line-soft: #dedbd3;
+  --rm-accent: #0d5a61;
+  --rm-accent-ink: #ffffff;
+  --rm-accent-wash: #dbe8e8;
+  --rm-rare: #a8631a;
+  --rm-rare-wash: #f4e6d3;
+  --rm-special: #8a6a34;
+  color-scheme: light;
+}
+
+/* Nur Ueberschreibungen. Jedes Token ist oben vollstaendig definiert - eine
+   Farbe, die es nur hier drin gaebe, faellt im un-gestempelten Zustand auf
+   keinen Wert zurueck. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rm-bg: #131617;
+    --rm-surface: #1d2123;
+    --rm-surface-2: #24292b;
+    --rm-ink: #e9e7e1;
+    --rm-muted: #929b9e;
+    --rm-line: #343b3d;
+    --rm-line-soft: #2a3032;
+    --rm-accent: #4aacb2;
+    --rm-accent-ink: #0b1416;
+    --rm-accent-wash: #1a3134;
+    --rm-rare: #dfa257;
+    --rm-rare-wash: #2e2313;
+    --rm-special: #b99a68;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --rm-bg: #131617;
+  --rm-surface: #1d2123;
+  --rm-surface-2: #24292b;
+  --rm-ink: #e9e7e1;
+  --rm-muted: #929b9e;
+  --rm-line: #343b3d;
+  --rm-line-soft: #2a3032;
+  --rm-accent: #4aacb2;
+  --rm-accent-ink: #0b1416;
+  --rm-accent-wash: #1a3134;
+  --rm-rare: #dfa257;
+  --rm-rare-wash: #2e2313;
+  --rm-special: #b99a68;
+  color-scheme: dark;
+}
+
 @theme inline {
   /* custom breakpoints */
   --breakpoint-3xl: 120rem;
@@ -37,4 +98,28 @@
   --spacing-f-72: clamp(7.5rem, 4.74rem + 13.82vw, 18rem);
   --spacing-f-80: clamp(8.5rem, 5.47rem + 15.13vw, 20rem);
   --spacing-f-96: clamp(10rem, 6.32rem + 18.42vw, 24rem);
+
+  /* Farben als Tailwind-Utilities: bg-surface, text-rare, border-line, ...
+     Die Werte zeigen auf die --rm-*-Variablen oben, damit der Theme-Wechsel
+     ueber sie laeuft und nicht ueber doppelte Utility-Definitionen. */
+  --color-bg: var(--rm-bg);
+  --color-surface: var(--rm-surface);
+  --color-surface-2: var(--rm-surface-2);
+  --color-ink: var(--rm-ink);
+  --color-muted: var(--rm-muted);
+  --color-line: var(--rm-line);
+  --color-line-soft: var(--rm-line-soft);
+  --color-accent: var(--rm-accent);
+  --color-accent-ink: var(--rm-accent-ink);
+  --color-accent-wash: var(--rm-accent-wash);
+  --color-rare: var(--rm-rare);
+  --color-rare-wash: var(--rm-rare-wash);
+  --color-special: var(--rm-special);
+
+  /* Display fuer Ueberschriften und Geraetenamen, Sans fuer Fliesstext,
+     Mono fuer Gear-Daten - Baujahr und Finish lesen sich wie technische
+     Angaben, also sehen sie auch so aus. */
+  --font-display: Archivo, ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
