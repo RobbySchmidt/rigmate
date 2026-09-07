@@ -45,19 +45,19 @@ async function submit() {
       <form class="flex flex-col gap-4" @submit.prevent="submit">
         <label class="flex flex-col gap-1">
           <span class="text-sm">{{ t.auth.displayName }}</span>
-          <input v-model="displayName" type="text" required minlength="2" maxlength="40" class="rounded border px-3 py-2" />
-          <span class="text-xs text-neutral-500">{{ t.auth.displayNameHint }}</span>
+          <input v-model="displayName" type="text" required minlength="2" maxlength="40" class="rounded border border-line px-3 py-2" />
+          <span class="text-xs text-muted">{{ t.auth.displayNameHint }}</span>
         </label>
         <label class="flex flex-col gap-1">
           <span class="text-sm">{{ t.auth.email }}</span>
-          <input v-model="email" type="email" required class="rounded border px-3 py-2" />
+          <input v-model="email" type="email" required class="rounded border border-line px-3 py-2" />
         </label>
         <label class="flex flex-col gap-1">
           <span class="text-sm">{{ t.auth.password }}</span>
-          <input v-model="password" type="password" required minlength="8" class="rounded border px-3 py-2" />
+          <input v-model="password" type="password" required minlength="8" class="rounded border border-line px-3 py-2" />
         </label>
-        <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-        <button type="submit" :disabled="pending" class="rounded bg-neutral-900 px-4 py-2 text-white">
+        <p v-if="error" class="text-sm text-danger">{{ error }}</p>
+        <button type="submit" :disabled="pending" class="rounded bg-accent px-4 py-2 text-accent-ink">
           {{ t.auth.submitRegister }}
         </button>
       </form>

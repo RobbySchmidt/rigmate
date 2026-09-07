@@ -62,25 +62,25 @@ const countLabel = computed(() =>
   <div class="mx-auto flex max-w-lg flex-col gap-f-8">
     <div>
       <h1 class="mb-3 text-f-4xl font-semibold">{{ t.onboarding.title }}</h1>
-      <p class="text-neutral-600">{{ t.onboarding.intro }}</p>
+      <p class="text-muted">{{ t.onboarding.intro }}</p>
     </div>
 
     <CatalogPicker :create-handler="createCatalogItem" @select="add" />
-    <p v-if="addError" class="text-sm text-red-600">{{ addError }}</p>
+    <p v-if="addError" class="text-sm text-danger">{{ addError }}</p>
 
     <div v-if="added.length > 0" class="flex flex-col gap-2">
-      <p class="text-sm text-neutral-600">{{ countLabel }}</p>
-      <ul class="divide-y rounded border">
+      <p class="text-sm text-muted">{{ countLabel }}</p>
+      <ul class="divide-y divide-line-soft rounded border border-line">
         <li v-for="(item, index) in added" :key="index" class="px-3 py-2">{{ item }}</li>
       </ul>
-      <p class="text-sm text-neutral-500">{{ t.onboarding.keepGoing }}</p>
+      <p class="text-sm text-muted">{{ t.onboarding.keepGoing }}</p>
     </div>
 
     <div class="flex gap-3">
-      <NuxtLink v-if="added.length > 0" to="/" class="rounded bg-neutral-900 px-4 py-2 text-white">
+      <NuxtLink v-if="added.length > 0" to="/" class="rounded bg-accent px-4 py-2 text-accent-ink">
         {{ t.onboarding.done }}
       </NuxtLink>
-      <NuxtLink to="/" class="rounded border px-4 py-2">{{ t.onboarding.skip }}</NuxtLink>
+      <NuxtLink to="/" class="rounded border border-line px-4 py-2">{{ t.onboarding.skip }}</NuxtLink>
     </div>
   </div>
 </template>

@@ -98,7 +98,7 @@ watch(term, (value) => {
       v-model="term"
       type="search"
       :placeholder="t.search.placeholder"
-      class="w-full rounded border px-3 py-2"
+      class="w-full rounded border border-line px-3 py-2"
     />
 
     <!-- Ein Fehlschlag ersetzt die Ergebnisflaeche vollstaendig statt in
@@ -106,11 +106,11 @@ watch(term, (value) => {
          fuer sich zwischen "leer" und "kaputt" unterscheiden, und genau das
          war die Luecke aus Fix-Runde 1. Eigener Text, damit er nie wie
          t.search.noResults oder t.search.peopleLoginHint aussieht. -->
-    <p v-if="searchError" class="text-red-600">{{ t.search.searchError }}</p>
+    <p v-if="searchError" class="text-danger">{{ t.search.searchError }}</p>
     <template v-else>
       <section v-if="(data?.catalog ?? []).length > 0">
         <h2 class="mb-3 text-f-2xl font-semibold">{{ t.search.gearHeading }}</h2>
-        <ul class="divide-y rounded border">
+        <ul class="divide-y divide-line-soft rounded border border-line">
           <li v-for="hit in data.catalog" :key="hit.id" class="px-3 py-2">
             <NuxtLink :to="`/gear/${hit.slug}`" class="underline">
               {{ hit.brandName }} {{ hit.name }}
@@ -121,13 +121,13 @@ watch(term, (value) => {
 
       <section>
         <h2 class="mb-3 text-f-2xl font-semibold">{{ t.search.peopleHeading }}</h2>
-        <p v-if="!user" class="text-neutral-600">{{ t.search.peopleLoginHint }}</p>
-        <ul v-else-if="(data?.people ?? []).length > 0" class="divide-y rounded border">
+        <p v-if="!user" class="text-muted">{{ t.search.peopleLoginHint }}</p>
+        <ul v-else-if="(data?.people ?? []).length > 0" class="divide-y divide-line-soft rounded border border-line">
           <li v-for="hit in data.people" :key="hit.userId" class="px-3 py-2">
             <NuxtLink :to="`/profile/${hit.userId}`" class="underline">{{ hit.displayName }}</NuxtLink>
           </li>
         </ul>
-        <p v-else class="text-neutral-600">{{ t.search.noResults }}</p>
+        <p v-else class="text-muted">{{ t.search.noResults }}</p>
       </section>
     </template>
   </div>

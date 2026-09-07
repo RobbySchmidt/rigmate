@@ -30,14 +30,14 @@ async function submit() {
     <form class="flex flex-col gap-4" @submit.prevent="submit">
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.auth.email }}</span>
-        <input v-model="email" type="email" required class="rounded border px-3 py-2" />
+        <input v-model="email" type="email" required class="rounded border border-line px-3 py-2" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.auth.password }}</span>
-        <input v-model="password" type="password" required class="rounded border px-3 py-2" />
+        <input v-model="password" type="password" required class="rounded border border-line px-3 py-2" />
       </label>
-      <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-      <button type="submit" :disabled="pending" class="rounded bg-neutral-900 px-4 py-2 text-white">
+      <p v-if="error" class="text-sm text-danger">{{ error }}</p>
+      <button type="submit" :disabled="pending" class="rounded bg-accent px-4 py-2 text-accent-ink">
         {{ t.auth.submitLogin }}
       </button>
     </form>

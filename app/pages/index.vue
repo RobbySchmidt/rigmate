@@ -18,18 +18,18 @@ const recommendationsError = computed(() => !!error.value)
   <div class="flex flex-col gap-f-8">
     <h1 class="text-f-4xl font-semibold">{{ t.suggestions.title }}</h1>
 
-    <p v-if="recommendationsError" class="text-red-600">{{ t.suggestions.loadError }}</p>
+    <p v-if="recommendationsError" class="text-danger">{{ t.suggestions.loadError }}</p>
     <template v-else>
       <!-- Die Leere erklaeren statt kaschieren: der leere Zustand bringt der
            App ihr eigenes Prinzip bei. -->
-      <div v-if="data?.fallback" class="rounded border border-dashed p-4">
+      <div v-if="data?.fallback" class="rounded border border-dashed border-line p-4">
         <p class="mb-2 font-medium">{{ t.suggestions.emptyTitle }}</p>
-        <p class="mb-4 text-neutral-600">{{ t.suggestions.emptyBody }}</p>
-        <NuxtLink to="/onboarding" class="rounded bg-neutral-900 px-4 py-2 text-white">
+        <p class="mb-4 text-muted">{{ t.suggestions.emptyBody }}</p>
+        <NuxtLink to="/onboarding" class="rounded bg-accent px-4 py-2 text-accent-ink">
           {{ t.suggestions.emptyCta }}
         </NuxtLink>
       </div>
-      <p v-else class="text-sm text-neutral-500">{{ t.suggestions.refineHint }}</p>
+      <p v-else class="text-sm text-muted">{{ t.suggestions.refineHint }}</p>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <PersonSuggestion
