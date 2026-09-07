@@ -589,9 +589,12 @@ Den `profile`-Block um diese Schluessel erweitern, vorhandene unveraendert lasse
     tabChain: 'Signal Chain',
     tabsLabel: 'Ansicht des Equipments',
 
-    // Seltenheit
-    rarityRare: 'selten',
-    raritySpecial: 'besonders',
+    // Seltenheit: NICHT anlegen. Diese beiden Schluessel wurden waehrend der
+    // Umsetzung wieder gestrichen - "selten"/"besonders" standen im
+    // Widerspruch zu "rar"/"speziell", die gear/[slug].vue schon zeigte.
+    // Es gibt jetzt einen Top-Level-Block "rarity" mit allen vier Stufen,
+    // aus dem beide Seiten lesen. Wer den Plan woertlich abschreibt, legt
+    // die Doppelung wieder an.
 
     // Signalkette
     chainEmptyOwn: 'Keine Signal Chain angelegt',
@@ -1749,6 +1752,144 @@ git commit -m "feat(rig): GearPool als rechte Spalte im Bearbeitungsmodus"
 
 ---
 
+## Task 11a: Seltenheitsdarstellung zusammenziehen
+
+**Aus dem Spec-Review nach Task 7.** Die Zuordnung „Seltenheitsstufe → CSS-Klasse" steht inzwischen an
+vier Stellen, und die Tasks 10 und 11 legen zwei weitere an:
+
+| Datei | Funktion |
+|---|---|
+| `app/components/RarityPip.vue` | `pipClass` |
+| `app/components/GearList.vue` | `nameClass` |
+| `app/components/SignalChain.vue` | `nodeClass` — rare/special woertlich wie `pipClass` |
+| `app/components/SignalChain.vue` | `nameClass` — identisch mit dem in GearList |
+| `app/components/SignalChainEditor.vue` | aus Task 10 |
+| `app/components/GearPool.vue` | aus Task 11 |
+
+Das ist genau das Muster, gegen das `shared/utils/rarityBase.ts` angelegt wurde — dort steht im
+Dateikopf, dass die Werteliste vorher dreifach existierte. **Sechs Kopien einer Regel, die die Kernmechanik
+der Plattform sichtbar macht, laufen garantiert auseinander.**
+
+**Files:**
+- Create: `shared/utils/rarityStyle.ts`
+- Create: `tests/unit/rarityStyle.test.ts`
+- Modify: `RarityPip.vue`, `GearList.vue`, `SignalChain.vue`, `SignalChainEditor.vue`, `GearPool.vue`
+
+- [ ] **Step 1: Die eine Wahrheit anlegen**
+
+`shared/utils/rarityStyle.ts`, nach dem Muster von `shared/utils/rarityBase.ts` (lies dessen Dateikopf):
+
+```ts
+import type { RarityBase } from './rarityBase'
+
+/**
+ * Einziger Ort fuer die Zuordnung Seltenheitsstufe -> Darstellung.
+ *
+ * Nur zwei der vier Stufen werden ausgezeichnet: leuchten alle vier, sagt
+ * die Auszeichnung nichts mehr. Bernstein gehoert in diesem Projekt
+ * ausschliesslich der Seltenheit - sie ist die Mechanik, ueber die Menschen
+ * einander finden, keine Verzierung.
+ *
+ * Vorher stand diese Zuordnung in vier Komponenten, und zwei weitere waren
+ * geplant. Dieselbe Behandlung wie RarityBase und die Baujahr-Regel.
+ */
+export function rarityTextClass(rarity: RarityBase | null): string { /* ... */ }
+
+/** Der Punkt bzw. Knoten: gefuellt bei rare, hohler Ring bei special. */
+export function rarityDotClass(rarity: RarityBase | null): string { /* ... */ }
+```
+
+Die konkreten Klassen holst du aus den vorhandenen Komponenten. **Eine Entscheidung musst du dabei
+treffen:** `RarityPip` benutzt fuer die stille Stufe `bg-line opacity-55`, der Kettenknoten in
+`SignalChain.vue` dagegen `bg-surface border-line`. Der Spec-Review hat die Begruendung dafuer widerlegt
+(„damit der Strang nicht durchscheint" — der Strang laeuft gar nicht hinter dem Knoten durch, die Stuecke
+sind Flex-Geschwister, und der `special`-Knoten ist ohnehin durchsichtig). **Vereinheitliche die beiden**,
+und begruende im Bericht, welche Variante du warum genommen hast. Wenn du sie nach dem Ansehen doch fuer
+verschieden haeltst, ist das auch eine Antwort — dann aber mit einer Begruendung, die traegt.
+
+- [ ] **Step 2: Test schreiben**
+
+`tests/unit/rarityStyle.test.ts` — je Funktion alle vier Stufen plus `null`, mit **positiven**
+Zusicherungen. Nicht nur „enthaelt nicht `bg-rare`": ein leerer String waere sonst gruen und der Punkt
+unsichtbar.
+
+- [ ] **Step 3: Alle sechs Stellen umstellen**
+
+Jede Komponente importiert aus `#shared/utils/rarityStyle` statt eine eigene Funktion zu halten. Wo eine
+Komponente eine echte Variante braucht (Kasten-Hintergrund im Editor), bleibt die dort — aber getrennt von
+Text- und Punktfarbe, nicht in einer gemischten Funktion.
+
+- [ ] **Step 4: Gegenprobe**
+
+Aendere `rarityTextClass` fuer `rare` probeweise auf `'text-ink'` und lass die volle Suite laufen.
+**Mehrere** Tests in verschiedenen Dateien muessen rot werden — das beweist, dass die Komponenten
+tatsaechlich an der gemeinsamen Quelle haengen und nicht an einer uebriggebliebenen Kopie. Danach
+zurueckaendern.
+
+- [ ] **Step 5: Volle Suite und Commit**
+
+```bash
+yarn test
+git add shared/utils/rarityStyle.ts tests/unit/rarityStyle.test.ts app/components
+git commit -m "refactor(ui): Seltenheitsdarstellung an einer Stelle"
+```
+
+---
+
+## Task 11b: Testluecken schliessen
+
+**Aus dem Spec-Review nach Task 7.** Fuenf Tests sind gruen, ohne das zu pruefen, was ihr Name behauptet.
+Das ist die Schwester des wiederkehrenden Projektfehlers, und sie ist hier schon sechsmal vorgekommen.
+
+**Files:**
+- Modify: `tests/component/gearList.test.ts`, `tests/component/rarityPip.test.ts`
+- Modify: `tests/component/signalChain.test.ts`
+
+- [ ] **Step 1: `GearList` — der Seltenheitspunkt ist ungeprueft**
+
+`RarityPip` ist im Test gestubbt und wird nie gesucht. **Man kann `<RarityPip>` ersatzlos aus der Liste
+loeschen, und alle sieben Tests bleiben gruen** — obwohl der Punkt vor jedem Eintrag der Kern von
+Abschnitt 4.2 der Spec ist. Ergaenze zwei Zusicherungen:
+
+- dass je Eintrag ein Pip gerendert wird (ueber den Stub findbar machen, z.B. `stubs: { RarityPip: { props: ['rarity'], template: '<span data-pip :data-rarity="rarity" />' } }`)
+- dass er die **richtige** Stufe bekommt — der Eintrag mit `rare` muss `data-rarity="rare"` tragen
+
+- [ ] **Step 2: `GearList` — der Zaehler ist ungeprueft**
+
+Der Test heisst „zeigt je Gruppe ein Label **mit der Anzahl**", prueft aber nur die Labels. Man kann
+`{{ group.entries.length }}` ersatzlos streichen, alles bleibt gruen. Prueft den Zaehler gezielt, nicht
+ueber `toContain` auf dem Gesamttext — eine „1" findet sich sonst in jedem Baujahr.
+
+- [ ] **Step 3: `RarityPip` — stille Stufen nur negativ geprueft**
+
+`mass`, `common` und `null` pruefen ausschliesslich `not.toContain(...)`. Gaebe `pipClass` fuer den stillen
+Fall einen leeren String zurueck, waere der Punkt unsichtbar — und der Test gruen. Ergaenze eine positive
+Zusicherung auf die Klasse, die den stillen Punkt tatsaechlich malt.
+
+Ebenso beim „hohler Ring"-Test: `not.toContain('bg-special')` prueft eine Klasse, die keine Verzweigung je
+erzeugt. Gemeint war „kein Hintergrund", geprueft wird „nicht dieser eine Hintergrund".
+
+- [ ] **Step 4: `SignalChain` — Knoten- und Namensfarbe ganz ungeprueft**
+
+`nodeClass` und `nameClass` haben keinen einzigen Test. Spec-Kernpunkt 7 verlangt, dass die Knoten
+dieselbe Sprache sprechen wie die Punkte im Equipment-Reiter — genau das ist ungesichert. Ergaenze je
+einen Test fuer `rare`, `special` und still.
+
+- [ ] **Step 5: Jede Ergaenzung gegenpruefen**
+
+Fuer **jeden** neuen Test: die gepruefte Stelle im Code kaputtmachen, den Test rot sehen, zurueckbauen.
+Ein Test, der nach dieser Runde nicht nachweislich fehlschlagen kann, ist keine Verbesserung, sondern nur
+mehr Zeilen.
+
+- [ ] **Step 6: Volle Suite und Commit**
+
+```bash
+yarn test
+git add tests/component
+git commit -m "test: Luecken schliessen, die der Spec-Review gefunden hat"
+```
+
+---
 ## Task 12: `GearPanel.vue` — die beiden Reiter
 
 **Files:**
@@ -1954,7 +2095,7 @@ const showChainTab = computed(() => props.isOwn || props.stations.length > 0)
         @update:stations="emit('update:stations', $event)"
         @remove="emit('remove', $event)"
       />
-      <SignalChain v-else :stations="stations" :is-own="isOwn" />
+      <SignalChain v-else :stations="stations" :is-own="isOwn" :outside-count="poolItems.length" />
 
       <!-- Der Ausgang des Speicherns muss sichtbar sein: die Oberflaeche
            zeigt die neue Reihenfolge bereits, ein stiller Fehlschlag waere
