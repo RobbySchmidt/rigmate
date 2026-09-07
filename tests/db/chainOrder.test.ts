@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { adminClient } from '../helpers/supabase'
+import { adminClient, anonClient } from '../helpers/supabase'
 import { createTestUser, deleteTestUsers, type TestUser } from '../helpers/testUser'
 
 /**
@@ -71,10 +71,11 @@ describe('chain_position und set_chain_order', () => {
     const { error } = await user.client.rpc('set_chain_order', { item_ids: gearIds })
     expect(error).toBeNull()
 
-    const { data } = await admin
+    const { data, error: readError } = await admin
       .from('gear_items')
       .select('id, chain_position')
       .eq('owner_id', user.id)
+    expect(readError).toBeNull()
 
     const positions = gearIds.map((id) => data!.find((row) => row.id === id)!.chain_position)
     expect(positions).toEqual([1, 2, 3])
@@ -86,10 +87,11 @@ describe('chain_position und set_chain_order', () => {
     })
     expect(error).toBeNull()
 
-    const { data } = await admin
+    const { data, error: readError } = await admin
       .from('gear_items')
       .select('id, chain_position')
       .eq('owner_id', user.id)
+    expect(readError).toBeNull()
     const byId = Object.fromEntries(data!.map((row) => [row.id, row.chain_position]))
 
     expect(byId[gearIds[2]!]).toBe(1)
@@ -98,16 +100,23 @@ describe('chain_position und set_chain_order', () => {
   })
 
   it('vertauscht zwei Positionen, ohne an einer Eindeutigkeit zu scheitern', async () => {
-    await user.client.rpc('set_chain_order', { item_ids: [gearIds[0], gearIds[1]] })
+    // Ohne diese Pruefung waere ein gescheiterter Setup-Aufruf unsichtbar:
+    // die Kette bliebe auf dem Stand des Vortests stehen, und der stimmt
+    // zufaellig mit dem ueberein, was dieser Test unten erwartet.
+    const { error: setupError } = await user.client.rpc('set_chain_order', {
+      item_ids: [gearIds[0], gearIds[1]],
+    })
+    expect(setupError).toBeNull()
     const { error } = await user.client.rpc('set_chain_order', {
       item_ids: [gearIds[1], gearIds[0]],
     })
     expect(error).toBeNull()
 
-    const { data } = await admin
+    const { data, error: readError } = await admin
       .from('gear_items')
       .select('id, chain_position')
       .eq('owner_id', user.id)
+    expect(readError).toBeNull()
     const byId = Object.fromEntries(data!.map((row) => [row.id, row.chain_position]))
 
     expect(byId[gearIds[1]!]).toBe(1)
@@ -132,10 +141,11 @@ describe('chain_position und set_chain_order', () => {
 
     // Der laute Abbruch muss die bestehende Kette unangetastet lassen -
     // ein halb umsortiertes Rig waere schlimmer als gar keine Meldung.
-    const { data: after } = await admin
+    const { data: after, error: readError } = await admin
       .from('gear_items')
       .select('id, chain_position')
       .eq('owner_id', user.id)
+    expect(readError).toBeNull()
     const byId = Object.fromEntries(after!.map((row) => [row.id, row.chain_position]))
     expect(byId[gearIds[1]!]).toBe(1)
     expect(byId[gearIds[0]!]).toBe(2)
@@ -150,10 +160,11 @@ describe('chain_position und set_chain_order', () => {
     expect(error).not.toBeNull()
     expect(error!.message).toMatch(/must not be null/)
 
-    const { data: after } = await admin
+    const { data: after, error: readError } = await admin
       .from('gear_items')
       .select('id, chain_position')
       .eq('owner_id', user.id)
+    expect(readError).toBeNull()
     const byId = Object.fromEntries(after!.map((row) => [row.id, row.chain_position]))
     expect(byId[gearIds[1]!]).toBe(1)
     expect(byId[gearIds[0]!]).toBe(2)
@@ -167,10 +178,34 @@ describe('chain_position und set_chain_order', () => {
     expect(error).not.toBeNull()
     expect(error!.message).toMatch(/duplicate/)
 
-    const { data: after } = await admin
+    const { data: after, error: readError } = await admin
       .from('gear_items')
       .select('id, chain_position')
       .eq('owner_id', user.id)
+    expect(readError).toBeNull()
+    const byId = Object.fromEntries(after!.map((row) => [row.id, row.chain_position]))
+    expect(byId[gearIds[1]!]).toBe(1)
+    expect(byId[gearIds[0]!]).toBe(2)
+  })
+
+  // Frueher schlug hier der Dubletten-Waechter an: count(distinct) zaehlt
+  // NULL nicht mit, also sah array[a, null] fuer ihn nach einer Dublette aus.
+  // Laut war das zwar, aber mit falscher Begruendung.
+  it('lehnt null als Element mit eigener Begruendung ab, nicht als Dublette', async () => {
+    const { error } = await user.client.rpc('set_chain_order', {
+      item_ids: [gearIds[0], null],
+    })
+
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/must not contain null/)
+    // Der Kern dieses Tests: die Meldung muss die richtige Ursache nennen.
+    expect(error!.message).not.toMatch(/duplicate/)
+
+    const { data: after, error: readError } = await admin
+      .from('gear_items')
+      .select('id, chain_position')
+      .eq('owner_id', user.id)
+    expect(readError).toBeNull()
     const byId = Object.fromEntries(after!.map((row) => [row.id, row.chain_position]))
     expect(byId[gearIds[1]!]).toBe(1)
     expect(byId[gearIds[0]!]).toBe(2)
@@ -191,5 +226,31 @@ describe('chain_position und set_chain_order', () => {
     expect(readError).toBeNull()
     expect(data).toHaveLength(3)
     expect(data!.every((row) => row.chain_position === null)).toBe(true)
+  })
+
+  // Fix 1: "revoke all ... from public" liess anon den Grant aus Supabase'
+  // Default Privileges. Der Test muss den Unterschied zum Waechter im Rumpf
+  // sehen koennen - vor dem Fix kam anon durch und bekam "not authenticated",
+  // also waere eine blosse "irgendein Fehler"-Pruefung schon damals gruen
+  // gewesen.
+  it('laesst einen nicht angemeldeten Aufrufer gar nicht erst an die Funktion', async () => {
+    const anon = anonClient()
+    const { error } = await anon.rpc('set_chain_order', { item_ids: [] })
+
+    expect(error).not.toBeNull()
+    expect(error!.code).toBe('42501')
+    expect(error!.message).toMatch(/permission denied/)
+    expect(error!.message).not.toMatch(/not authenticated/)
+  })
+
+  // Fix 4: der Waechter im Rumpf war als einziger ungetestet. anon kommt
+  // seit Fix 1 nicht mehr bis dorthin, service_role dagegen darf ausfuehren
+  // und hat trotzdem keine auth.uid() - genau der Aufrufer, fuer den der
+  // Waechter die zweite Verteidigungslinie ist.
+  it('weist einen Aufrufer ohne auth.uid() ab, der ausfuehren darf', async () => {
+    const { error } = await admin.rpc('set_chain_order', { item_ids: [] })
+
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/not authenticated/)
   })
 })
