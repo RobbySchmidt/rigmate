@@ -182,17 +182,21 @@ alter table gear_items add column chain_position smallint;
 einer Person, bei denen die Spalte gesetzt ist. Kein eigener Tabellentyp, keine Kanten — eine Ordnung
 reicht, weil eine Signalkette linear ist.
 
-**Eindeutig je Besitzer**, sonst ist die Reihenfolge bei einer Doppelbelegung von der Laune des Planers
-abhängig und die Kette springt zwischen zwei Aufrufen um:
+**Kein Unique-Index auf der Position** — das war ein Irrtum in der ersten Fassung dieser Spec. Ein
+partieller Unique-Index `(owner_id, chain_position)` klingt richtig, macht das Umsortieren aber unmöglich:
+tauscht man A (Position 1) und B (Position 2), verletzt das Update von A auf 2 den Index, solange B noch
+dort steht. `deferrable` hilft nicht, weil das nur für Constraints geht und ein partieller Unique-Index
+keiner sein kann.
+
+Stattdessen sorgt die Schreibfunktion aus Abschnitt 5.4 dafür, dass die Positionen immer geschlossen bei
+1 beginnen. Als Sicherheitsnetz wird **stabil sortiert**, damit eine Doppelung die Reihenfolge nicht
+zwischen zwei Aufrufen springen lässt:
 
 ```sql
-create unique index gear_items_owner_chain_position_key
-  on gear_items (owner_id, chain_position)
-  where chain_position is not null;
+order by chain_position, created_at
 ```
 
-Positionen dürfen Lücken haben — beim Herausnehmen einer Station muss nicht die ganze Kette umgeschrieben
-werden.
+Positionen sind damit lückenlos, weil immer die ganze Kette geschrieben wird.
 
 ### 5.3 Gepflegt wird von Hand
 
@@ -264,12 +268,29 @@ Bearbeitung und holt den Feed zurück.
 
 #### Schreiben
 
-Eine Verschiebung ist ein Schreibvorgang. Fünf schnelle Züge wären fünf Anfragen, deshalb werden
-Änderungen **kurz gesammelt und gebündelt geschickt** (etwa 400 ms nach der letzten Aktion).
+**Direkt vom Client gegen Supabase**, abgesichert über RLS — nach der Architekturregel in CLAUDE.md ist
+das Pflegen des eigenen Rigs einfaches Schreiben und braucht keine Server-Route. Aggregiert wird hier
+nichts.
 
-Der Hinweis unter der Kette meldet den Ausgang **ehrlich**: gespeichert, oder fehlgeschlagen mit der
-Möglichkeit, es erneut zu versuchen. Ein stiller Fehlschlag wäre hier besonders teuer, weil die
-Oberfläche die neue Reihenfolge bereits zeigt — genau der wiederkehrende Fehler aus Abschnitt 7.
+Geschrieben wird **die ganze Kette auf einmal**, nicht die einzelne Verschiebung. Dafür eine
+Postgres-Funktion, per `supabase.rpc()` aufgerufen:
+
+```sql
+create function set_chain_order(item_ids uuid[]) returns void
+```
+
+Sie setzt `chain_position` auf den Index im übergebenen Array und alles andere des Aufrufers auf `null` —
+in einer Transaktion, nur für Zeilen mit `owner_id = auth.uid()`.
+
+**Warum eine Funktion und nicht einzelne Updates:** Eine Verschiebung berührt immer mehrere Zeilen. Als
+Folge einzelner Aufrufe wären das je nach Kettenlänge zwanzig Anfragen, und ein Abbruch in der Mitte
+hinterließe eine halb umsortierte Kette. Ein Aufruf, ein Zustand.
+
+Die Oberfläche sammelt schnell aufeinanderfolgende Aktionen **kurz und schickt sie gebündelt** (etwa
+400 ms nach der letzten). Der Hinweis unter der Kette meldet den Ausgang **ehrlich**: gespeichert, oder
+fehlgeschlagen mit der Möglichkeit, es erneut zu versuchen. Ein stiller Fehlschlag wäre hier besonders
+teuer, weil die Oberfläche die neue Reihenfolge bereits zeigt — genau der wiederkehrende Fehler aus
+Abschnitt 7.
 
 ---
 
@@ -357,9 +378,16 @@ werden Umlaute als „ae"/„oe"/„ue"/„ss" geschrieben, auch in Kommentaren.
 **Die Reiter** sind echte Reiter: `role="tablist"`, `role="tab"`, `aria-selected`, `role="tabpanel"`,
 Fokus sichtbar.
 
-**Das Ziehen bekommt keine Bibliothek.** HTML5-Drag-and-Drop reicht für die Maus; die Pfeile und
-„Anhängen" tragen Tastatur und Touch und sind ohnehin Pflicht. Eine Drag-Bibliothek würde eine
-Abhängigkeit hinzufügen, um einen Weg zu verbessern, der nie der einzige sein darf.
+**Fürs Ziehen kommt `vuedraggable` (SortableJS) dazu.** Zwei Dinge dabei beachten:
+
+- **`yarn add vuedraggable` installiert die falsche Version.** `latest` ist 2.24.3 und das ist Vue 2.
+  Die Vue-3-Variante liegt auf dem `next`-Tag: **`vuedraggable@4.1.0`**, peer `vue: ^3.0.1`. Letzter
+  Release 2023-08 — stabil, aber nicht mehr aktiv gepflegt.
+- **Die Komponente greift auf `document` zu und verträgt kein SSR.** Sie gehört in `<ClientOnly>` oder
+  in eine `.client.vue`. Ohne das bricht der Server-Render der Profilseite.
+
+SortableJS beherrscht Touch, anders als HTML5-Drag-and-Drop. **Die Pfeile bleiben trotzdem**, denn per
+Tastatur ist auch SortableJS nicht bedienbar.
 
 ---
 
@@ -401,7 +429,10 @@ getroffen wurde.
 | Eine `chain_position`-Spalte statt Kanten | Eine Signalkette ist linear. Eine Ordnung genügt. |
 | Bearbeiten tauscht die rechte Spalte | Kein eigener Screen, kein Overlay. Die Fläche ist da, und Kette und Geräteliste gehören beim Bauen nebeneinander. *(Robbys Vorschlag.)* |
 | Der Reiter allein tauscht sie nicht | Ansehen soll nicht den Feed kosten. Nur bei leerer Kette entfällt der Umweg, weil es nichts anzusehen gibt. |
-| Ziehen nie als einziger Weg | Per Tastatur nicht erreichbar, auf Touch unzuverlässig. Pfeile und „Anhängen" sind kein Zusatz, sondern die Grundbedienung. |
+| `vuedraggable` fürs Ziehen | *(Robbys Entscheidung.)* SortableJS beherrscht Touch, was HTML5-Drag-and-Drop nicht kann. |
+| Pfeile bleiben trotz Bibliothek | Auch SortableJS ist per Tastatur nicht bedienbar. „Anhängen" und die Pfeile sind Grundbedienung, kein Zusatz. |
 | „✕" nimmt heraus, löscht nicht | Ein Löschen an dieser Stelle wäre ein teurer Irrtum. |
 | Schreibvorgänge gebündelt | Eine Verschiebung je Anfrage wäre bei schnellem Sortieren eine Salve. |
+| Ganze Kette per RPC, nicht Einzel-Updates | Eine Verschiebung berührt mehrere Zeilen. Ein Abbruch mittendrin hinterließe eine halb umsortierte Kette. |
+| Kein Unique-Index auf der Position | Er würde jedes Umsortieren blockieren, weil der Zwischenzustand ihn verletzt — und `deferrable` geht bei einem partiellen Index nicht. |
 | Nur das Profil umbauen, Tokens aber gemeinsam | Die Tokens sind der teure Teil und werden einmal gebaut. Der Rest der App zieht nach, ohne dass etwas doppelt entsteht. |
