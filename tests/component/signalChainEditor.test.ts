@@ -23,9 +23,12 @@ function mountEditor(props: Record<string, unknown> = {}) {
     global: {
       stubs: {
         draggable: {
-          props: ['modelValue', 'itemKey'],
+          // "group" ist mit deklariert, damit der Name der Zug-Gruppe als
+          // data-Attribut nachpruefbar wird - sonst landet das Objekt nur
+          // als "[object Object]" im Fallthrough.
+          props: ['modelValue', 'itemKey', 'group'],
           template:
-            '<div><template v-for="(el, i) in modelValue" :key="el.id"><slot name="item" :element="el" :index="i" /></template></div>',
+            '<div :data-group="group && group.name"><template v-for="(el, i) in modelValue" :key="el.id"><slot name="item" :element="el" :index="i" /></template></div>',
         },
       },
     },
@@ -52,6 +55,13 @@ describe('SignalChainEditor', () => {
     expect(nodes[0].classes()).toContain('bg-rare')
     expect(nodes[1].classes()).toContain('border-special')
     expect(nodes[2].classes()).toContain('bg-surface')
+  })
+
+  it('liegt in derselben Zug-Gruppe wie der Geraete-Pool', () => {
+    // Ohne diese Gruppe nimmt die Kette nichts an, was aus GearPool kommt -
+    // der Zug laeuft ins Leere, und zwar ohne Fehlermeldung.
+    const wrapper = mountEditor()
+    expect(wrapper.find('[data-group]').attributes('data-group')).toBe('chain')
   })
 
   it('schiebt eine Station mit dem Pfeil nach oben', async () => {

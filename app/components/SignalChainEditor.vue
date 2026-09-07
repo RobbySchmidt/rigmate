@@ -13,6 +13,11 @@ import draggable from 'vuedraggable'
 import { rarityNameClass, rarityNodeClass } from '#shared/utils/rarityStyle'
 import type { ChainStation } from './SignalChain.vue'
 
+// Die Zug-Gruppe "chain" ist dieselbe wie in GearPool.vue und in der
+// Ablageflaeche von GearPanel.vue. SortableJS nimmt ein gezogenes Element nur
+// an, wenn beide Seiten in derselben Gruppe liegen - fehlt sie hier, laeuft
+// jeder Zug aus dem Pool ins Leere, und zwar ohne Fehlermeldung.
+//
 // Diese Komponente haelt keine eigene Wahrheit: die Stationen kommen von
 // aussen, jede Aenderung geht nach oben. Wer sie einsetzt, muss
 // update:stations auch wirklich uebernehmen (v-model:stations), sonst
@@ -91,6 +96,7 @@ const buttonClass =
     item-key="id"
     handle="[data-grip]"
     draggable="[data-station]"
+    :group="{ name: 'chain', pull: true, put: true }"
     ghost-class="opacity-40"
     class="flex flex-col"
   >

@@ -226,7 +226,14 @@ export const de = {
     chainDragHandle: 'Zum Umsortieren ziehen',
     chainSaving: 'Wird gespeichert',
     chainSaved: 'Reihenfolge gespeichert',
+    // Sammeltext fuer alles, was ein Nutzer nicht selbst ausloesen kann
+    // (RG002/RG003/RG004 aus set_chain_order). Rohe Postgres-Meldungen
+    // gehoeren nie auf den Schirm.
     chainSaveError: 'Reihenfolge konnte nicht gespeichert werden',
+    // Zwei der fuenf SQLSTATEs verlangen etwas anderes vom Nutzer als
+    // "nochmal probieren" - deshalb ein eigener Satz je Fall.
+    chainSaveErrorSession: 'Du bist nicht mehr angemeldet. Melde dich neu an.',
+    chainSaveErrorStale: 'Dein Rig hat sich geändert. Lad die Seite neu.',
     chainRetry: 'Erneut versuchen',
     chainRemovedHint: 'Aus der Kette genommen, bleibt im Rig.',
 
