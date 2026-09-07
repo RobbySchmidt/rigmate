@@ -148,11 +148,10 @@ function tabClass(selected: boolean): string {
   ].join(' ')
 }
 
-// TODO Task 17: auf text-danger umstellen.
 // Bernstein (text-rare) ist der Seltenheit vorbehalten und kommt hier nicht
-// in Frage. Bis es ein Farbtoken fuer Fehler gibt, steht die Klasse an
+// in Frage - fuer Fehler gibt es text-danger. Die Klasse steht an
 // dieser einen Stelle statt dreimal im Template.
-const dangerClass = 'text-red-600'
+const dangerClass = 'text-danger'
 </script>
 
 <template>

@@ -319,12 +319,11 @@ const specialCount = computed(
   () => ((rig.value ?? []) as any[]).filter((row) => row.catalog_items.rarity_base === 'special').length,
 )
 
-// TODO Task 17: auf text-danger umstellen.
 // Bernstein (text-rare) gehoert der Seltenheit und kommt hier nicht in
-// Frage. Bis es ein Farbtoken fuer Fehler gibt, steht die Klasse an dieser
+// Frage - fuer Fehler gibt es text-danger. Die Klasse steht an dieser
 // einen Stelle statt viermal im Template - dasselbe Vorgehen wie in
 // GearPanel.vue und ProfileHeader.vue.
-const dangerClass = 'text-red-600'
+const dangerClass = 'text-danger'
 </script>
 
 <template>

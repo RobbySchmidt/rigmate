@@ -19,6 +19,10 @@
   --rm-rare: #a8631a;
   --rm-rare-wash: #f4e6d3;
   --rm-special: #8a6a34;
+  /* Fehler und Zerstoerendes. Eigene Farbe, weil --rm-rare ausschliesslich
+     der Seltenheit gehoert - ein roter Fehlertext in Bernstein waere
+     doppeldeutig genau dort, wo Eindeutigkeit zaehlt. */
+  --rm-danger: #a33a2b;
   color-scheme: light;
 }
 
@@ -40,6 +44,7 @@
     --rm-rare: #dfa257;
     --rm-rare-wash: #2e2313;
     --rm-special: #b99a68;
+    --rm-danger: #e0897a;
     color-scheme: dark;
   }
 }
@@ -58,6 +63,7 @@
   --rm-rare: #dfa257;
   --rm-rare-wash: #2e2313;
   --rm-special: #b99a68;
+  --rm-danger: #e0897a;
   color-scheme: dark;
 }
 
@@ -115,6 +121,7 @@
   --color-rare: var(--rm-rare);
   --color-rare-wash: var(--rm-rare-wash);
   --color-special: var(--rm-special);
+  --color-danger: var(--rm-danger);
 
   /* Display fuer Ueberschriften und Geraetenamen, Sans fuer Fliesstext,
      Mono fuer Gear-Daten - Baujahr und Finish lesen sich wie technische
