@@ -48,7 +48,7 @@ const categoryLabel = computed(
       <p class="text-sm text-neutral-500">{{ categoryLabel }}</p>
       <h1 class="text-f-5xl font-semibold">{{ data.item.brandName }} {{ data.item.name }}</h1>
       <p class="text-sm text-neutral-600">
-        {{ t.gearPage.rarity[data.item.rarityBase as keyof typeof t.gearPage.rarity] }} ·
+        {{ t.rarity[data.item.rarityBase as keyof typeof t.rarity] }} ·
         {{ t.gearPage.playersCount.replace('{count}', String(data.stats.ownerCount)) }} ·
         {{ t.gearPage.wishCount.replace('{count}', String(data.stats.wishCount)) }}
       </p>

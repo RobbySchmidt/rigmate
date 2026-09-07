@@ -3,6 +3,15 @@ export const de = {
     name: 'Rigmate',
     tagline: 'Finde Leute über ihr Equipment.',
   },
+  // Die Seltenheitsstufen aus dem Postgres-Enum rarity_base. Stehen hier
+  // ganz oben, weil sie an mehreren Stellen sichtbar sind - Gear-Seite und
+  // Profil-Panel. Vorher gab es sie doppelt und mit verschiedenen Woertern.
+  rarity: {
+    mass: 'Massenware',
+    common: 'verbreitet',
+    special: 'speziell',
+    rare: 'rar',
+  },
   nav: {
     home: 'Start',
     rig: 'Mein Rig',
@@ -145,12 +154,6 @@ export const de = {
     partOf: 'Gehört zu',
     unverified: 'Dieser Eintrag wurde von einem Nutzer angelegt und ist noch ungeprüft.',
     signInToSeePlayers: 'Melde dich an, um zu sehen, wer das spielt.',
-    rarity: {
-      mass: 'Massenware',
-      common: 'verbreitet',
-      special: 'speziell',
-      rare: 'rar',
-    },
     noPlayers: 'Hier hat es noch niemand eingetragen.',
     // Diese Seite ist laut Abschnitt 10 oeffentlich und suchmaschinen-
     // auffindbar - ein Fehlschlag oder ein echtes 404 muessen sich sowohl im
@@ -202,10 +205,6 @@ export const de = {
     tabEquipment: 'Equipment',
     tabChain: 'Signal Chain',
     tabsLabel: 'Ansicht des Equipments',
-
-    // Seltenheit
-    rarityRare: 'selten',
-    raritySpecial: 'besonders',
 
     // Signalkette
     chainEmptyOwn: 'Keine Signal Chain angelegt',
