@@ -185,6 +185,61 @@ export const de = {
     // beim Laden von Profil, Rig, Praeferenzen oder Wunschliste soll nicht
     // wie ein legitim leerer Bereich aussehen.
     loadError: 'Das konnte gerade nicht geladen werden. Versuch es noch einmal.',
+
+    // Kennzahlen im Kopf
+    statDevices: 'Geräte',
+    statRarities: 'Raritäten',
+    statSpecials: 'Besonderheiten',
+    statMates: 'Rig-Kollegen',
+    statMatesError: 'Anzahl der Rig-Kollegen konnte nicht geladen werden',
+
+    // Aktionen, bis Stufe 2 deaktiviert
+    follow: 'Folgen',
+    message: 'Nachricht',
+    stageTwoHint: 'Kommt in der nächsten Ausbaustufe',
+
+    // Reiter im linken Panel
+    tabEquipment: 'Equipment',
+    tabChain: 'Signal Chain',
+    tabsLabel: 'Ansicht des Equipments',
+
+    // Seltenheit
+    rarityRare: 'selten',
+    raritySpecial: 'besonders',
+
+    // Signalkette
+    chainEmptyOwn: 'Keine Signal Chain angelegt',
+    chainEmptyOwnHint:
+      'Trag ein, in welcher Reihenfolge dein Signal durch die Geräte läuft.',
+    chainEmptyDrop: 'Zieh ein Gerät hierher, um anzufangen',
+    chainOutsideTitle: 'Nicht in der Kette',
+    chainOutsideHint: 'Saiten, Plektren und Zubehör stehen unter Equipment.',
+    chainEdit: 'Kette bearbeiten',
+    chainDone: 'Fertig',
+    chainPoolTitle: 'Geräte hinzufügen',
+    chainPoolHint:
+      'Nach links ziehen, um eine Station anzuhängen. Was hier stehen bleibt, taucht weiterhin unter Equipment auf.',
+    chainPoolEmpty: 'Alle Geräte stehen in der Kette.',
+    chainAppend: 'Anhängen',
+    chainMoveUp: 'Nach oben',
+    chainMoveDown: 'Nach unten',
+    chainRemove: 'Aus der Kette nehmen',
+    chainDragHandle: 'Zum Umsortieren ziehen',
+    chainSaving: 'Wird gespeichert',
+    chainSaved: 'Reihenfolge gespeichert',
+    chainSaveError: 'Reihenfolge konnte nicht gespeichert werden',
+    chainRetry: 'Erneut versuchen',
+    chainRemovedHint: 'Aus der Kette genommen, bleibt im Rig.',
+
+    // Feed
+    feedTitle: 'Verlauf',
+    feedEmpty: 'Noch nichts passiert.',
+    feedError: 'Der Verlauf konnte nicht geladen werden',
+    feedEventLabel: 'Rig-Ereignis',
+    feedAddedOne: 'hat ein Gerät ins Rig geholt',
+    feedAddedMany: 'hat Geräte ins Rig geholt',
+    feedRareTitle: 'Selten',
+    feedRareOnly: 'Niemand sonst hier spielt das.',
   },
   settings: {
     title: 'Einstellungen',
