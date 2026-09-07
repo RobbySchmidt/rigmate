@@ -140,4 +140,56 @@ describe('chain_position und set_chain_order', () => {
     expect(byId[gearIds[1]!]).toBe(1)
     expect(byId[gearIds[0]!]).toBe(2)
   })
+
+  // Ab hier die beiden Waechter aus chain_order_guards. Die Kette steht zu
+  // Beginn auf gearIds[1] = 1, gearIds[0] = 2, gearIds[2] = null - beide
+  // abgelehnten Aufrufe muessen sie genau so stehen lassen.
+  it('lehnt null laut ab, statt still gar nichts zu tun', async () => {
+    const { error } = await user.client.rpc('set_chain_order', { item_ids: null })
+
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/must not be null/)
+
+    const { data: after } = await admin
+      .from('gear_items')
+      .select('id, chain_position')
+      .eq('owner_id', user.id)
+    const byId = Object.fromEntries(after!.map((row) => [row.id, row.chain_position]))
+    expect(byId[gearIds[1]!]).toBe(1)
+    expect(byId[gearIds[0]!]).toBe(2)
+  })
+
+  it('lehnt ein doppelt uebergebenes Geraet ab, statt still eine Luecke zu lassen', async () => {
+    const { error } = await user.client.rpc('set_chain_order', {
+      item_ids: [gearIds[0], gearIds[0], gearIds[1]],
+    })
+
+    expect(error).not.toBeNull()
+    expect(error!.message).toMatch(/duplicate/)
+
+    const { data: after } = await admin
+      .from('gear_items')
+      .select('id, chain_position')
+      .eq('owner_id', user.id)
+    const byId = Object.fromEntries(after!.map((row) => [row.id, row.chain_position]))
+    expect(byId[gearIds[1]!]).toBe(1)
+    expect(byId[gearIds[0]!]).toBe(2)
+  })
+
+  // Dieser Test haelt jemanden davon ab, das leere Array in denselben
+  // Waechter wie null zu werfen: '{}' ist kein Fehler, sondern der
+  // ausdrueckliche Wunsch, die Kette zu leeren. Steht bewusst zuletzt -
+  // er raeumt die Kette ab, auf der die Tests davor bestehen.
+  it('leert die Kette bei einem leeren Array, statt zu meckern', async () => {
+    const { error } = await user.client.rpc('set_chain_order', { item_ids: [] })
+    expect(error).toBeNull()
+
+    const { data, error: readError } = await admin
+      .from('gear_items')
+      .select('id, chain_position')
+      .eq('owner_id', user.id)
+    expect(readError).toBeNull()
+    expect(data).toHaveLength(3)
+    expect(data!.every((row) => row.chain_position === null)).toBe(true)
+  })
 })
