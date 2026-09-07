@@ -156,7 +156,7 @@ Die Knoten benutzen dieselbe Sprache wie die Punkte im Equipment-Reiter: gefüll
 **Beide Darstellungen sind verkabelt.** Beim Ansehen trägt ein durchgehender senkrechter Strang die
 Knoten. Im Bearbeitungsmodus, wo die Stationen zu Kästen werden, sitzt zwischen je zwei Kästen ein
 kurzes **Patchkabel** — eine Kurve, die leicht nach rechts durchhängt, wie eines zwischen zwei Pedalen.
-Zwei Regeln dazu:
+Es sitzt **mittig zwischen den Kästen**, nicht in der Flucht der Griffe. Zwei Regeln dazu:
 
 - **Nur zwischen zwei Stationen, nie hinter der letzten.** Ein Kabel ins Nichts liest sich als fehlendes
   Glied.
