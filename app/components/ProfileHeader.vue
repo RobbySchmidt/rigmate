@@ -8,6 +8,16 @@
 // @vue/test-utils direkt, also ausserhalb der Nuxt-Build-Pipeline.
 import { computed } from 'vue'
 
+/**
+ * Ein Eintrag aus `profiles.links` - Bandcamp, YouTube und dergleichen.
+ * Die Spalte ist jsonb, die Seite typisiert sie einmal und gibt sie hier
+ * herein, statt im Template zu casten.
+ */
+export interface ProfileLink {
+  label: string
+  url: string
+}
+
 const props = withDefaults(
   defineProps<{
     /** Das Einzige, was Pflicht ist - siehe settings.displayNameHint. */
@@ -15,6 +25,13 @@ const props = withDefaults(
     realName?: string | null
     bio?: string | null
     bands?: string[]
+    /**
+     * Die Links aus dem Profil. Sie standen schon vor dem Umbau im Kopf und
+     * bleiben dort: der Plan zu diesem Task hatte keine Prop dafuer
+     * vorgesehen, und sie waeren beim Zusammenbauen stillschweigend
+     * verschwunden - ein Rueckschritt gegenueber der alten Seite.
+     */
+    links?: ProfileLink[]
     /** Fertige oeffentliche URL. Den Storage-Pfad loest die Seite auf. */
     avatarUrl?: string | null
     deviceCount: number
@@ -40,6 +57,7 @@ const props = withDefaults(
     realName: null,
     bio: null,
     bands: () => [],
+    links: () => [],
     avatarUrl: null,
     mateCountFailed: false,
     isOwn: false,
@@ -118,13 +136,34 @@ const actionClass =
         {{ initials }}
       </span>
 
-      <div class="flex min-w-0 flex-1 flex-col gap-[.35rem]">
+      <!-- basis statt flex-1: mit flex-basis 0 blieben Name, Bio und Links
+           auf einem schmalen Schirm neben Avatar UND Aktionen stehen und
+           quetschten sich in gut hundert Pixel - die Bio brach dann auf
+           sieben Zeilen um (im Browser bei 420px nachgesehen). Mit einer
+           echten Wunschbreite rutschen die Aktionen stattdessen in die
+           naechste Zeile. -->
+      <div class="flex min-w-0 shrink grow basis-[16rem] flex-col gap-[.35rem]">
         <h1 class="font-display text-f-4xl font-semibold leading-tight text-ink">{{ displayName }}</h1>
         <p v-if="realName" class="text-sm text-muted">{{ realName }}</p>
         <p v-if="bio" class="max-w-[60ch] text-[.9375rem] leading-relaxed text-ink">{{ bio }}</p>
         <p v-if="bands.length > 0" class="flex flex-wrap items-baseline gap-2 text-[.875rem] text-ink">
           <span class="font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted">{{ t.profile.bands }}</span>
           <span>{{ bandList }}</span>
+        </p>
+
+        <!-- Dieselbe Zeilenform wie die Bands darueber: Versal-Label, dann
+             der Inhalt. Die Links fuehren nach draussen und tragen deshalb
+             rel="noopener noreferrer" - wie in der alten Fassung. -->
+        <p v-if="links.length > 0" data-links class="flex flex-wrap items-baseline gap-2 text-[.875rem]">
+          <span class="font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted">{{ t.profile.links }}</span>
+          <a
+            v-for="link in links"
+            :key="link.url"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="border-b border-line text-ink no-underline transition-colors hover:border-accent hover:text-accent"
+          >{{ link.label }}</a>
         </p>
       </div>
 

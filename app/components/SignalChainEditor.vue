@@ -88,6 +88,30 @@ const buttonClass =
   'grid size-[1.5rem] shrink-0 place-items-center rounded-sm text-muted transition-colors ' +
   'hover:bg-surface hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-1 ' +
   'focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-30'
+
+// ZUM #item-SLOT UNTEN - und warum der Hinweis hier steht statt dort:
+//
+// Der Slot darf GENAU EIN Wurzelelement je Station liefern. vuedraggable
+// ordnet die DOM-Kinder den Array-Positionen zu und zaehlt sie dafuer nach
+// (computeComponentStructure: "Item slot must have only one child"); ein
+// zweiter Knoten je Eintrag verschiebt diese Zuordnung. Das Patchkabel
+// steckt deshalb mit im Wrapper.
+//
+// ZUR RASTERSPALTE minmax(0,1fr) UNTEN: ein blankes 1fr heisst
+// minmax(auto, 1fr), und dieses auto ist die MIN-CONTENT-Breite der Station.
+// Die enthaelt den Geraetenamen ungebrochen, weil "truncate" ihn auf
+// white-space: nowrap setzt - das Raster wuchs damit ueber die 15,5rem
+// schmale Profilspalte hinaus und die Kette schob sich im Bearbeitungsmodus
+// quer in den Pool daneben (im Browser gesehen, erstes Rendern dieser
+// Seite). Mit minmax(0,1fr) darf die Spalte schrumpfen, und dann greift das
+// truncate, fuer das es gedacht war.
+//
+// Und ein HTML-Kommentar IM Slot zaehlt mit. Vue laesst Kommentare im
+// Entwicklungsmodus stehen, sie werden zu Comment-Knoten - der Erklaertext,
+// der frueher hier ueber dem <div data-station> stand, hat die Kette beim
+// ersten Rendern im Browser mit genau dieser Ausnahme abstuerzen lassen,
+// sobald sie die erste Station bekam. Der Komponententest hat das nicht
+// gesehen, weil er draggable durch eine Attrappe ersetzt.
 </script>
 
 <template>
@@ -100,13 +124,10 @@ const buttonClass =
     ghost-class="opacity-40"
     class="flex flex-col"
   >
+    <!-- Kein Kommentar innerhalb von #item - siehe Begruendung im Skript. -->
     <template #item="{ element, index }">
-      <!-- Genau ein Wurzelelement je Station: vuedraggable ordnet die
-           DOM-Kinder den Array-Positionen zu, ein zweites Element je Eintrag
-           wuerde diese Zuordnung verschieben. Das Patchkabel steckt deshalb
-           mit im Wrapper. -->
       <div data-station>
-        <div class="grid grid-cols-[1.1rem_1fr] gap-x-[.6rem]">
+        <div class="grid grid-cols-[1.1rem_minmax(0,1fr)] gap-x-[.6rem]">
           <!-- Der durchgehende Strang bleibt wie in der Ansichtsfassung:
                Stueck ueber dem Knoten, Knoten, Stueck darunter bis zum Kabel.
                Damit er die einzige senkrechte Linie bleibt, haben die
@@ -235,7 +256,7 @@ const buttonClass =
         <div
           v-if="index < stations.length - 1"
           data-cable
-          class="grid grid-cols-[1.1rem_1fr] gap-x-[.6rem]"
+          class="grid grid-cols-[1.1rem_minmax(0,1fr)] gap-x-[.6rem]"
           aria-hidden="true"
         >
           <div class="flex h-[1.35rem] justify-center text-line">

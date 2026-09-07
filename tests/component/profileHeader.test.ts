@@ -60,6 +60,35 @@ describe('ProfileHeader', () => {
     expect(wrapper.text()).not.toContain(de.profile.bands)
   })
 
+  it('zeigt die Profil-Links mit rel="noopener noreferrer"', () => {
+    // Die alte Profilseite hatte sie, der Plan zu diesem Umbau nicht - ohne
+    // Prop und ohne Test waeren sie beim Zusammenbauen stillschweigend
+    // verschwunden.
+    const wrapper = mountHeader({
+      links: [
+        { label: 'Bandcamp', url: 'https://example.invalid/a' },
+        { label: 'YouTube', url: 'https://example.invalid/b' },
+      ],
+    })
+    const links = wrapper.findAll('[data-links] a')
+    expect(links.map((link) => link.text())).toEqual(['Bandcamp', 'YouTube'])
+    expect(links.map((link) => link.attributes('href'))).toEqual([
+      'https://example.invalid/a',
+      'https://example.invalid/b',
+    ])
+    expect(links.map((link) => link.attributes('rel'))).toEqual([
+      'noopener noreferrer',
+      'noopener noreferrer',
+    ])
+    expect(wrapper.get('[data-links]').text()).toContain(de.profile.links)
+  })
+
+  it('laesst den Link-Block ganz weg, wenn niemand Links hinterlegt hat', () => {
+    expect(mountHeader({ links: [] }).find('[data-links]').exists()).toBe(false)
+    // Auch ohne die Prop - die Vorgabe darf keinen leeren Block erzeugen.
+    expect(mountHeader().find('[data-links]').exists()).toBe(false)
+  })
+
   it('zeigt alle vier Kennzahlen mit Label und Wert', () => {
     const wrapper = mountHeader()
     const labels = wrapper.findAll('[data-stat] [data-label]').map((node) => node.text())

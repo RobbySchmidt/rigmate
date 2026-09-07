@@ -37,7 +37,7 @@ const t = useText()
 <template>
   <div v-if="stations.length > 0" class="flex flex-col">
     <template v-for="(station, index) in stations" :key="station.id">
-      <div class="grid grid-cols-[1.1rem_1fr] gap-x-[.6rem]">
+      <div class="grid grid-cols-[1.1rem_minmax(0,1fr)] gap-x-[.6rem]">
         <!-- Der Strang links laeuft durch: Stueck ueber dem Knoten, Knoten,
              Stueck darunter bis zum Patchkabel. Ohne diese beiden Stuecke
              haengen die Knoten in der Luft, weil das Kabel nur den schmalen
@@ -75,7 +75,7 @@ const t = useText()
       <div
         v-if="index < stations.length - 1"
         data-cable
-        class="grid grid-cols-[1.1rem_1fr] gap-x-[.6rem]"
+        class="grid grid-cols-[1.1rem_minmax(0,1fr)] gap-x-[.6rem]"
         aria-hidden="true"
       >
         <div class="flex h-[1.35rem] justify-center text-line">
