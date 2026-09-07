@@ -31,4 +31,20 @@ describe('RarityPip', () => {
     const wrapper = mount(RarityPip, { props: { rarity: null } })
     expect(wrapper.classes()).not.toContain('bg-rare')
   })
+
+  it('traegt selbst keinen vertikalen Versatz mehr', () => {
+    // Der Punkt beschreibt nur noch, WAS er ist - nicht, WO er sitzt. Der
+    // Versatz haengt am Kontext (Liste vs. Legende) und gehoert deshalb an
+    // die Aufrufstelle.
+    const wrapper = mount(RarityPip, { props: { rarity: 'rare' } })
+    expect(wrapper.classes().filter((name) => name.startsWith('mt-'))).toEqual([])
+  })
+
+  it('reicht eine von aussen gesetzte Klasse durch', () => {
+    const wrapper = mount(RarityPip, { props: { rarity: 'rare' }, attrs: { class: 'mt-2' } })
+    expect(wrapper.classes()).toContain('mt-2')
+    // Der wichtige Teil: die durchgereichte Klasse ERGAENZT die eigene,
+    // sie ersetzt sie nicht.
+    expect(wrapper.classes()).toContain('bg-rare')
+  })
 })

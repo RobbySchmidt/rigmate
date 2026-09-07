@@ -59,7 +59,7 @@ function nameClass(rarity: RarityBase | null): string {
       </div>
       <ul class="flex list-none flex-col p-0">
         <li v-for="entry in group.entries" :key="entry.id" class="flex items-baseline gap-[.45rem] py-[.28rem]">
-          <RarityPip :rarity="entry.rarity" />
+          <RarityPip :rarity="entry.rarity" class="mt-[.45rem]" />
           <NuxtLink
             :to="`/gear/${entry.slug}`"
             class="border-b border-transparent text-[.9rem] leading-snug no-underline hover:border-current hover:text-accent"
