@@ -208,6 +208,69 @@ getroffen hat.
   ist eine Sackgasse.
 - **Kette mit einer einzigen Station:** wird gezeigt. Ein Knoten ist eine ehrliche Kette.
 
+Der Leertext lautet sinngemäß **„Keine Signal Chain angelegt"**, mit einem Satz daneben, was das ist und
+wie man anfängt.
+
+### 5.4 Bearbeiten: die rechte Spalte wird zur Geräteliste
+
+Auf dem **eigenen** Profil lässt sich die Kette direkt auf der Profilseite bauen. Kein eigener Screen,
+kein Overlay: **„Kette bearbeiten" tauscht die rechte Spalte** — dort, wo sonst der Feed steht, erscheint
+die Liste der Geräte, die noch nicht in der Kette sind. Von dort zieht man sie nach links.
+
+```
+┌──────────────┬───────────────────────────────────┐
+│ Signal Chain │  Geräte hinzufügen                │
+│              │                                   │
+│ ⠿ 1 · Gitarre│   ⠿ Cabinet                       │
+│   White F. ↑↓✕│    Marshall 1960B    [Anhängen]  │
+│ ─ Einfügemarke                                   │
+│ ⠿ 2 · Pedal  │   ⠿ Amp                           │
+│   CE-2     ↑↓✕│    Marshall JTM45    [Anhängen]  │
+│              │                                   │
+│ Fertig       │                                   │
+└──────────────┴───────────────────────────────────┘
+```
+
+**Der Reiter allein tauscht die rechte Spalte nicht.** Ein Klick auf „Signal Chain" soll ansehen dürfen,
+ohne dass der Feed verschwindet. Erst „Kette bearbeiten" wechselt. **Ausnahme:** ist die Kette leer, gibt
+es nichts anzusehen — dann steht die Geräteliste sofort rechts.
+
+**Besucher sehen davon nichts.** Kein Griff, keine Pfeile, kein „Bearbeiten"; die rechte Spalte bleibt der
+Feed. Die Bearbeitung hängt an derselben Bedingung wie der vorhandene Bearbeiten-Link im Profilkopf:
+`useUserId()` gleich Profil-Id. **Serverseitig schützt weiterhin RLS** — die Sichtbarkeit im Client ist
+Bequemlichkeit, keine Absicherung.
+
+#### Bedienung
+
+| Weg | Wofür |
+|---|---|
+| Ziehen | schnellster Weg mit der Maus, mit Einfügemarke an der nächstgelegenen Fuge |
+| Pfeile hoch/runter an jeder Station | einziger Weg per Tastatur, und der zuverlässige auf Touch |
+| „Anhängen" an jedem Gerät der Liste | hängt hinten an, ohne Ziehen — trägt die schmale Ansicht |
+| „✕" an jeder Station | nimmt aus der Kette |
+
+**Ziehen ist nie der einzige Weg.** HTML5-Drag-and-Drop ist per Tastatur nicht erreichbar und auf Touch
+unzuverlässig; ohne Pfeile und „Anhängen" wäre die Kette für einen Teil der Nutzer nicht bearbeitbar.
+
+**Auf schmalen Schirmen** stehen die Spalten untereinander, dann zieht niemand von rechts nach links.
+Dort tragen „Anhängen" und die Pfeile die ganze Bedienung.
+
+**„✕" nimmt aus der Kette und löscht nichts.** Das Gerät wandert zurück in die Liste und bleibt im Rig.
+Das steht auch so auf dem Bildschirm, weil ein „✕" sonst nach Löschen aussieht — und Löschen wäre hier
+ein teurer Irrtum.
+
+**„Fertig" statt „Speichern".** Jede Änderung wird sofort geschrieben; der Knopf schließt nur die
+Bearbeitung und holt den Feed zurück.
+
+#### Schreiben
+
+Eine Verschiebung ist ein Schreibvorgang. Fünf schnelle Züge wären fünf Anfragen, deshalb werden
+Änderungen **kurz gesammelt und gebündelt geschickt** (etwa 400 ms nach der letzten Aktion).
+
+Der Hinweis unter der Kette meldet den Ausgang **ehrlich**: gespeichert, oder fehlgeschlagen mit der
+Möglichkeit, es erneut zu versuchen. Ein stiller Fehlschlag wäre hier besonders teuer, weil die
+Oberfläche die neue Reihenfolge bereits zeigt — genau der wiederkehrende Fehler aus Abschnitt 7.
+
 ---
 
 ## 6. Der Feed
@@ -245,8 +308,13 @@ verschieden sind:
 | Kette nicht gepflegt | Kette konnte nicht geladen werden |
 | keine Rig-Ereignisse | Feed-Abfrage fehlgeschlagen |
 | 0 Rig-Kollegen | Kollegenzahl konnte nicht berechnet werden |
+| Reihenfolge gespeichert | Speichern fehlgeschlagen, Anzeige zeigt trotzdem die neue Reihenfolge |
 
 Jeder dieser Fälle braucht ein eigenes Flag und einen eigenen sichtbaren Text.
+
+Der letzte ist der gefährlichste: beim Sortieren zeigt die Oberfläche die neue Reihenfolge sofort, auch
+wenn der Schreibvorgang scheitert. Nach einem Neuladen wäre die Änderung weg, ohne dass irgendwann etwas
+kaputt ausgesehen hätte.
 
 ---
 
@@ -273,7 +341,9 @@ davon wird in einer Seite lokal definiert.
 | `ProfileHeader.vue` | Avatar, Name, Bio, Bands, Kennzahlen, Aktionen |
 | `GearPanel.vue` | linkes Panel mit beiden Reitern |
 | `GearList.vue` | kategorisierte Liste mit Seltenheitspunkten |
-| `SignalChain.vue` | senkrechte Kette |
+| `SignalChain.vue` | senkrechte Kette, ansehen |
+| `SignalChainEditor.vue` | dieselbe Kette bearbeitbar: Griffe, Pfeile, Einfügemarke |
+| `GearPool.vue` | rechte Spalte im Bearbeitungsmodus, Geräte außerhalb der Kette |
 | `RarityPip.vue` | der Punkt, eine Stelle für die Regel |
 | `FeedItem.vue` | ein Beitrag, vorerst nur Rig-Ereignisse |
 
@@ -287,6 +357,10 @@ werden Umlaute als „ae"/„oe"/„ue"/„ss" geschrieben, auch in Kommentaren.
 **Die Reiter** sind echte Reiter: `role="tablist"`, `role="tab"`, `aria-selected`, `role="tabpanel"`,
 Fokus sichtbar.
 
+**Das Ziehen bekommt keine Bibliothek.** HTML5-Drag-and-Drop reicht für die Maus; die Pfeile und
+„Anhängen" tragen Tastatur und Touch und sind ohnehin Pflicht. Eine Drag-Bibliothek würde eine
+Abhängigkeit hinzufügen, um einen Weg zu verbessern, der nie der einzige sein darf.
+
 ---
 
 ## 10. Entwürfe
@@ -298,7 +372,10 @@ Die visuellen Vorlagen, in der Reihenfolge ihrer Entstehung:
 2. [Panel mit zwei Ansichten](https://claude.ai/code/artifact/1072f5f4-15bd-44c4-be65-a5d5ac1f5bb1) —
    der beschlossene Entwurf, beide Reiter im aktiven Zustand
 
-Beide arbeiten mit echten Seed-Daten von Röhrenglut Rüdiger.
+3. [Kette bearbeiten](https://claude.ai/code/artifact/0104dec5-24e7-4978-b07e-fca068e35bf1) —
+   Bearbeitungsmodus mit funktionierendem Ziehen, daneben die Besucheransicht
+
+Alle drei arbeiten mit echten Seed-Daten von Röhrenglut Rüdiger.
 
 ---
 
@@ -322,4 +399,9 @@ getroffen wurde.
 | Rig-Ereignisse aus `created_at` vorgezogen | Kostet keine Tabelle und verhindert, dass die rechte Spalte bis Stufe 2 leer bleibt. |
 | Stufe-2-Schaltflächen jetzt entwerfen, deaktiviert zeigen | Sonst wird der Kopf zweimal entworfen. |
 | Eine `chain_position`-Spalte statt Kanten | Eine Signalkette ist linear. Eine Ordnung genügt. |
+| Bearbeiten tauscht die rechte Spalte | Kein eigener Screen, kein Overlay. Die Fläche ist da, und Kette und Geräteliste gehören beim Bauen nebeneinander. *(Robbys Vorschlag.)* |
+| Der Reiter allein tauscht sie nicht | Ansehen soll nicht den Feed kosten. Nur bei leerer Kette entfällt der Umweg, weil es nichts anzusehen gibt. |
+| Ziehen nie als einziger Weg | Per Tastatur nicht erreichbar, auf Touch unzuverlässig. Pfeile und „Anhängen" sind kein Zusatz, sondern die Grundbedienung. |
+| „✕" nimmt heraus, löscht nicht | Ein Löschen an dieser Stelle wäre ein teurer Irrtum. |
+| Schreibvorgänge gebündelt | Eine Verschiebung je Anfrage wäre bei schnellem Sortieren eine Salve. |
 | Nur das Profil umbauen, Tokens aber gemeinsam | Die Tokens sind der teure Teil und werden einmal gebaut. Der Rest der App zieht nach, ohne dass etwas doppelt entsteht. |
