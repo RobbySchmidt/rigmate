@@ -2,7 +2,9 @@
 
 Soziales Netzwerk für Gitarristen, bei dem **das Equipment den sozialen Graphen bildet**. Nicht „Facebook für Musiker", sondern näher an Letterboxd: ein strukturierter Gear-Katalog als Rückgrat, an dem das Soziale hochwächst. Man findet Menschen über ihr Equipment — gewichtet nach Seltenheit, damit nicht jeder mit einem Standard-Pedal jedem vorgeschlagen wird.
 
-**Aktueller Stand: Ausbaustufe 1 ist gebaut und auf `main` gemergt.** 36 Commits, 9 Migrationen, 259 Unit- und Komponententests plus 33 API-Tests, alle grün. Der Gear-Graph funktioniert nachweislich: wer eine Rarität teilt, steht mit Faktor 3–5 über dem, der ein Allerweltspedal teilt.
+**Ausbaustufe 1 ist gebaut und auf `main` gemergt.** Der Gear-Graph funktioniert nachweislich: wer eine Rarität teilt, steht mit Faktor 3–5 über dem, der ein Allerweltspedal teilt.
+
+**Aktuell in Arbeit: der Profilumbau auf `feature/profil-umbau`.** 39 Commits, 13 Migrationen, 439 Unit- und Komponententests plus 38 API-Tests, alle grün. Die Profilseite ist zweispaltig neu gebaut (Equipment-Panel links, Feed rechts), die Signalkette lässt sich per Drag and Drop pflegen. **16 von 20 Tasks sind durch, vier stehen aus** — siehe „Was noch aussteht".
 
 ## Zuerst lesen
 
@@ -15,6 +17,16 @@ Das ist die **Quelle der Wahrheit** für alles Inhaltliche: Datenmodell, Empfehl
 > **[docs/superpowers/plans/2026-09-06-rigmate-stufe-1.md](docs/superpowers/plans/2026-09-06-rigmate-stufe-1.md)**
 
 Der Plan für Stufe 1, vollständig abgearbeitet. Sein Abschnitt „Was dieser Plan über die Spec hinaus festlegt" listet die Entscheidungen, die beim Planen dazukamen. **Achtung: der Plan ist an mehreren Stellen überholt** — während der Umsetzung wurden Fehler darin gefunden und gegen ihn entschieden. Im Zweifel gilt der Code, nicht der Plan. Stufe 2 und 3 haben noch keine Pläne.
+
+### Für den laufenden Profilumbau
+
+> **[docs/superpowers/specs/2026-09-07-rigmate-profil-design.md](docs/superpowers/specs/2026-09-07-rigmate-profil-design.md)**
+
+Designsprache und Aufbau der Profilseite. Ergänzt die Hauptspec, widerspricht ihr an genau einer benannten Stelle (Abschnitt 8). Hat wie die Hauptspec einen **Anhang mit jeder Entscheidung und ihrem Grund** — vor dem Ändern dort nachsehen.
+
+> **[docs/superpowers/plans/2026-09-07-rigmate-profil-umbau.md](docs/superpowers/plans/2026-09-07-rigmate-profil-umbau.md)**
+
+Der Umsetzungsplan, 20 Tasks. **Er wurde während der Umsetzung mehrfach korrigiert** — wo etwas gebaut wurde, das dem Plan widerspricht, steht der Grund als Nachtrag im Task selbst. Ganz unten der Abschnitt **„Offen nach dem ersten Browserlauf"** mit dem, was noch aussteht.
 
 ## Stack
 
@@ -46,15 +58,15 @@ Supabase-Projekt: `rigmate`, Region `eu-west-1`, Postgres 17.6. Lokales Supabase
 | | |
 |---|---|
 | `yarn dev` | Dev-Server auf Port 3000 |
-| `yarn test` | Unit-, Komponenten- und DB-Tests (259) |
-| `yarn test:api` | API-Tests (33) — **braucht einen laufenden `yarn dev`** |
+| `yarn test` | Unit-, Komponenten- und DB-Tests (439 auf dem Profil-Branch, 259 auf `main`) |
+| `yarn test:api` | API-Tests (38 bzw. 33) — **braucht einen laufenden `yarn dev`** |
 | `yarn db:new <name>` | neue Migration anlegen |
 | `yarn db:push` | Migrationen auf die Instanz anwenden |
 | `yarn seed:catalog` | Katalog einspielen, idempotent |
 | `yarn seed:catalog --prune` | zusätzlich Einträge löschen, die nicht mehr in den Seed-Daten stehen |
 | `yarn seed:users` | 20 Demo-Musiker anlegen, idempotent |
 
-**Demo-Login zum Ausprobieren:** `demo-halbtakt-hanno@rigmate.invalid`, Passwort steht in [scripts/seed-users.ts](scripts/seed-users.ts). Nach dem Anmelden zeigt `/` echte Vorschläge mit Begründung.
+**Demo-Login zum Ausprobieren:** `demo-halbtakt-hanno@rigmate.invalid`, Passwort steht in [scripts/seed-users.ts](scripts/seed-users.ts). Nach dem Anmelden zeigt `/` echte Vorschläge mit Begründung, und „Mein Profil" in der Navigation führt auf die umgebaute Profilseite. Der interessanteste Demo-Fall ist **Röhrenglut Rüdiger** (über die Suche): vier Geräte, eine Rarität, zwei Besonderheiten — und **null Rig-Kollegen**, weil er nichts mit irgendwem teilt. Seltenheit verbindet nicht nur, sie isoliert auch.
 
 ## Architekturregeln
 
@@ -64,7 +76,9 @@ Supabase-Projekt: `rigmate`, Region `eu-west-1`, Postgres 17.6. Lokales Supabase
 - **Schema ist Code.** Alle Änderungen als versionierte Migrationen unter `supabase/migrations/`, niemals von Hand im Dashboard oder per MCP. Stand: 9 Migrationen, lokal und auf der Instanz synchron.
 - `service_role` key bleibt **serverseitig** — `server/`, `scripts/`, `tests/`, nie in `app/`. Nach jedem Build prüfen: `yarn build && grep -r "service_role" .output/public/` muss leer bleiben.
 - In [nuxt.config.ts](nuxt.config.ts) steht `supabase.redirect: false` mit Absicht — sonst würde jeder Nicht-Angemeldete auf `/login` geschickt, aber Gear-Seiten sollen laut Abschnitt 10 öffentlich sein. Der Schutz läuft stattdessen per Seite über `app/middleware/auth.ts`.
-- **Gemeinsame Regeln liegen unter `shared/utils/`** und dürfen nicht kopiert werden: `modelYearRule.ts` (kein Baujahr im Modellnamen), `rarityBase.ts`, `suggestionReason.ts`. Jede dieser Dateien entstand, weil eine Regel vorher zwei- bis viermal existierte und auseinanderlief.
+- **Gemeinsame Regeln liegen unter `shared/utils/`** und dürfen nicht kopiert werden: `modelYearRule.ts` (kein Baujahr im Modellnamen), `rarityBase.ts`, `suggestionReason.ts`, `rarityStyle.ts` (Seltenheitsstufe → CSS-Klasse), `rigEvents.ts` (Feed-Ereignisse aus `gear_items.created_at`). Jede dieser Dateien entstand, weil eine Regel vorher zwei- bis sechsmal existierte und auseinanderlief.
+- **Farben und Schriften kommen aus den Tokens in [app/assets/css/main.css](app/assets/css/main.css)**, nie als `neutral-*` oder Hex im Template. Die Tokens stehen dreifach: heller Grund vollständig in `:root`, dunkel als Überschreibung in `@media (prefers-color-scheme: dark)` **und** `[data-theme="dark"]`. Ein Token, das nur in einem der Dunkel-Blöcke steht, rendert im un-gestempelten Zustand die Textfarbe des einen Themes auf dem Grund des anderen.
+- **`--rm-rare` und `--rm-special` (Bernstein) gehören ausschließlich der Seltenheit.** Sie ist die Mechanik, über die Menschen einander finden, keine Verzierung — wer Bernstein woanders benutzt, macht die Auszeichnung unlesbar. Für Fehler gibt es `--rm-danger`.
 
 ## Fallstricke, die uns beim Bauen Zeit gekostet haben
 
@@ -77,7 +91,22 @@ Das ist die wertvollste Liste in dieser Datei. Jeder Punkt hat mindestens einen 
 - **Nuxt bindet auf `[::1]:3000`, also IPv6.** Eine Prüfung, ob der Port frei ist, muss das mitfangen — und auf deutschem Windows heißt der Zustand in `netstat` **`ABHÖREN`**, nicht `LISTENING`. Ein Filter auf „listening" übersieht den laufenden Server.
 - **Drei Tests in `tests/db/demoSeed.test.ts` setzen voraus, dass `yarn seed:users` gelaufen ist.** Sie sagen das inzwischen selbst, wenn sie fehlschlagen — keine Regression suchen, erst den Seed laufen lassen.
 - **Der Sprachtest ist ein AST-Scan, keine Stichwortsuche.** Er zerlegt jede `.vue`-Datei und schlägt fehl bei statischen Textknoten, bei literalen `placeholder`/`title`/`aria-label`/`alt` (die müssen gebunden sein: `:placeholder="t.x"`) und bei jeder Datei, die er nicht parsen kann.
-- **In `.vue`-Dateien Umlaute als „ae"/„oe"/„ue"/„ss" schreiben**, auch in Kommentaren — der Sprachtest scannt die ganze Datei. In `.ts` und `.sql` sind echte Umlaute in Ordnung (in SQL trotzdem lieber umschreiben).
+- **In `.vue`-Dateien Umlaute als „ae"/„oe"/„ue"/„ss" schreiben**, auch in Kommentaren — der Sprachtest scannt die ganze Datei. In `.ts` und `.sql` sind echte Umlaute in Ordnung (in SQL trotzdem lieber umschreiben). **Ausnahme: sichtbare Texte in `app/locales/de.ts` bekommen echte Umlaute** — sie landen unverändert auf dem Bildschirm. Die Kommentare in derselben Datei sind trotzdem transliteriert.
+
+### Beim Profilumbau dazugekommen
+
+- **Ein HTML-Kommentar im `<template>` kann teuer werden.** Am Wurzelknoten macht er zwei Wurzelknoten, Vue schaltet den Attribute-Fallthrough ab, und ein von außen gesetztes `class` kommt nicht mehr an — `wrapper.classes()` ist im Test leer, ohne jede Fehlermeldung. Im `#item`-Slot von `vuedraggable` ist er ein **Absturz**: „Item slot must have only one child", und zwar erst, sobald die Liste ihr erstes Element bekommt. Erklärende Kommentare gehören ins `<script setup>`. Ein Quelltext-Guard dafür steht in `tests/unit/draggableItemSlot.test.ts`.
+- **`yarn add vuedraggable` installiert die Vue-2-Fassung.** `latest` ist 2.24.3; die Vue-3-Variante ist `vuedraggable@4.1.0` vom `next`-Tag. Sie verträgt **kein SSR** — alles, was sie enthält, gehört in `<ClientOnly>`.
+- **`grid-cols-[1.1rem_1fr]` bedeutet `minmax(auto,1fr)`**, und dieses `auto` ist die Min-Content-Breite des Inhalts. Ein langer Gerätename schiebt damit die ganze Spalte über ihre Grenze. Für Spalten, die sich klein machen dürfen, `minmax(0,1fr)`.
+- **`mt-*` auf einem textlosen Flex-Kind unter `items-baseline` verschiebt nichts.** Flexbox richtet einen Kasten ohne Text an seiner unteren Margin-Kante aus; das `margin-top` treibt nur die Zeilenhöhe hoch (gemessen: 0,00px Wirkung, 2,19px Kosten je Zeile).
+- **`$fetch` nimmt im SSR die Cookies des eingehenden Requests nicht mit.** Eine Server-Route hinter `requireUserId()` antwortet dann mit 401, und die Seite zeigt dauerhaft einen Fehlerzustand, ohne dass etwas kaputt ist. In Seiten `useRequestFetch()` benutzen.
+- **Nitro braucht ~13 Sekunden zum Neubauen.** Wer eine Gegenprobe an einer Server-Route fährt und sofort testet, prüft den alten Build — die Gegenprobe ist dann wertlos und **grün**. Vor dem Testlauf per direktem HTTP-Aufruf belegen, dass der geänderte Stand wirklich ausgeliefert wird.
+- **Zwei gleichzeitige `yarn test`-Läufe zerschießen sich.** `deleteTestUsers()` räumt **jeden** `rigmate-test-*`-Account auf der geteilten Instanz ab, nicht nur die eigenen. `fileParallelism: false` schützt nur innerhalb eines Laufs. Immer nur ein Lauf gleichzeitig.
+- **`data-*`-Attribute als Testselektoren** sind seit dem Profilumbau etabliert (`data-cable`, `data-station`, `data-pip`, `data-count`). Über ein Tag zu selektieren zählt jedes künftige Icon mit, über eine Klasse koppelt den Test ans Styling.
+- **`gear_items.installed_in_id` ist nicht die Signalkette.** Es heißt „Tonabnehmer ist in Gitarre verbaut" und hängt an einer Ein-Ebenen-Invariante mit eigenem Trigger. Die Kette ist `chain_position`, geschrieben ausschließlich über `set_chain_order()`.
+- **Kein eindeutiger Index auf `(owner_id, chain_position)`.** Er würde jedes Umsortieren blockieren, weil der Zwischenzustand ihn verletzt, und `deferrable` geht bei einem partiellen Index nicht.
+- **`revoke ... from public` entzieht `anon` nichts.** Supabase vergibt per `alter default privileges` einen **expliziten** Grant an `anon`, den nur ein `revoke ... from anon` entfernt. Vorbild: `supabase/migrations/20260906120155_profiles_fix_round_1.sql`. **Nach so einer Migration die ACL auf der Instanz nachmessen**, nicht annehmen.
+- **`set_chain_order()` wirft mit eigenen SQLSTATE-Codes** `RG001`–`RG005` (nicht angemeldet, null, null-Element, Dublette, fremdes Gerät). Die Codes sind die Schnittstelle, die englischen Meldungstexte dürfen sich ändern. Rohe Postgres-Meldungen gehören nie auf den Bildschirm.
 
 ## Der wiederkehrende Fehler dieses Projekts
 
@@ -85,9 +114,47 @@ Das ist die wertvollste Liste in dieser Datei. Jeder Punkt hat mindestens einen 
 
 Jede Supabase-Antwort und jedes `$fetch` muss seinen Fehler prüfen, sichtbar machen und **vom legitimen Leerergebnis unterscheidbar** machen. Vorbilder im Code: [app/pages/search.vue](app/pages/search.vue) und [app/pages/profile/[id].vue](app/pages/profile/[id].vue).
 
+**Der Profilumbau hat sieben weitere gefunden**, jeden einzelnen erst durch eine Gegenprobe:
+
+| | |
+|---|---|
+| `set_chain_order(null)` | tat nichts und meldete nichts |
+| doppelte Ids in der Kette | erzeugten kommentarlos eine Lücke in der Nummerierung |
+| `revoke ... from public` | behauptete Schutz und lieferte keinen — `anon` durfte weiterhin ausführen |
+| `useChainOrder` | drei Wettläufe: „gespeichert" ohne Schreibvorgang, Fehlalarm, zwei gleichzeitige Aufrufe |
+| fehlendes `outsideCount` | hätte einen Hinweis **wortlos** verschwinden lassen, mit nichts als einer Konsolenwarnung |
+| „Niemand sonst hier spielt das." | eine Behauptung über andere Nutzer, die aus den Daten nicht folgt |
+| kein Profil-Link in der Navigation | das eigene Profil war überhaupt nicht erreichbar — **kein Test hätte das gefunden, das kam aus dem Ausprobieren** |
+
 Die Schwester davon: **Tests, die aus dem falschen Grund grün sind.** Ebenfalls sechsmal gefunden — `toBeGreaterThanOrEqual`, wo Genauigkeit gemeint war; ein Vergleich von 0 mit 0 auf leerer Datenbank; Assertions, die einen Schreibvorgang beobachten, ohne die Nutzlast zu lesen; `indexOf(a) < indexOf(b)`, das auch bestand, wenn `a` fehlte. **Bei jedem neuen Test fragen: kann der überhaupt fehlschlagen?** Und im Zweifel: Fix zurücknehmen, Test scheitern sehen, Fix wieder einbauen.
 
 ## Was noch aussteht
+
+### Zuerst: der Profilumbau auf `feature/profil-umbau`
+
+**16 von 20 Tasks sind durch.** Die Seite läuft, wurde im Browser geprüft, alle Tests grün. Offen:
+
+| Task | |
+|---|---|
+| **17** | Eigenes Token `--rm-danger` für Fehler. Bis dahin steht an drei Stellen `text-red-600` mit einem `// TODO Task 17` daneben. |
+| **18** | `login`, `register`, `confirm`, `index`, `search`, `settings`, `onboarding` auf die Farbtokens umstellen |
+| **19** | `gear/[slug]`, `rig`, `CatalogPicker`, `GearItemForm`, `PersonSuggestion` ebenso |
+| **20** | Abschluss: volle Suite, `yarn build` plus `grep service_role .output/public/` |
+
+**Tasks 18 und 19 sind nicht kosmetisch, sondern nötig:** Seit die Farbtokens stehen, greift `prefers-color-scheme: dark` bei jedem, dessen System dunkel steht — während diese Seiten noch `bg-white` und `text-neutral-*` tragen. Bis sie umgestellt sind, **nicht ausliefern**.
+
+Dazu entschieden, aber noch nicht gebaut: **die linke Spalte wird im Bearbeitungsmodus breiter** (~22rem statt 15,5rem), weil Griff und drei Knöpfe ~85 von 248px fressen und die Gerätenamen abgeschnitten werden.
+
+Gemeldet, noch nicht entschieden — Einzelheiten im Plan unter „Offen nach dem ersten Browserlauf":
+
+- `GearPool`-Karten kürzen auch im Normalfall
+- Name und Detail teilen sich in `GearList` eine Zeile und brechen um
+- **„Reihenfolge gespeichert" bleibt nach „Fertig" stehen** — das ist ein Fehler, keine Geschmacksfrage: der Hinweis gehört an den Bearbeitungsmodus
+- **Unbestätigt:** `login.vue` navigiert nach dem Anmelden womöglich nicht weiter. Der Code sieht richtig aus, der Befund stammt aus einer headless-Umgebung — **vor einem Fix reproduzieren**
+
+**Demo-Daten, die dabei verändert wurden:** Halbtakt-Hanno hat auf der geteilten Instanz jetzt eine Signalkette (Strat → DS-1 → TS9) und zwei Profil-Links. Kein Demo-Nutzer hatte vorher beides, und ohne ist die halbe Profilseite nicht anzusehen. `yarn seed:users` räumt die Kette weg, die Links nicht.
+
+### Danach
 
 - **Review der Spec durch Robby** — nach wie vor offen, und der günstigste Zeitpunkt für Kurskorrekturen
 - **Pläne für Stufe 2** (Feed, Posts, Kommentare, Likes, Folgen, Freundschaft, DMs, Benachrichtigungen) **und Stufe 3**
@@ -106,6 +173,12 @@ Beim Bauen dazugekommen, alles bewusst offen gelassen:
 - Leaked-Password-Schutz in Supabase ist aus.
 - **Im Katalog fehlen Basssaiten** — beide Demo-Bassisten teilen sich den einzigen eindeutigen Satz.
 - Katalog-Backoffice (Abschnitt 15 nennt es schon), Passwort-Reset, Passwort ändern.
+
+Aus dem Profilumbau dazugekommen:
+
+- **Rig-Ereignisse gruppieren nach UTC-Tag.** Wer abends um halb zwölf ein Pedal einträgt, sieht es im Feed unter dem Folgetag. Bewusst so: die Datenbank hat kein Zeitzonenfeld, „lokale Zeit" wäre also gar nicht eindeutig definiert.
+- **`chain_position` ist per RLS auch direkt beschreibbar.** Die Policy „users manage their own gear" erlaubt weiterhin ein schlichtes `update gear_items set chain_position = 1`; geschlossen hält die Positionen allein `set_chain_order()`. Für den Prototyp in Ordnung, weil nur unsere eigene Oberfläche schreibt.
+- **Die Signalkette ist auf einem echten Handy nie erprobt worden.** Gebaut ist sie dafür (Ziehen entfällt, „Anhängen" und die Pfeile tragen die Bedienung), gesehen wurde es nur in einem schmalen Browserfenster.
 
 ## Arbeitsweise
 
