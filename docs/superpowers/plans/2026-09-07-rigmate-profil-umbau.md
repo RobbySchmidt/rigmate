@@ -1131,6 +1131,30 @@ git commit -m "feat(ui): SignalChain mit Patchkabeln und getrennten Leerzustaend
 
 Diese Datei traegt den gefaehrlichsten Zustand der ganzen Seite: die Oberflaeche zeigt die neue Reihenfolge sofort, auch wenn das Speichern scheitert.
 
+> **Nachtrag aus der Umsetzung: der Entwurf unten reicht nicht.** Gegen die naive Fassung gemessen,
+> wurden sechs Tests rot. Drei verschiedene Wettlaeufe, alle unsichtbar:
+>
+> 1. Eine **alte Antwort kommt zurueck**, nachdem der Nutzer weitersortiert hat → `status` springt auf
+>    `'saved'`, obwohl der neuere Stand nirgends steht. Genau die Luege, gegen die die Datei gebaut ist.
+> 2. **Umgekehrt:** die alte Antwort scheitert → `'error'`, obwohl der neuere Stand gleich erfolgreich
+>    sein wird. Fehlalarm plus Flackern.
+> 3. Bei langsamer Antwort fliegen **zwei `set_chain_order`-Aufrufe gleichzeitig**. Die Funktion setzt
+>    die ganze Kette — je nach Laufzeit gewinnt auf der Datenbank die aeltere Reihenfolge.
+>
+> Gebaut ist es jetzt mit `queuedVersion`/`sentVersion`: eine Antwort wird nur dann zu einem Zustand,
+> wenn sie noch zum angezeigten Stand gehoert; sonst geht sofort der neue Stand hinterher. Es laeuft
+> immer nur ein Durchgang, und die Schleife loescht dabei den offenen Timer — sonst schickt er denselben
+> Stand ein zweites Mal.
+>
+> Ausserdem dazugekommen, jeweils mit Test:
+> - **`lastError`** in der Rueckgabe. RG001 (abgemeldet) und RG005 (fremdes Geraet, Ansicht veraltet)
+>   verlangen von der Oberflaeche verschiedene Reaktionen; ohne den Code bleibt ihr ein Sammeltext fuer
+>   fuenf Ursachen. Wird bei jedem neuen `save()` geleert.
+> - **`flushNow()`**, oeffentlich und `await`bar. `onScopeDispose` schickt den offenen Stand **sofort**,
+>   statt den Timer nur abzuraeumen — ein `clearTimeout` allein waere der stille Verlust in Reinform.
+> - **`try/catch` um den `rpc`.** Eine geworfene Rejection waere sonst unbehandelt *und* wuerde den
+>   Durchgang mitten im Nachziehen abbrechen, so dass der Rest der Kette fuer immer liegen bleibt.
+
 **Files:**
 - Create: `app/composables/useChainOrder.ts`
 - Create: `tests/unit/useChainOrder.test.ts`
@@ -1730,6 +1754,17 @@ git commit -m "feat(rig): GearPool als rechte Spalte im Bearbeitungsmodus"
 **Files:**
 - Create: `app/components/GearPanel.vue`
 - Create: `tests/component/gearPanel.test.ts`
+
+**Aus Task 8:** `useChainOrder` liefert neben `status` auch `lastError` mit dem SQLSTATE-Code. Zwei davon
+sagen dem Nutzer etwas und verdienen einen eigenen Text in `app/locales/de.ts` (echte Umlaute, es ist eine
+`.ts`-Datei):
+
+| Code | Lage | Vorschlag |
+|---|---|---|
+| `RG001` | Sitzung abgelaufen | „Du bist nicht mehr angemeldet. Melde dich neu an." |
+| `RG005` | Ansicht veraltet, Geraet gehoert nicht mehr dir | „Dein Rig hat sich geaendert. Lad die Seite neu." |
+
+`RG002`/`RG003`/`RG004` kann ein Nutzer nicht ausloesen — die bleiben beim Sammeltext `chainSaveError`.
 
 **Beim Bauen von Task 6 aufgefallen:** `GearList` rendert bei `groups: []` buchstaeblich nichts — kein
 Rahmen, keine Hoehe, kein Text. Das ist als Liste richtig, hinterlaesst im Panel aber eine wortlose
