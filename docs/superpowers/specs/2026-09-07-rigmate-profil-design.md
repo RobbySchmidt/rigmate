@@ -208,6 +208,12 @@ order by chain_position, created_at
 
 Positionen sind damit lückenlos, weil immer die ganze Kette geschrieben wird.
 
+**Offen geblieben, beim Bauen gefunden:** Ohne Unique-Index hält allein `set_chain_order()` die Positionen
+geschlossen — die RLS-Policy „users manage their own gear" erlaubt einem Client aber weiterhin ein
+schlichtes `update gear_items set chain_position = 1`. Die Invariante ist also nur so gut, wie die Clients
+die Funktion benutzen. Fuer den Prototyp reicht das, weil nur unsere eigene Oberflaeche schreibt. Wer das
+haerten will, braucht einen Trigger, der Direktschreiber auf dieser Spalte ablehnt.
+
 ### 5.3 Gepflegt wird von Hand
 
 **Entschieden gegen automatisches Vorsortieren nach Kategorie.** Wer eine Kette zeigen will, trägt sie
