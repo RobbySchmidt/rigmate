@@ -1799,13 +1799,20 @@ export function rarityTextClass(rarity: RarityBase | null): string { /* ... */ }
 export function rarityDotClass(rarity: RarityBase | null): string { /* ... */ }
 ```
 
-Die konkreten Klassen holst du aus den vorhandenen Komponenten. **Eine Entscheidung musst du dabei
-treffen:** `RarityPip` benutzt fuer die stille Stufe `bg-line opacity-55`, der Kettenknoten in
-`SignalChain.vue` dagegen `bg-surface border-line`. Der Spec-Review hat die Begruendung dafuer widerlegt
-(„damit der Strang nicht durchscheint" — der Strang laeuft gar nicht hinter dem Knoten durch, die Stuecke
-sind Flex-Geschwister, und der `special`-Knoten ist ohnehin durchsichtig). **Vereinheitliche die beiden**,
-und begruende im Bericht, welche Variante du warum genommen hast. Wenn du sie nach dem Ansehen doch fuer
-verschieden haeltst, ist das auch eine Antwort — dann aber mit einer Begruendung, die traegt.
+Die konkreten Klassen holst du aus den vorhandenen Komponenten. **Achtung, der stille Zustand darf NICHT vereinheitlicht werden.** `RarityPip` benutzt dafuer
+`bg-line opacity-55`, der Kettenknoten `bg-surface border-line`. Die urspruengliche Begruendung in
+`SignalChain.vue` („damit der Strang nicht durchscheint") ist falsch — der Strang laeuft nicht hinter dem
+Knoten durch, die Stuecke sind Flex-Geschwister. **Aber das Ergebnis stimmt trotzdem, aus einem anderen
+Grund:** der Knoten sitzt zwischen zwei `bg-line`-Segmenten **derselben Farbe**. Ein Punkt mit
+`opacity-55` daneben liest sich nicht als Station, sondern als Stelle, an der die Linie duenner wird. Und
+ohne Rand ist der Kreis im stillen Zustand gegen `bg-surface` praktisch unsichtbar — bei `RarityPip`
+traegt ihn die Deckkraft, auf dem Kabel nicht.
+
+**Also: zwei benannte Varianten statt einer Funktion mit Sonderfall.** Etwa `rarityDotClass()` fuer den
+Punkt in einer Liste und `rarityNodeClass()` fuer den Knoten auf einem Kabel — `rare` und `special` sind
+in beiden identisch, nur der stille Zustand unterscheidet sich. **Korrigiere dabei den falschen Kommentar
+in `SignalChain.vue`**, sonst wird die richtige Loesung beim naechsten Mal mit der falschen Begruendung
+wegoptimiert.
 
 - [ ] **Step 2: Test schreiben**
 
