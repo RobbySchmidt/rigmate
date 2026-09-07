@@ -1731,6 +1731,20 @@ git commit -m "feat(rig): GearPool als rechte Spalte im Bearbeitungsmodus"
 - Create: `app/components/GearPanel.vue`
 - Create: `tests/component/gearPanel.test.ts`
 
+**Beim Bauen von Task 6 aufgefallen:** `GearList` rendert bei `groups: []` buchstaeblich nichts — kein
+Rahmen, keine Hoehe, kein Text. Das ist als Liste richtig, hinterlaesst im Panel aber eine wortlose
+Luecke. **Das Panel muss die drei Zustaende auseinanderhalten:**
+
+| Zustand | was zu sehen ist |
+|---|---|
+| Equipment vorhanden | die Liste |
+| kein Equipment eingetragen | ein Satz, der das sagt — auf dem eigenen Profil mit Weg zum Eintragen |
+| Laden fehlgeschlagen | eine Fehlermeldung in `text-danger`, unterscheidbar vom leeren Rig |
+
+Der dritte Fall kommt als Prop von der Seite (die Liste selbst hat keine fehlbare Quelle). Ohne diese
+Unterscheidung sieht ein kaputter Request aus wie ein leeres Rig — der wiederkehrende Fehler dieses
+Projekts, sechsmal in achtzehn Tasks aufgetreten.
+
 - [ ] **Step 1: Test schreiben**
 
 ```ts
