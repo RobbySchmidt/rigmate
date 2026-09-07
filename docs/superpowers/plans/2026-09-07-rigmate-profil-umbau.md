@@ -47,6 +47,12 @@ Einzelne Testdatei laufen lassen: `yarn vitest run <pfad>`. Alles: `yarn test`.
 
 **Geaendert:** `app/assets/css/main.css` · `app/locales/de.ts` · `app/pages/profile/[id].vue` · `tests/helpers/supabaseStub.ts` · `tests/component/profile.test.ts` · `nuxt.config.ts` · `package.json` · `CLAUDE.md`
 
+**Nachtraeglich dazugekommen (Tasks 17-19):** Sobald die Farbtokens stehen, greift `prefers-color-scheme: dark`
+fuer jeden, dessen System dunkel steht — waehrend 73 fest verdrahtete Hell-Klassen in 13 Dateien weiterleben.
+Robbys Entscheidung: die restlichen Seiten mitnehmen, statt den Dunkelmodus stillzulegen. Betroffen sind
+`login`, `register`, `confirm`, `index`, `search`, `settings`, `onboarding`, `gear/[slug]`, `rig` sowie
+`CatalogPicker`, `GearItemForm` und `PersonSuggestion`. `profile/[id].vue` faellt raus, das baut Task 16 neu.
+
 ---
 
 ## Task 1: Migration — `chain_position` und `set_chain_order`
@@ -1905,7 +1911,7 @@ const showChainTab = computed(() => props.isOwn || props.stations.length > 0)
            zeigt die neue Reihenfolge bereits, ein stiller Fehlschlag waere
            nach einem Neuladen spurlos weg. -->
       <div v-if="editing" class="mt-[.9rem] flex items-center gap-2 border-t border-line-soft pt-3 font-mono text-[.7rem]">
-        <span v-if="saveStatus === 'error'" class="text-rare">{{ t.profile.chainSaveError }}</span>
+        <span v-if="saveStatus === 'error'" class="text-danger">{{ t.profile.chainSaveError }}</span>
         <button v-if="saveStatus === 'error'" type="button" class="text-accent hover:underline" @click="emit('retry')">
           {{ t.profile.chainRetry }}
         </button>
@@ -2217,7 +2223,7 @@ const initials = computed(() =>
         <div><b class="mr-1 font-display text-base tabular-nums text-ink">{{ specialCount }}</b>{{ t.profile.statSpecials }}</div>
         <!-- Null Rig-Kollegen ist ein echtes Ergebnis und sieht anders aus
              als eine fehlgeschlagene Abfrage. -->
-        <div v-if="mateCountFailed" class="text-rare">{{ t.profile.statMatesError }}</div>
+        <div v-if="mateCountFailed" class="text-danger">{{ t.profile.statMatesError }}</div>
         <div v-else><b class="mr-1 font-display text-base tabular-nums text-ink">{{ mateCount }}</b>{{ t.profile.statMates }}</div>
       </div>
     </div>
@@ -2688,7 +2694,7 @@ Und das Template:
       :is-own="isOwn"
     />
 
-    <p v-if="rigError" class="text-rare">{{ t.profile.loadError }}</p>
+    <p v-if="rigError" class="text-danger">{{ t.profile.loadError }}</p>
 
     <div v-else class="grid gap-7 lg:grid-cols-[15.5rem_1fr]">
       <GearPanel
@@ -2724,7 +2730,7 @@ Und das Template:
       </div>
     </div>
   </div>
-  <p v-else-if="profileError" class="text-rare">{{ t.profile.loadError }}</p>
+  <p v-else-if="profileError" class="text-danger">{{ t.profile.loadError }}</p>
   <p v-else class="text-muted">{{ t.profile.notFound }}</p>
 </template>
 ```
@@ -2790,7 +2796,156 @@ git commit -m "feat(profile): zweispaltiges Profil mit Equipment-Panel und Feed"
 
 ---
 
-## Task 17: Abschluss
+## Task 17: Fehlerfarbe nachziehen
+
+Beim Umstellen der Seiten fiel auf: **die Tokens haben keine Farbe fuer Fehlermeldungen.** Die Seiten
+benutzen heute `text-red-600`. Dafuer `--rm-rare` zu nehmen waere falsch — Bernstein gehoert
+ausschliesslich der Seltenheit, sonst ist genau die Trennung kaputt, auf der das Farbkonzept steht.
+
+**Files:**
+- Modify: `app/assets/css/main.css`
+
+- [ ] **Step 1: Token in allen drei Bloecken ergaenzen**
+
+In `:root`, in `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` und in
+`:root[data-theme="dark"]` — **in allen dreien**, sonst faellt die Farbe in einem Zustand auf nichts zurueck:
+
+```css
+  /* Fehler und Zerstoerendes. Eigene Farbe, weil --rm-rare ausschliesslich
+     der Seltenheit gehoert - ein roter Fehlertext in Bernstein waere
+     doppeldeutig genau dort, wo Eindeutigkeit zaehlt. */
+  --rm-danger: #a33a2b;          /* dunkel: #e0897a */
+```
+
+Und im `@theme inline`-Block:
+
+```css
+  --color-danger: var(--rm-danger);
+```
+
+- [ ] **Step 2: Pruefen, dass die Utility entsteht**
+
+```bash
+yarn dev
+```
+
+Auf einer beliebigen Seite in den DevTools pruefen, dass `text-danger` eine Regel erzeugt. Nuxt bindet auf
+`[::1]:3000` (IPv6); auf deutschem Windows heisst der Zustand in `netstat` **`ABHOEREN`**.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/assets/css/main.css
+git commit -m "feat(ui): eigenes Token fuer Fehlerfarbe"
+```
+
+---
+
+## Task 18: Seiten auf die Tokens umstellen
+
+Rein mechanisch, kein neues Design. Ziel: kein `neutral-*`, kein `bg-white`, kein `text-red-*` mehr in
+`app/`. Danach ist die App im Dunkelmodus durchgaengig statt halb.
+
+**Files (7 Seiten):**
+- Modify: `app/pages/login.vue`, `app/pages/register.vue`, `app/pages/confirm.vue`,
+  `app/pages/index.vue`, `app/pages/search.vue`, `app/pages/settings.vue`, `app/pages/onboarding.vue`
+
+- [ ] **Step 1: Ersetzungstabelle anwenden**
+
+| alt | neu |
+|---|---|
+| `bg-neutral-50` | `bg-bg` |
+| `bg-white` | `bg-surface` |
+| `bg-neutral-100` | `bg-surface-2` |
+| `text-neutral-900` | `text-ink` |
+| `text-neutral-600`, `text-neutral-500` | `text-muted` |
+| `border-neutral-200`, `border-neutral-300` | `border-line` |
+| `border` ohne Farbe | `border border-line-soft` |
+| `bg-neutral-900` (Schaltflaeche) | `bg-accent` |
+| `text-white` **auf** `bg-accent` | `text-accent-ink` |
+| `text-red-600`, `text-red-700` | `text-danger` |
+| `underline` bei Links | `text-accent hover:underline` |
+
+**Nicht blind ersetzen.** Sieh dir jede Stelle an: `text-white` auf einem dunklen Knopf wird
+`text-accent-ink`, `text-white` auf einem Bild bleibt `text-white`. Und wo `border` ohne Farbangabe steht,
+erbt es heute Tailwinds Standardgrau — das muss explizit werden.
+
+- [ ] **Step 2: Sprachtest und volle Suite**
+
+```bash
+yarn test
+```
+
+Erwartet: gruen. Haengt ein Komponententest an einer alten Klasse, **passe den Test an — dreh die Klasse
+nicht zurueck.** Genau dafuer sind die Tests da.
+
+- [ ] **Step 3: Beide Themes ansehen**
+
+`yarn dev`, dann jede der sieben Seiten einmal hell und einmal dunkel. Dunkel erreichst du ueber die
+System-Einstellung oder indem du in den DevTools `data-theme="dark"` ans `<html>` haengst.
+
+Achte auf: weisse Flaechen, die dunkel bleiben muessten; Text, der auf seinem Grund verschwindet;
+Rahmen, die im Dunkeln unsichtbar werden.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/pages
+git commit -m "refactor(ui): Seiten auf die Farbtokens umgestellt"
+```
+
+---
+
+## Task 19: Gear-Seite, Rig und die Komponenten umstellen
+
+Dieselbe Tabelle wie Task 18, aber diese Dateien sind groesser und haben mehr Zustaende.
+
+**Files (5):**
+- Modify: `app/pages/gear/[slug].vue`, `app/pages/rig.vue`
+- Modify: `app/components/CatalogPicker.vue`, `app/components/GearItemForm.vue`,
+  `app/components/PersonSuggestion.vue`
+
+- [ ] **Step 1: Ersetzungstabelle aus Task 18 anwenden**
+
+Zwei Besonderheiten:
+
+- **`app/pages/gear/[slug].vue` ist oeffentlich** (Abschnitt 10 der Hauptspec) und zeigt Seltenheit an.
+  Die Seltenheitsstufe dort bekommt jetzt dieselbe Farbe wie im Profil-Panel: `text-rare` fuer `rare`,
+  `text-special` fuer `special`, sonst nichts. **Das ist der einzige Ort ausser dem Profil, an dem
+  Bernstein auftauchen darf.**
+- **`app/components/CatalogPicker.vue`** hat eine Auswahlliste mit Hover- und Aktiv-Zustaenden. Dort
+  `bg-neutral-100` als Hover → `bg-surface-2`, ausgewaehlt → `bg-accent-wash`.
+
+- [ ] **Step 2: Volle Suite**
+
+```bash
+yarn test
+```
+
+- [ ] **Step 3: Kontrolle, dass wirklich nichts uebrig ist**
+
+```bash
+grep -rn "neutral-\|bg-white\|text-red-\|border-red-" app/ || echo "sauber"
+```
+
+Erwartet: `sauber`. Findet der Befehl noch etwas, gehoert es entweder umgestellt oder es gibt einen
+Grund — dann Kommentar an die Stelle.
+
+- [ ] **Step 4: Beide Themes ansehen**
+
+`yarn dev`, dann `/gear/<beliebiger-slug>`, `/rig` und ein Formular mit dem CatalogPicker, jeweils hell
+und dunkel.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/pages app/components
+git commit -m "refactor(ui): Gear-Seite, Rig und Komponenten auf die Farbtokens umgestellt"
+```
+
+---
+
+## Task 20: Abschluss
 
 **Files:**
 - Modify: `CLAUDE.md`
@@ -2853,7 +3008,7 @@ git commit -m "docs: Fallstricke aus dem Profilumbau in CLAUDE.md"
 
 ## Was dieser Plan bewusst offen laesst
 
-- **Startseite, Suche, Gear-Seiten, Rig, Einstellungen, Login** bleiben unveraendert. Sie benutzen die Tokens spaeter, ohne dass etwas doppelt entsteht — aber danach faellt der Rest der App sichtbar gegen das Profil ab.
+- **Das Layout der uebrigen Seiten bleibt unveraendert.** Tasks 18 und 19 stellen nur ihre Farben auf die Tokens um, damit der Dunkelmodus durchgaengig ist — sie bekommen kein neues Design. Danach faellt der Rest der App gestalterisch weiterhin gegen das Profil ab, aber nichts sieht mehr kaputt aus.
 - **Posts, Kommentare, Likes, Folgen** bleiben Stufe 2. Ihre Schaltflaechen sind entworfen und deaktiviert.
 - **Gerätefotos.** `catalog_items.image_path` existiert, ist aber leer. Kommen Bilder dazu, aendert sich das Layout nicht.
 - **Die Kette auf dem Handy.** Die Spalten stehen dort untereinander, gezogen wird nichts — „Anhaengen" und die Pfeile tragen die Bedienung. Das ist gebaut, aber auf einem echten Geraet nicht erprobt.
