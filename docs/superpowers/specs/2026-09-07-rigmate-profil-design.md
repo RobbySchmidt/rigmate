@@ -302,6 +302,23 @@ in einer Transaktion, nur für Zeilen mit `owner_id = auth.uid()`.
 Folge einzelner Aufrufe wären das je nach Kettenlänge zwanzig Anfragen, und ein Abbruch in der Mitte
 hinterließe eine halb umsortierte Kette. Ein Aufruf, ein Zustand.
 
+**Fehler kommen als stabiler Code, nicht als Text.** Jede Ausnahme der Funktion trägt einen eigenen
+SQLSTATE. Die englischen Meldungstexte sind Diagnose für Entwickler und dürfen sich ändern; die Codes
+sind die Schnittstelle und dürfen es nicht.
+
+| Code | Bedeutung |
+|---|---|
+| `RG001` | nicht angemeldet (`auth.uid()` ist `null`) |
+| `RG002` | `item_ids` ist `null` |
+| `RG003` | `item_ids` enthält `null` als Element |
+| `RG004` | ein Gerät steht zweimal in der Kette |
+| `RG005` | Gerät unbekannt oder nicht im Besitz des Aufrufers |
+
+`RG004` und `RG005` nennen die betroffene Geräte-Id in der Meldung — bei einer langen Kette ist eine
+bloße Anzahl nicht zu gebrauchen. Ein **nicht angemeldeter** Aufrufer erreicht die Funktion gar nicht
+erst: `anon` hat kein `EXECUTE`, das gibt `42501`. `RG001` trifft nur, wer ausführen darf und trotzdem
+keine `auth.uid()` hat.
+
 Die Oberfläche sammelt schnell aufeinanderfolgende Aktionen **kurz und schickt sie gebündelt** (etwa
 400 ms nach der letzten). Der Hinweis unter der Kette meldet den Ausgang **ehrlich**: gespeichert, oder
 fehlgeschlagen mit der Möglichkeit, es erneut zu versuchen. Ein stiller Fehlschlag wäre hier besonders
