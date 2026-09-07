@@ -6,6 +6,7 @@
 // PersonSuggestion in app/pages/index.vue.
 import { computed } from 'vue'
 import type { RarityBase } from '#shared/utils/rarityBase'
+import { rarityNameClass } from '#shared/utils/rarityStyle'
 
 export interface GearListEntry {
   id: string
@@ -41,10 +42,18 @@ const hasMarked = computed(() =>
   ),
 )
 
-function nameClass(rarity: RarityBase | null): string {
-  if (rarity === 'rare') return 'text-rare font-medium'
-  if (rarity === 'special') return 'text-special'
-  return 'text-ink'
+// Die Farbe kommt aus der gemeinsamen Quelle, das zusaetzliche Gewicht bei
+// "rare" bleibt bewusst hier. Es ist kein Ausrutscher, sondern haengt am
+// Kontext: die Namen in DIESER Liste stehen in normaler Schriftstaerke, ein
+// Rarissimum hebt sich darin erst ueber font-medium heraus. Im Signalweg, im
+// Bearbeiten-Modus und im Pool stehen dieselben Namen bereits in
+// font-semibold - dort waere font-medium (500) kein Zugewinn, sondern eine
+// Abstufung nach UNTEN gegenueber 600. Ein in rarityNameClass() fest
+// verdrahtetes Gewicht wuerde also die eine Ansicht heben und die andere
+// senken. Deshalb steht es an der Aufrufstelle.
+function entryNameClass(rarity: RarityBase | null): string {
+  const color = rarityNameClass(rarity)
+  return rarity === 'rare' ? `${color} font-medium` : color
 }
 </script>
 
@@ -70,7 +79,7 @@ function nameClass(rarity: RarityBase | null): string {
           <NuxtLink
             :to="`/gear/${entry.slug}`"
             class="border-b border-transparent text-[.9rem] leading-snug no-underline hover:border-current hover:text-accent"
-            :class="nameClass(entry.rarity)"
+            :class="entryNameClass(entry.rarity)"
           >
             {{ entry.label }}
           </NuxtLink>

@@ -49,6 +49,28 @@ describe('SignalChain', () => {
     expect(wrapper.findAll('a')[0].attributes('href')).toBe('/gear/gretsch-white-falcon')
   })
 
+  it('zeichnet Namen und Knoten nach Seltenheit aus', () => {
+    const wrapper = mountChain({})
+    const links = wrapper.findAll('a')
+    expect(links[0].classes()).toContain('text-rare')
+    expect(links[1].classes()).toContain('text-special')
+    expect(links[2].classes()).toContain('text-ink')
+    // Hier stehen die Namen schon in font-semibold - ein zusaetzliches
+    // font-medium waere eine Abstufung nach unten, kein Zugewinn.
+    expect(links[0].classes()).not.toContain('font-medium')
+
+    const nodes = wrapper.findAll('.rounded-full')
+    expect(nodes).toHaveLength(stations.length)
+    expect(nodes[0].classes()).toContain('bg-rare')
+    expect(nodes[1].classes()).toContain('border-special')
+    // Der stille Knoten wird auf dem Kabel vom Rand getragen, nicht von der
+    // Deckkraft: zwischen zwei bg-line-Stuecken laese sich ein
+    // halbtransparenter Punkt als duennere Stelle im Kabel, nicht als Station.
+    expect(nodes[2].classes()).toContain('bg-surface')
+    expect(nodes[2].classes()).toContain('border-line')
+    expect(nodes[2].classes()).not.toContain('opacity-55')
+  })
+
   it('setzt ein Kabel zwischen die Stationen, aber keins hinter die letzte', () => {
     const wrapper = mountChain({})
     // Ein Kabel ins Nichts liest sich als fehlendes Glied.

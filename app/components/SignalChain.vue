@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RarityBase } from '#shared/utils/rarityBase'
+import { rarityNameClass, rarityNodeClass } from '#shared/utils/rarityStyle'
 
 export interface ChainStation {
   id: string
@@ -17,24 +18,20 @@ defineProps<{ stations: ChainStation[]; isOwn: boolean; outsideCount: number }>(
 
 const t = useText()
 
-// Dieselbe Sprache wie die Punkte im Equipment-Reiter: gefuellt bei rare,
-// hohl bei special. Zwischen den Ansichten muss niemand umlernen.
+// Farben und Knotenform kommen aus #shared/utils/rarityStyle - dieselbe
+// Sprache wie die Punkte im Equipment-Reiter: gefuellt bei rare, hohl bei
+// special, zwischen den Ansichten muss niemand umlernen.
 //
-// Der stille Zustand weicht bewusst von RarityPip ab: dort ist er ein
-// halbtransparenter Punkt (bg-line opacity-55), hier eine deckende Flaeche
-// mit Rand. Der Knoten sitzt auf dem Kabel und muss den Strang
-// durchstossen - halbtransparent liesse die Linie durchscheinen.
-function nodeClass(rarity: RarityBase | null): string {
-  if (rarity === 'rare') return 'bg-rare border-rare'
-  if (rarity === 'special') return 'border-special'
-  return 'bg-surface border-line'
-}
-
-function nameClass(rarity: RarityBase | null): string {
-  if (rarity === 'rare') return 'text-rare'
-  if (rarity === 'special') return 'text-special'
-  return 'text-ink'
-}
+// Der STILLE Zustand weicht ab (rarityNodeClass statt rarityPipClass), und
+// die Begruendung, die frueher hier stand, war falsch: der Strang laeuft
+// NICHT hinter dem Knoten durch, die drei Stuecke sind Flex-Geschwister -
+// halbtransparent koennte da gar nichts durchscheinen. Der Unterschied
+// stimmt trotzdem, aus einem anderen Grund: der Knoten sitzt zwischen zwei
+// bg-line-Segmenten derselben Farbe, und ein Punkt mit opacity-55 laese sich
+// dort als duennere Stelle im Kabel statt als Station. Ohne Rand waere der
+// Kreis ausserdem gegen bg-surface praktisch unsichtbar - in der Liste
+// traegt ihn die Deckkraft, hier tut das der Rand. Die ausfuehrliche
+// Fassung steht bei rarityNodeClass().
 </script>
 
 <template>
@@ -50,7 +47,7 @@ function nameClass(rarity: RarityBase | null): string {
              laeuft, liest sich wie ein abgerissenes Kabel. -->
         <div class="flex flex-col items-center">
           <span class="h-[.42rem] w-px" :class="index > 0 ? 'bg-line' : 'bg-transparent'" />
-          <span class="size-[.6rem] shrink-0 rounded-full border-[1.5px]" :class="nodeClass(station.rarity)" />
+          <span class="size-[.6rem] shrink-0 rounded-full border-[1.5px]" :class="rarityNodeClass(station.rarity)" />
           <span v-if="index < stations.length - 1" class="w-px flex-1 bg-line" />
         </div>
         <div class="min-w-0">
@@ -60,7 +57,7 @@ function nameClass(rarity: RarityBase | null): string {
           <NuxtLink
             :to="`/gear/${station.slug}`"
             class="inline-block border-b border-transparent font-display text-[.9375rem] font-semibold leading-tight no-underline hover:border-current hover:text-accent"
-            :class="nameClass(station.rarity)"
+            :class="rarityNameClass(station.rarity)"
           >
             {{ station.label }}
           </NuxtLink>

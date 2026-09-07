@@ -33,6 +33,27 @@ function mountEditor(props: Record<string, unknown> = {}) {
 }
 
 describe('SignalChainEditor', () => {
+  it('zeichnet Namen und Knoten wie die Ansichtsfassung aus', () => {
+    // Zwischen Ansehen und Bearbeiten darf sich die Seltenheit nicht anders
+    // lesen - beide haengen an derselben Quelle.
+    const wrapper = mountEditor()
+    const names = wrapper.findAll('.font-display')
+    expect(names.map((name) => name.text())).toEqual([
+      'Gretsch White Falcon',
+      'Boss CE-2 Chorus',
+      'Marshall JTM45',
+    ])
+    expect(names[0].classes()).toContain('text-rare')
+    expect(names[1].classes()).toContain('text-special')
+    expect(names[2].classes()).toContain('text-ink')
+
+    const nodes = wrapper.findAll('.rounded-full')
+    expect(nodes).toHaveLength(stations.length)
+    expect(nodes[0].classes()).toContain('bg-rare')
+    expect(nodes[1].classes()).toContain('border-special')
+    expect(nodes[2].classes()).toContain('bg-surface')
+  })
+
   it('schiebt eine Station mit dem Pfeil nach oben', async () => {
     const wrapper = mountEditor()
     await wrapper.findAll(`[aria-label="${de.profile.chainMoveUp}"]`)[1].trigger('click')

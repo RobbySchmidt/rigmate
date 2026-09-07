@@ -9,7 +9,9 @@
 // direkt, also ausserhalb der Nuxt-Build-Pipeline.
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
-import type { RarityBase } from '#shared/utils/rarityBase'
+// Dieselbe Namensfarbe wie in SignalChain.vue und SignalChainEditor.vue:
+// zwischen Ansehen, Bearbeiten und diesem Pool muss niemand umlernen.
+import { rarityNameClass } from '#shared/utils/rarityStyle'
 import type { ChainStation } from './SignalChain.vue'
 
 // Diese Komponente haelt keine eigene Wahrheit: die Geraete kommen von aussen,
@@ -29,20 +31,6 @@ const list = computed({
 
 function append(id: string): void {
   emit('append', id)
-}
-
-// Dieselbe Farbe wie in SignalChain.vue und SignalChainEditor.vue: zwischen
-// Ansehen, Bearbeiten und diesem Pool muss niemand umlernen.
-//
-// ZUSAMMENZUG STEHT AN: die Zuordnung "Seltenheitsstufe -> CSS-Klasse" liegt
-// inzwischen in RarityPip.vue, GearList.vue, zweimal in SignalChain.vue und
-// hier. Wortgleiche Kopie aus SignalChain.vue - genau deshalb, damit der
-// Umzug nach shared/utils/ ein Loeschen bleibt und kein Abgleich wird. Wer
-// den Umzug macht: hier auch loeschen.
-function nameClass(rarity: RarityBase | null): string {
-  if (rarity === 'rare') return 'text-rare'
-  if (rarity === 'special') return 'text-special'
-  return 'text-ink'
 }
 
 // Der Anhaengen-Knopf sitzt mit im ziehbaren Element. Zwei Massnahmen halten
@@ -108,7 +96,7 @@ const appendButtonClass =
             </span>
             <span
               class="block truncate font-display text-[.9375rem] font-semibold leading-tight"
-              :class="nameClass(element.rarity)"
+              :class="rarityNameClass(element.rarity)"
             >
               {{ element.label }}
             </span>

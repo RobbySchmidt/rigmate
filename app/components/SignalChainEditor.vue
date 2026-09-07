@@ -8,7 +8,9 @@
 // @vue/test-utils direkt, also ausserhalb der Nuxt-Build-Pipeline.
 import { computed, nextTick } from 'vue'
 import draggable from 'vuedraggable'
-import type { RarityBase } from '#shared/utils/rarityBase'
+// Knoten und Namensfarbe aus derselben Quelle wie SignalChain.vue: zwischen
+// Ansehen und Bearbeiten muss niemand umlernen.
+import { rarityNameClass, rarityNodeClass } from '#shared/utils/rarityStyle'
 import type { ChainStation } from './SignalChain.vue'
 
 // Diese Komponente haelt keine eigene Wahrheit: die Stationen kommen von
@@ -74,28 +76,6 @@ function remove(index: number): void {
   emit('remove', row.id)
 }
 
-// Dieselben Farben wie in SignalChain.vue: zwischen Ansehen und Bearbeiten
-// muss niemand umlernen.
-//
-// ZUSAMMENZUG STEHT AN: die Zuordnung "Seltenheitsstufe -> CSS-Klasse" liegt
-// inzwischen in RarityPip.vue, GearList.vue, zweimal in SignalChain.vue und
-// hier. Beide Funktionen sind wortgleiche Kopien aus SignalChain.vue - genau
-// deshalb, damit der Umzug nach shared/utils/ ein Loeschen bleibt und kein
-// Abgleich wird. Wer den Umzug macht: hier auch loeschen.
-function nodeClass(rarity: RarityBase | null): string {
-  if (rarity === 'rare') return 'bg-rare border-rare'
-  if (rarity === 'special') return 'border-special'
-  return 'bg-surface border-line'
-}
-
-// Wortgleiche Kopie aus SignalChain.vue - siehe Hinweis ueber nodeClass():
-// wandert beim Zusammenzug nach shared/utils/.
-function nameClass(rarity: RarityBase | null): string {
-  if (rarity === 'rare') return 'text-rare'
-  if (rarity === 'special') return 'text-special'
-  return 'text-ink'
-}
-
 // Ein Knopf, drei Mal: gleiche Groesse, gleiche Zurueckhaltung. Der
 // deaktivierte Zustand nimmt die Zeigerereignisse mit weg, damit ein Klick am
 // Rand der Kette nicht doch noch irgendwo landet.
@@ -129,7 +109,7 @@ const buttonClass =
                ueber zwoelf Geraete hinweg nur Unruhe. -->
           <div class="flex flex-col items-center">
             <span class="h-[.6rem] w-px" :class="index > 0 ? 'bg-line' : 'bg-transparent'" />
-            <span class="size-[.6rem] shrink-0 rounded-full border-[1.5px]" :class="nodeClass(element.rarity)" />
+            <span class="size-[.6rem] shrink-0 rounded-full border-[1.5px]" :class="rarityNodeClass(element.rarity)" />
             <span v-if="index < stations.length - 1" class="w-px flex-1 bg-line" />
           </div>
 
@@ -163,7 +143,7 @@ const buttonClass =
               </span>
               <span
                 class="block truncate font-display text-[.9375rem] font-semibold leading-tight"
-                :class="nameClass(element.rarity)"
+                :class="rarityNameClass(element.rarity)"
               >
                 {{ element.label }}
               </span>

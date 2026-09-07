@@ -7,16 +7,11 @@
 // doppelte Imports selbst.
 import { computed } from 'vue'
 import type { RarityBase } from '#shared/utils/rarityBase'
+import { rarityPipClass } from '#shared/utils/rarityStyle'
 
-// Nur zwei der vier Stufen bekommen eine Auszeichnung. Leuchten alle vier,
-// sagt die Auszeichnung nichts mehr - "mass" und "common" bleiben still.
 const props = defineProps<{ rarity: RarityBase | null }>()
 
-const pipClass = computed(() => {
-  if (props.rarity === 'rare') return 'bg-rare border-rare'
-  if (props.rarity === 'special') return 'border-special'
-  return 'bg-line opacity-55'
-})
+const pipClass = computed(() => rarityPipClass(props.rarity))
 
 // Kein vertikaler Versatz im Template, und das mit Absicht: die Komponente
 // beschreibt nur, WAS sie ist (ein Punkt in einer bestimmten Farbe), nicht

@@ -51,8 +51,24 @@ describe('GearPool', () => {
 
   it('faerbt eine Besonderheit anders als ein Allerweltsgeraet', () => {
     const wrapper = mountPool()
-    const html = wrapper.html()
-    expect(html).toContain('text-special')
+    const names = wrapper.findAll('[data-gear] .font-display')
+    expect(names).toHaveLength(items.length)
+    expect(names[0].classes()).toContain('text-special')
+    expect(names[1].classes()).toContain('text-ink')
+  })
+
+  it('faerbt ein Rarissimum wie im Signalweg', () => {
+    // Der Pool haengt an derselben Quelle wie SignalChain und der Editor.
+    const wrapper = mountPool({
+      items: [
+        { id: 'g5', slug: 'e', category: 'Gitarre', label: 'Gretsch White Falcon', detail: null, rarity: 'rare' as const },
+      ],
+    })
+    const name = wrapper.get('[data-gear] .font-display')
+    expect(name.classes()).toContain('text-rare')
+    // Die Namen stehen hier schon in font-semibold - font-medium waere eine
+    // Abstufung nach unten und gehoert deshalb nur in die GearList.
+    expect(name.classes()).not.toContain('font-medium')
   })
 
   it('sagt es, wenn alles schon in der Kette steht', () => {

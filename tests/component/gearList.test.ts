@@ -69,6 +69,17 @@ describe('GearList', () => {
     expect(links[1].classes()).toContain('text-special')
   })
 
+  it('hebt eine Raritaet in DIESER Liste zusaetzlich ueber das Schriftgewicht', () => {
+    // Die Namen hier stehen in normaler Staerke - anders als im Signalweg,
+    // wo sie ohnehin font-semibold sind. Deshalb haengt das Gewicht an
+    // dieser Aufrufstelle und nicht in rarityNameClass(): dort verdrahtet
+    // wuerde es den Signalweg von 600 auf 500 herunterziehen.
+    const wrapper = mountList({ groups })
+    const links = wrapper.findAll('a')
+    expect(links[0].classes()).toContain('font-medium')
+    expect(links[1].classes()).not.toContain('font-medium')
+  })
+
   it('zeigt Detailangaben, wenn es welche gibt', () => {
     const wrapper = mountList({ groups })
     expect(wrapper.text()).toContain('1997')
