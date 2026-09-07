@@ -558,6 +558,11 @@ grep -n "profile:" -A 20 app/locales/de.ts
 
 - [ ] **Step 2: Texte ergaenzen**
 
+**Achtung, Schreibweise:** Die Texte unten stehen hier mit „ae/oe/ue" — das ist die Regel fuer
+`.vue`-Dateien und **hier falsch**. `de.ts` ist eine `.ts`-Datei und benutzt durchgehend echte Umlaute
+(34 Vorkommen: „Zubehör", „Künstlername", „bestätigt"). Diese Strings landen auf dem Bildschirm.
+**Schreib sie mit echten Umlauten**, sonst steht auf der Oberflaeche ein Gemisch aus beidem.
+
 Den `profile`-Block um diese Schluessel erweitern, vorhandene unveraendert lassen:
 
 ```ts
