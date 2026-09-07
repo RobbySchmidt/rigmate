@@ -29,7 +29,7 @@ const stations = [
 function mountChain(props: Record<string, unknown>) {
   installNuxtAutoImports()
   return mount(SignalChain, {
-    props: { stations, isOwn: false, ...props },
+    props: { stations, isOwn: false, outsideCount: 0, ...props },
     global: { components: { NuxtLink: NuxtLinkStub } },
   })
 }
@@ -72,8 +72,18 @@ describe('SignalChain', () => {
   })
 
   it('sagt, wo die Geraete ohne Platz im Signalweg geblieben sind', () => {
-    const wrapper = mountChain({})
+    const wrapper = mountChain({ outsideCount: 2 })
     // Ohne diesen Hinweis wirkt der Reiter, als haette er Geraete verschluckt.
     expect(wrapper.text()).toContain(de.profile.chainOutsideTitle)
+    // Die Zahl darf nicht bloss ein Schalter sein - sie steht am Label und
+    // muss die uebergebene Anzahl zeigen. Ein toContain('2') auf dem ganzen
+    // Text waere schon durch "Boss CE-2 Chorus" gruen geworden.
+    expect(wrapper.get('[data-outside-count]').text()).toBe('2')
+  })
+
+  it('schweigt, wenn das ganze Rig in der Kette steht', () => {
+    const wrapper = mountChain({ outsideCount: 0 })
+    // Ein Hinweis auf Geraete, die es nicht gibt, behauptet etwas ueber nichts.
+    expect(wrapper.text()).not.toContain(de.profile.chainOutsideTitle)
   })
 })

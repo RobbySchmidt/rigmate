@@ -10,12 +10,20 @@ export interface ChainStation {
   rarity: RarityBase | null
 }
 
-defineProps<{ stations: ChainStation[]; isOwn: boolean }>()
+// outsideCount sind die Geraete im Rig, die keine Station im Signalweg sind.
+// Ohne die Zahl stand der Hinweis darunter bedingungslos da und behauptete
+// bei einem vollstaendig eingetragenen Rig etwas ueber nichts.
+defineProps<{ stations: ChainStation[]; isOwn: boolean; outsideCount: number }>()
 
 const t = useText()
 
 // Dieselbe Sprache wie die Punkte im Equipment-Reiter: gefuellt bei rare,
 // hohl bei special. Zwischen den Ansichten muss niemand umlernen.
+//
+// Der stille Zustand weicht bewusst von RarityPip ab: dort ist er ein
+// halbtransparenter Punkt (bg-line opacity-55), hier eine deckende Flaeche
+// mit Rand. Der Knoten sitzt auf dem Kabel und muss den Strang
+// durchstossen - halbtransparent liesse die Linie durchscheinen.
 function nodeClass(rarity: RarityBase | null): string {
   if (rarity === 'rare') return 'bg-rare border-rare'
   if (rarity === 'special') return 'border-special'
@@ -88,10 +96,21 @@ function nameClass(rarity: RarityBase | null): string {
     </template>
 
     <!-- Ohne diesen Hinweis wirkt der Reiter, als haette er Geraete
-         verschluckt: Saiten und Zubehoer haben im Signalweg keinen Platz. -->
-    <div class="mt-4 border-t border-line-soft pt-[.9rem] text-[.8125rem] text-muted">
-      <span class="mb-1 block font-mono text-[.6875rem] uppercase tracking-[.1em]">
-        {{ t.profile.chainOutsideTitle }}
+         verschluckt: Saiten und Zubehoer haben im Signalweg keinen Platz.
+         Steht aber das ganze Rig in der Kette, gibt es nichts zu erklaeren -
+         dann schweigt der Block, statt auf Geraete zu zeigen, die es nicht
+         gibt. Die Anzahl haengt am Label statt in einem eigenen Satz: jeder
+         Satz mit der Zahl wuerde nur den Titel wiederholen ("Nicht in der
+         Kette" / "X Geraete stehen nicht in der Kette"), und ein Zaehler am
+         Abschnittslabel umgeht ausserdem die deutsche Pluralbeugung, fuer
+         die es sonst wie bei addedOne/addedMany zwei Schluessel braeuchte. -->
+    <div
+      v-if="outsideCount > 0"
+      class="mt-4 border-t border-line-soft pt-[.9rem] text-[.8125rem] text-muted"
+    >
+      <span class="mb-1 flex items-baseline justify-between gap-2 font-mono text-[.6875rem] uppercase tracking-widest">
+        <span>{{ t.profile.chainOutsideTitle }}</span>
+        <span data-outside-count class="tabular-nums">{{ outsideCount }}</span>
       </span>
       {{ t.profile.chainOutsideHint }}
     </div>
