@@ -15,6 +15,7 @@ export const de = {
   nav: {
     home: 'Start',
     rig: 'Mein Rig',
+    profile: 'Mein Profil',
     search: 'Suche',
     settings: 'Einstellungen',
     login: 'Anmelden',

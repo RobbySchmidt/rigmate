@@ -2,6 +2,11 @@
 const t = useText()
 const user = useSupabaseUser()
 const supabase = useSupabaseClient()
+// useSupabaseUser() liefert die JWT-Claims, nicht ein User-Objekt - die Id
+// steckt unter "sub", nicht unter "id". useUserId() normalisiert das. Ein
+// Griff auf user.value.id waere hier undefined, und der Profil-Link zeigte
+// stumm auf /profile/undefined.
+const userId = useUserId()
 
 async function logout() {
   await supabase.auth.signOut()
@@ -16,6 +21,7 @@ async function logout() {
         <NuxtLink to="/" class="text-f-xl font-display font-semibold">{{ t.app.name }}</NuxtLink>
         <NuxtLink to="/search" class="text-sm">{{ t.nav.search }}</NuxtLink>
         <template v-if="user">
+          <NuxtLink v-if="userId" :to="`/profile/${userId}`" class="text-sm">{{ t.nav.profile }}</NuxtLink>
           <NuxtLink to="/rig" class="text-sm">{{ t.nav.rig }}</NuxtLink>
           <NuxtLink to="/settings" class="text-sm">{{ t.nav.settings }}</NuxtLink>
           <button type="button" class="ml-auto text-sm" @click="logout">{{ t.nav.logout }}</button>
