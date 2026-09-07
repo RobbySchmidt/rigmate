@@ -3222,3 +3222,42 @@ git commit -m "docs: Fallstricke aus dem Profilumbau in CLAUDE.md"
 - **Posts, Kommentare, Likes, Folgen** bleiben Stufe 2. Ihre Schaltflaechen sind entworfen und deaktiviert.
 - **Gerätefotos.** `catalog_items.image_path` existiert, ist aber leer. Kommen Bilder dazu, aendert sich das Layout nicht.
 - **Die Kette auf dem Handy.** Die Spalten stehen dort untereinander, gezogen wird nichts — „Anhaengen" und die Pfeile tragen die Bedienung. Das ist gebaut, aber auf einem echten Geraet nicht erprobt.
+
+---
+
+## Offen nach dem ersten Browserlauf (Stand Task 16)
+
+Beim ersten Rendern der fertigen Seite gefunden. Zwei Fehler wurden sofort behoben (der
+`vuedraggable`-Absturz durch einen Kommentar im Item-Slot, der Ueberlauf durch `minmax(auto,1fr)`), diese
+Punkte stehen noch offen:
+
+### Entschieden, noch nicht gebaut
+
+- **Die linke Spalte wird im Bearbeitungsmodus breiter** (~22rem statt 15,5rem), die rechte schrumpft
+  entsprechend. *(Robbys Entscheidung.)* Grund: Griff und drei Knoepfe fressen ~85 von 248px, die
+  Geraetenamen werden abgeschnitten („Fender Strat…"). Der sichtbare Sprung beim Umschalten ist der
+  bewusst akzeptierte Preis; die Alternativen waren Knoepfe unter dem Namen (jede Station deutlich
+  hoeher) oder kuerzere Namen (zwei Strats verschiedener Marken nicht mehr unterscheidbar).
+
+### Gemeldet, noch nicht entschieden
+
+- **`GearPool`-Karten kuerzen auch im Normalfall** („Fender Deluxe Rever…") — `minmax(11rem,1fr)` plus
+  `truncate`. Bei kurzen Namen unauffaellig.
+- **Auch die Ansichtsfassung ist eng:** Name und Detail teilen sich eine Baseline-Zeile, „Gretsch White
+  Falcon" bricht auf zwei Zeilen, „1997 · White" daneben auch. Gehoert zu `GearList`.
+- **„Reihenfolge gespeichert" bleibt nach „Fertig" stehen**, bis man neu laedt — folgt aus
+  `saveStatus !== 'idle'` in `GearPanel`. Wirkt in der reinen Ansicht deplatziert. **Das ist ein Fehler,
+  keine Geschmacksfrage:** der Hinweis gehoert an den Bearbeitungsmodus, nicht an die Seite.
+
+### Nebenbefund ausserhalb dieses Plans, unbestaetigt
+
+- **`login.vue` navigiert nach erfolgreichem Anmelden womoeglich nicht weiter.** Die Sitzung steht (die
+  Navigation wechselt auf „Abmelden"), die Route bleibt `/login`. Der Code sieht richtig aus
+  (`navigateTo(safeRedirect(route.query.redirect))`, und `safeRedirect` liefert bei leerem Query
+  korrekt `/`), und der Befund stammt aus einer headless-Umgebung. **Vor einem Fix reproduzieren.**
+
+### Demo-Daten, die beim Bauen veraendert wurden
+
+Auf der geteilten Instanz: **Halbtakt-Hanno hat eine Signalkette** (Strat → DS-1 → TS9) und **zwei
+Profil-Links**. Kein Demo-Nutzer hatte vorher beides, und ohne ist die halbe Seite nicht anzusehen.
+`yarn seed:users` raeumt die Kette wieder weg, die Links nicht.
