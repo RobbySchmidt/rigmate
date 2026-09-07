@@ -125,8 +125,17 @@ Avatar, Anzeigename, Handle, Bio, Bands, dann eine Zeile mit Kennzahlen: **Gerä
 Besonderheiten · Rig-Kollegen**. Rechts die Aktionen; „Folgen" und „Nachricht" sind bis Stufe 2 sichtbar,
 aber deaktiviert — sie zu verstecken und später einzublenden würde den Kopf zweimal entwerfen.
 
-„Rig-Kollegen" ist die Anzahl Personen, die mindestens einen Katalogeintrag mit dieser Person teilen.
-Serverseitig, weil es über alle Nutzer aggregiert (Architekturregel in CLAUDE.md).
+„Rig-Kollegen" ist die Anzahl Personen, die mindestens **ein Gerät im Rig** mit dieser Person teilen —
+gezählt wird ausschließlich über `gear_items`. Serverseitig, weil es über alle Nutzer aggregiert
+(Architekturregel in CLAUDE.md).
+
+**Ausdrücklich nicht mitgezählt: Wunschliste und Verbrauchsmaterial.** Eine frühere Fassung dieses
+Absatzes sagte „Katalogeintrag", was beides eingeschlossen hätte. Das macht die Kennzahl wertlos: über
+Saiten und Plektren teilt fast jeder etwas mit fast jedem, die Zahl wäre praktisch eine Konstante. Und ein
+gemeinsamer *Wunsch* ist kein gemeinsames Rig — er sagt nichts darüber, wie jemand tatsächlich klingt.
+
+Das ist zugleich die einzige Lesart, unter der Röhrenglut Rüdigers echte **0** herauskommt, und die ist
+die interessanteste Zahl im ganzen Demo-Datensatz (siehe unten, Abschnitt 8).
 
 ### 4.2 Linkes Panel, Reiter „Equipment"
 
