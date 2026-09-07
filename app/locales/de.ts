@@ -245,7 +245,12 @@ export const de = {
     feedAddedOne: 'hat ein Gerät ins Rig geholt',
     feedAddedMany: 'hat Geräte ins Rig geholt',
     feedRareTitle: 'Selten',
-    feedRareOnly: 'Niemand sonst hier spielt das.',
+    // Sagt bewusst nichts darueber, wie viele andere das Geraet spielen -
+    // das weiss der Feed gar nicht. hasRarity kommt aus der Katalogstufe
+    // rarity_base, nicht aus einer Zaehlung der Besitzer. Der frueherre Text
+    // ("Niemand sonst hier spielt das.") war eine Behauptung ueber andere
+    // Nutzer, die aus den Daten nicht folgt.
+    feedRareHint: 'Seltenes Equipment bringt dich mit weniger, aber passenderen Leuten zusammen.',
   },
   settings: {
     title: 'Einstellungen',

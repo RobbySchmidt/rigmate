@@ -92,7 +92,7 @@ const actionText = computed(() =>
       class="flex flex-wrap items-baseline gap-x-2 rounded-sm border-l-2 border-rare bg-rare-wash px-3 py-[.4rem] text-[.8125rem] text-ink"
     >
       <span class="font-mono text-[.6875rem] uppercase tracking-[.1em] text-rare">{{ t.profile.feedRareTitle }}</span>
-      <span>{{ t.profile.feedRareOnly }}</span>
+      <span>{{ t.profile.feedRareHint }}</span>
     </p>
   </article>
 </template>

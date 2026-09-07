@@ -113,11 +113,11 @@ describe('FeedItem', () => {
     const withRarity = mountItem({ event: manyItems })
     const hint = withRarity.get('[data-rarity-hint]')
     expect(hint.text()).toContain(de.profile.feedRareTitle)
-    expect(hint.text()).toContain(de.profile.feedRareOnly)
+    expect(hint.text()).toContain(de.profile.feedRareHint)
 
     const without = mountItem({ event: oneItem })
     expect(without.find('[data-rarity-hint]').exists()).toBe(false)
-    expect(without.text()).not.toContain(de.profile.feedRareOnly)
+    expect(without.text()).not.toContain(de.profile.feedRareHint)
   })
 
   it('schreibt den Tag deutsch und haelt das ISO-Datum maschinenlesbar', () => {
