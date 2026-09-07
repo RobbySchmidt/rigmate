@@ -64,7 +64,7 @@ function entryNameClass(rarity: RarityBase | null): string {
         class="flex items-baseline justify-between border-b border-line-soft pb-1 font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted"
       >
         <span>{{ group.label }}</span>
-        <span class="tabular-nums opacity-70">{{ group.entries.length }}</span>
+        <span data-count class="tabular-nums opacity-70">{{ group.entries.length }}</span>
       </div>
       <ul class="flex list-none flex-col p-0">
         <li v-for="entry in group.entries" :key="entry.id" class="flex items-baseline gap-[.45rem] py-[.28rem]">

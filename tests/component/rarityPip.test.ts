@@ -12,24 +12,33 @@ describe('RarityPip', () => {
   it('zeigt einen hohlen Ring bei special', () => {
     const wrapper = mount(RarityPip, { props: { rarity: 'special' } })
     expect(wrapper.classes()).toContain('border-special')
-    expect(wrapper.classes()).not.toContain('bg-special')
+    // Gemeint ist "kein Hintergrund" - 'bg-special' ist eine Klasse, die im
+    // Code an keiner Stelle vorkommt, ein Vergleich dagegen kann also nie rot
+    // werden. Stattdessen wird direkt geprueft, dass gar keine bg-Klasse
+    // gesetzt ist.
+    expect(wrapper.classes().some((name) => name.startsWith('bg-'))).toBe(false)
   })
 
   it('bleibt bei common still - sonst leuchtet die ganze Liste', () => {
     const wrapper = mount(RarityPip, { props: { rarity: 'common' } })
     expect(wrapper.classes()).not.toContain('bg-rare')
     expect(wrapper.classes()).not.toContain('border-special')
+    // Positiv geprueft: der stille Punkt bekommt tatsaechlich die Klasse, die
+    // ihn zeichnet - sonst waere ein leerer String hier ebenso gruen.
+    expect(wrapper.classes()).toContain('bg-line')
   })
 
   it('bleibt auch bei mass still', () => {
     const wrapper = mount(RarityPip, { props: { rarity: 'mass' } })
     expect(wrapper.classes()).not.toContain('bg-rare')
     expect(wrapper.classes()).not.toContain('border-special')
+    expect(wrapper.classes()).toContain('bg-line')
   })
 
   it('vertraegt null, ohne zu brechen', () => {
     const wrapper = mount(RarityPip, { props: { rarity: null } })
     expect(wrapper.classes()).not.toContain('bg-rare')
+    expect(wrapper.classes()).toContain('bg-line')
   })
 
   it('traegt selbst keinen vertikalen Versatz mehr', () => {
