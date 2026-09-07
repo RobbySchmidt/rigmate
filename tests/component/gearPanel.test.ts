@@ -315,8 +315,35 @@ describe('GearPanel', () => {
   })
 
   it('bestaetigt eine gespeicherte Reihenfolge', () => {
-    const wrapper = mountPanel({ isOwn: true, saveStatus: 'saved' })
+    const wrapper = mountPanel({ isOwn: true, editing: true, saveStatus: 'saved' })
     expect(wrapper.text()).toContain(de.profile.chainSaved)
+  })
+
+  // Die Quittung gehoert an die Handlung. Vorher blieb sie nach "Fertig"
+  // bis zum Neuladen stehen und behauptete auf einer reinen Ansichtsseite
+  // etwas ueber einen Vorgang, den dort niemand ausgeloest hat.
+  it('nimmt die Quittung zurueck, sobald der Bearbeitungsmodus endet', () => {
+    const wrapper = mountPanel({ isOwn: true, editing: false, saveStatus: 'saved' })
+    expect(wrapper.text()).not.toContain(de.profile.chainSaved)
+  })
+
+  // Die Gegenrichtung, und die ist die wichtigere: das Zuruecknehmen darf
+  // nur die Quittung treffen. Ein laufender oder fehlgeschlagener
+  // Schreibvorgang muss "Fertig" ueberleben, sonst verschwindet ein
+  // Fehlschlag wortlos - der wiederkehrende Fehler dieses Projekts.
+  it('haelt einen laufenden Schreibvorgang auch nach "Fertig" sichtbar', () => {
+    const wrapper = mountPanel({ isOwn: true, editing: false, saveStatus: 'pending' })
+    expect(wrapper.text()).toContain(de.profile.chainSaving)
+  })
+
+  it('haelt einen Fehlschlag auch nach "Fertig" sichtbar', () => {
+    const wrapper = mountPanel({
+      isOwn: true,
+      editing: false,
+      saveStatus: 'error',
+      lastError: { message: 'irgendwas ging schief' },
+    })
+    expect(wrapper.text()).toContain(de.profile.chainSaveError)
   })
 
   it('bietet nach einem Fehlschlag einen zweiten Versuch an', async () => {

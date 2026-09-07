@@ -119,7 +119,20 @@ const saveErrorText = computed(() => {
 // ein Wechsel auf Equipment waehrend eines laufenden Schreibvorgangs wuerde
 // sonst einen Fehlschlag wegblenden - genau die Sorte stiller Fehler, die
 // dieses Projekt sechsmal getroffen hat.
-const showSaveState = computed(() => props.isOwn && props.saveStatus !== 'idle')
+//
+// "Gespeichert" ist die Quittung fuer eine Handlung im Bearbeitungsmodus.
+// Nach "Fertig" blieb sie bis zum Neuladen stehen und behauptete auf einer
+// reinen Ansichtsseite etwas ueber einen Vorgang, den dort niemand
+// ausgeloest hat. Sie geht deshalb mit dem Modus.
+//
+// Fuer 'pending' und 'error' gilt das ausdruecklich NICHT. Wer waehrend
+// eines laufenden oder fehlgeschlagenen Schreibvorgangs auf "Fertig"
+// drueckt, muss das weiter sehen - sonst waere dieser Fix genau der stille
+// Fehlschlag, den der Absatz darueber verhindern soll.
+const showSaveState = computed(() => {
+  if (!props.isOwn || props.saveStatus === 'idle') return false
+  return props.editing || props.saveStatus !== 'saved'
+})
 
 // Nur zwei Reiter: jeder Pfeil wechselt zum jeweils anderen. Der Fokus muss
 // mitwandern, sonst haengt er an einem Knopf, der nicht mehr gewaehlt ist.
