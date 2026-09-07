@@ -3012,7 +3012,7 @@ ausschliesslich der Seltenheit, sonst ist genau die Trennung kaputt, auf der das
 **Files:**
 - Modify: `app/assets/css/main.css`
 
-- [ ] **Step 1: Token in allen drei Bloecken ergaenzen**
+- [x] **Step 1: Token in allen drei Bloecken ergaenzen**
 
 In `:root`, in `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` und in
 `:root[data-theme="dark"]` — **in allen dreien**, sonst faellt die Farbe in einem Zustand auf nichts zurueck:
@@ -3030,7 +3030,7 @@ Und im `@theme inline`-Block:
   --color-danger: var(--rm-danger);
 ```
 
-- [ ] **Step 2: Pruefen, dass die Utility entsteht**
+- [x] **Step 2: Pruefen, dass die Utility entsteht**
 
 ```bash
 yarn dev
@@ -3039,12 +3039,25 @@ yarn dev
 Auf einer beliebigen Seite in den DevTools pruefen, dass `text-danger` eine Regel erzeugt. Nuxt bindet auf
 `[::1]:3000` (IPv6); auf deutschem Windows heisst der Zustand in `netstat` **`ABHOEREN`**.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/assets/css/main.css
 git commit -m "feat(ui): eigenes Token fuer Fehlerfarbe"
 ```
+
+---
+
+**Nachtrag zur Umsetzung.** Der Task legte nur das Token an. Die drei Stellen mit `// TODO Task 17`
+liegen aber in `GearPanel.vue`, `ProfileHeader.vue` und `profile/[id].vue` — und keine dieser drei
+Dateien steht in der Dateiliste von Task 18 oder 19. Sie waeren durchgefallen und sind hier
+mitgenommen worden.
+
+Step 2 ist nicht als Blick in die DevTools erledigt, sondern als Abruf: `curl` auf
+`/_nuxt/assets/css/main.css`, darin `.text-danger` gesucht und `--rm-danger` gezaehlt — einmal hell,
+zweimal dunkel. **Der erste Anlauf hatte es nur in zwei von drei Bloecken.** Der `@media`-Block ist
+vier Leerzeichen eingerueckt, das Ersetzungsmuster passte auf zwei; genau der Fehler, vor dem der
+Task selbst warnt. Ein Blick auf eine gerenderte Seite haette das nicht gezeigt.
 
 ---
 
@@ -3057,7 +3070,7 @@ Rein mechanisch, kein neues Design. Ziel: kein `neutral-*`, kein `bg-white`, kei
 - Modify: `app/pages/login.vue`, `app/pages/register.vue`, `app/pages/confirm.vue`,
   `app/pages/index.vue`, `app/pages/search.vue`, `app/pages/settings.vue`, `app/pages/onboarding.vue`
 
-- [ ] **Step 1: Ersetzungstabelle anwenden**
+- [x] **Step 1: Ersetzungstabelle anwenden**
 
 | alt | neu |
 |---|---|
@@ -3077,7 +3090,7 @@ Rein mechanisch, kein neues Design. Ziel: kein `neutral-*`, kein `bg-white`, kei
 `text-accent-ink`, `text-white` auf einem Bild bleibt `text-white`. Und wo `border` ohne Farbangabe steht,
 erbt es heute Tailwinds Standardgrau — das muss explizit werden.
 
-- [ ] **Step 2: Sprachtest und volle Suite**
+- [x] **Step 2: Sprachtest und volle Suite**
 
 ```bash
 yarn test
@@ -3086,7 +3099,7 @@ yarn test
 Erwartet: gruen. Haengt ein Komponententest an einer alten Klasse, **passe den Test an — dreh die Klasse
 nicht zurueck.** Genau dafuer sind die Tests da.
 
-- [ ] **Step 3: Beide Themes ansehen**
+- [x] **Step 3: Beide Themes ansehen**
 
 `yarn dev`, dann jede der sieben Seiten einmal hell und einmal dunkel. Dunkel erreichst du ueber die
 System-Einstellung oder indem du in den DevTools `data-theme="dark"` ans `<html>` haengst.
@@ -3094,12 +3107,34 @@ System-Einstellung oder indem du in den DevTools `data-theme="dark"` ans `<html>
 Achte auf: weisse Flaechen, die dunkel bleiben muessten; Text, der auf seinem Grund verschwindet;
 Rahmen, die im Dunkeln unsichtbar werden.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/pages
 git commit -m "refactor(ui): Seiten auf die Farbtokens umgestellt"
 ```
+
+---
+
+**Nachtrag zur Umsetzung.** Zwei Zeilen der Ersetzungstabelle stimmten nicht:
+
+- `border` ohne Farbe erbt in **Tailwind v4 `currentColor`**, nicht Tailwinds Standardgrau — das war
+  v3. Die Raender standen also in Ink-Farbe, und der Sprung auf `border-line-soft` waere einer ins
+  fast Unsichtbare gewesen. Formularfelder und Listenrahmen haben `border-line` bekommen.
+- `divide-y` ohne Farbe faellt aus demselben Grund auf `currentColor`. Die drei Listen haben
+  `divide-line-soft` bekommen.
+
+Ausserdem trug `settings.vue` ein `text-green-700` fuer die Erfolgsmeldung, das weder die Tabelle
+oben noch der Kontrollgrep aus Task 19 erfasst. Es ist `text-muted` geworden — dasselbe, was
+`GearPanel` fuer „Reihenfolge gespeichert" benutzt.
+
+Step 3 ist **nur messbar** erledigt: jede benutzte Utility existiert im generierten CSS (auch
+`divide-line-soft`, das einen Kindselektor bekommt und mit einem Muster auf `.name {` faelschlich als
+fehlend gilt), die beiden Dunkel-Bloecke sind zeichengleich, und jedes benutzte Farbpaar hat einen
+Kontrastwert. Dabei kam heraus: **`muted` auf `bg` liegt im Hellmodus bei 4,01:1** und damit unter
+den 4,5:1 aus WCAG AA fuer Fliesstext; `rare` bei 3,80, `special` bei 4,05. Im Dunkelmodus bestehen
+alle Paare. Das sind Werte aus Task 3, nicht aus diesem Task — aber `text-muted` reicht jetzt weiter
+als vorher. **Entscheidung offen, und das Ansehen mit eigenen Augen steht noch aus.**
 
 ---
 
@@ -3112,7 +3147,7 @@ Dieselbe Tabelle wie Task 18, aber diese Dateien sind groesser und haben mehr Zu
 - Modify: `app/components/CatalogPicker.vue`, `app/components/GearItemForm.vue`,
   `app/components/PersonSuggestion.vue`
 
-- [ ] **Step 1: Ersetzungstabelle aus Task 18 anwenden**
+- [x] **Step 1: Ersetzungstabelle aus Task 18 anwenden**
 
 Zwei Besonderheiten:
 
@@ -3123,13 +3158,13 @@ Zwei Besonderheiten:
 - **`app/components/CatalogPicker.vue`** hat eine Auswahlliste mit Hover- und Aktiv-Zustaenden. Dort
   `bg-neutral-100` als Hover → `bg-surface-2`, ausgewaehlt → `bg-accent-wash`.
 
-- [ ] **Step 2: Volle Suite**
+- [x] **Step 2: Volle Suite**
 
 ```bash
 yarn test
 ```
 
-- [ ] **Step 3: Kontrolle, dass wirklich nichts uebrig ist**
+- [x] **Step 3: Kontrolle, dass wirklich nichts uebrig ist**
 
 ```bash
 grep -rn "neutral-\|bg-white\|text-red-\|border-red-" app/ || echo "sauber"
@@ -3138,12 +3173,12 @@ grep -rn "neutral-\|bg-white\|text-red-\|border-red-" app/ || echo "sauber"
 Erwartet: `sauber`. Findet der Befehl noch etwas, gehoert es entweder umgestellt oder es gibt einen
 Grund — dann Kommentar an die Stelle.
 
-- [ ] **Step 4: Beide Themes ansehen**
+- [x] **Step 4: Beide Themes ansehen**
 
 `yarn dev`, dann `/gear/<beliebiger-slug>`, `/rig` und ein Formular mit dem CatalogPicker, jeweils hell
 und dunkel.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/pages app/components
@@ -3152,12 +3187,39 @@ git commit -m "refactor(ui): Gear-Seite, Rig und Komponenten auf die Farbtokens 
 
 ---
 
+**Nachtrag zur Umsetzung.** Drei Annahmen des Tasks trafen nicht zu:
+
+- **Der Kontrollgrep aus Step 3 ist zu eng.** Er meldete „sauber", waehrend `text-amber-700`,
+  `text-green-700` und `text-neutral-400` unangetastet dastanden. Gescannt wurde stattdessen ueber
+  alle Tailwind-Farbfamilien.
+- **`CatalogPicker` hat weder einen `bg-neutral-100`-Hover noch einen Auswahlzustand.** Die Optionen
+  hatten ueberhaupt keine Rueckmeldung. Gebaut ist der gemeinte Hover (`hover:bg-surface-2`, dazu
+  `focus-visible` fuer die Tastatur); einen Auswahlzustand gibt es nicht, ein Klick waehlt sofort.
+- **Links sind `text-accent underline` geworden statt `text-accent hover:underline`.** `accent` gegen
+  `ink` sind nur 2,16:1 — ohne bleibende Unterstreichung waeren Links im Fliesstext allein ueber die
+  Farbe unterscheidbar, und das unterhalb der 3:1 aus WCAG 1.4.1.
+
+Bernstein hat drei Fremdnutzungen abgegeben — „ungeprueft" auf der Gear-Seite (`text-amber-700`) und
+im Picker (`text-amber-600`), dazu der Praezisions-Hinweis in `GearItemForm` (`bg-amber-50`). Weil das
+Abzeichen im Picker dadurch von der Stufenangabe daneben nicht mehr zu unterscheiden war, traegt es
+seine Auszeichnung jetzt ueber die Form (Rahmen) statt ueber die Farbe.
+
+Dafuer bekommt die Seltenheit auf der Gear-Seite ihre Farbe, ueber `rarityNameClass()` statt
+abgeschrieben. Zwei Tests decken **beide** Richtungen ab: dass Bernstein bei einer Rarissime kommt
+und dass es bei Massenware ausbleibt. Ohne die zweite Haelfte bestuende der Test auch, wenn jeder
+Eintrag leuchtete.
+
+`tests/component/index.test.ts` hing an `.text-neutral-400`. Da die Klasse jetzt fuer zwei Elemente
+derselben Karte gilt, laeuft der Selektor ueber `data-fallback`.
+
+---
+
 ## Task 20: Abschluss
 
 **Files:**
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Volle Testsuite**
+- [x] **Step 1: Volle Testsuite**
 
 ```bash
 yarn test
@@ -3165,7 +3227,7 @@ yarn test
 
 Erwartet: alles gruen, deutlich ueber 259 Tests.
 
-- [ ] **Step 2: API-Tests**
+- [x] **Step 2: API-Tests**
 
 ```bash
 yarn dev
@@ -3179,7 +3241,7 @@ yarn test:api
 
 Erwartet: alles gruen.
 
-- [ ] **Step 3: Build und Geheimnis-Kontrolle**
+- [x] **Step 3: Build und Geheimnis-Kontrolle**
 
 ```bash
 yarn build
@@ -3188,7 +3250,7 @@ grep -r "service_role" .output/public/
 
 Erwartet: `grep` findet **nichts**. Findet es etwas, ist der Service-Key im Client-Bundle gelandet — dann sofort stoppen und die Ursache suchen.
 
-- [ ] **Step 4: `CLAUDE.md` um die neuen Fallstricke ergaenzen**
+- [x] **Step 4: `CLAUDE.md` um die neuen Fallstricke ergaenzen**
 
 Unter „Fallstricke, die uns beim Bauen Zeit gekostet haben":
 
@@ -3207,12 +3269,29 @@ Und unter „Architekturregeln":
 - **Farben und Schriften kommen aus den Tokens in [main.css](app/assets/css/main.css)**, nie als `neutral-*` oder Hex im Template. `--rm-rare` und `--rm-special` gehoeren **ausschliesslich** der Seltenheit — wer Bernstein woanders benutzt, macht die Auszeichnung unlesbar.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add CLAUDE.md
 git commit -m "docs: Fallstricke aus dem Profilumbau in CLAUDE.md"
 ```
+
+---
+
+**Nachtrag zur Umsetzung.** Step 4 war beim Erreichen dieses Tasks schon erledigt — die dort
+aufgezaehlten Fallstricke stehen seit dem Commit „docs: CLAUDE.md auf den Stand des Profilumbaus
+bringen" in der Datei. Ergaenzt wurden stattdessen die vier, die beim Umstellen dazukamen
+(Tailwind-v4-Rahmenfarbe, `TEST_BASE_URL`, der zu enge Kontrollgrep, Utility statt Token pruefen).
+
+**Zu Step 2 ein Fund, der fast einen stillen Fehlgriff ergeben haette:** `TEST_BASE_URL` steht auf
+`http://localhost:3000`, und Nuxt weicht auf **3001** aus, wenn 3000 belegt ist. Genau das war der
+Fall — auf 3000 lief eine fremde App. `yarn test:api` haette diese befragt. Gegenprobe: gegen 3000
+fallen 36 von 38 Tests, gegen 3001 sind alle 38 gruen. Vor dem Lauf gehoert ein HTTP-Aufruf, der
+belegt, welche App antwortet.
+
+Bei Step 3 ist der Grep um seine eigene Gegenprobe ergaenzt worden: derselbe Ausdruck findet
+`service_role` im **Server**-Bundle, wo er hingehoert. Ohne diesen zweiten Lauf beweist ein leeres
+Ergebnis nur, dass der Pfad stimmt — nicht, dass nichts geleakt ist.
 
 ---
 
@@ -3245,9 +3324,11 @@ Punkte stehen noch offen:
   `truncate`. Bei kurzen Namen unauffaellig.
 - **Auch die Ansichtsfassung ist eng:** Name und Detail teilen sich eine Baseline-Zeile, „Gretsch White
   Falcon" bricht auf zwei Zeilen, „1997 · White" daneben auch. Gehoert zu `GearList`.
-- **„Reihenfolge gespeichert" bleibt nach „Fertig" stehen**, bis man neu laedt — folgt aus
-  `saveStatus !== 'idle'` in `GearPanel`. Wirkt in der reinen Ansicht deplatziert. **Das ist ein Fehler,
-  keine Geschmacksfrage:** der Hinweis gehoert an den Bearbeitungsmodus, nicht an die Seite.
+- ~~**„Reihenfolge gespeichert" bleibt nach „Fertig" stehen**~~ — **behoben.** Die Quittung geht
+  jetzt mit dem Bearbeitungsmodus. Ausdruecklich nur sie: `pending` und `error` bleiben auch nach
+  „Fertig" sichtbar, sonst waere der Fix genau der stille Fehlschlag, den der Kommentar ueber
+  `showSaveState` seit Task 12 verhindern soll. Eine Gegenprobe mit dem groben Fix
+  (`return props.editing`) laesst fuenf Tests fallen.
 
 ### Nebenbefund ausserhalb dieses Plans, unbestaetigt
 
