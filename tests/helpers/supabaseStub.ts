@@ -53,6 +53,8 @@ export interface SupabaseStubConfig {
   initialReads?: Record<string, QueryResult>
   /** Ergebnisse fuer JEDEN WEITEREN Aufruf von .from(table), der Reihe nach abgearbeitet - ein Eintrag pro erwartetem Schreibzugriff. */
   writes?: Record<string, QueryResult[]>
+  /** Ergebnisse je RPC-Name, der Reihe nach abgearbeitet. Fehlt ein Eintrag, gilt der Aufruf als erfolgreich. */
+  rpcResults?: Record<string, QueryResult[]>
 }
 
 /** Minimaler Ersatz fuer useSupabaseClient() in Komponenten-Tests. */
@@ -90,5 +92,20 @@ export function createSupabaseStub(config: SupabaseStubConfig = {}) {
     )
   })
 
-  return { from, inserts, updates }
+  // Ein Eintrag je rpc()-Aufruf. Ohne die Nutzlast koennte ein Test nur
+  // sehen, DASS gespeichert wurde, nicht WELCHE Reihenfolge - dieselbe
+  // Luecke, die bei .insert() acht Schreibstellen unbemerkt kaputt liess.
+  const rpcCalls: Array<{ name: string; payload: unknown }> = []
+  const rpcQueues: Record<string, QueryResult[]> = {}
+  for (const [name, queue] of Object.entries(config.rpcResults ?? {})) {
+    rpcQueues[name] = [...queue]
+  }
+
+  const rpc = vi.fn((name: string, payload?: unknown) => {
+    rpcCalls.push({ name, payload })
+    const result = rpcQueues[name]?.shift() ?? { data: null, error: null }
+    return Promise.resolve({ data: result.data ?? null, error: result.error ?? null })
+  })
+
+  return { from, rpc, inserts, updates, rpcCalls }
 }
