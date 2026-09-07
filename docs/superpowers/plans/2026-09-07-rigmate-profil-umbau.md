@@ -3003,6 +3003,9 @@ Unter „Fallstricke, die uns beim Bauen Zeit gekostet haben":
 - **`yarn add vuedraggable` installiert die Vue-2-Fassung.** `latest` ist 2.24.3. Die Vue-3-Variante ist `vuedraggable@4.1.0` vom `next`-Tag. Und sie vertraegt kein SSR — alles, was sie enthaelt, gehoert in `<ClientOnly>`.
 - **Kein eindeutiger Index auf `(owner_id, chain_position)`.** Er wuerde jedes Umsortieren blockieren, weil der Zwischenzustand ihn verletzt; `deferrable` geht bei einem partiellen Index nicht. `set_chain_order()` haelt die Positionen stattdessen geschlossen.
 - **`gear_items.installed_in_id` ist nicht die Signalkette.** Es heisst „Tonabnehmer ist in Gitarre verbaut" und haengt an einer Ein-Ebenen-Invariante mit eigenem Trigger. Die Kette ist `chain_position`.
+- **Ein HTML-Kommentar im `<template>` kostet den Attribute-Fallthrough.** Kommentar plus Element sind zwei Wurzelknoten, Vue reicht dann kein `class` von aussen mehr durch — `wrapper.classes()` kommt im Test leer zurueck, ohne jede Fehlermeldung. Erklaerende Kommentare gehoeren ins `<script setup>`.
+- **`mt-*` auf einem textlosen Flex-Kind unter `items-baseline` verschiebt nichts.** Flexbox richtet einen Kasten ohne Text an seiner unteren Margin-Kante aus; das `margin-top` treibt nur die Zeilenhoehe hoch. Im Profil-Panel waren das 2,19px je Zeile fuer null Wirkung. Wer einen Punkt vertikal ausrichten will, aendert die Ausrichtung, nicht den Abstand.
+- **`data-*`-Attribute als Testselektoren** gibt es seit dem Profilumbau (`data-cable` in `SignalChain.vue`). Vorher wurde ueber Tags und einmal ueber eine Klasse selektiert. Ueber ein Tag zu selektieren zaehlt jedes kuenftige Icon mit, ueber eine Klasse koppelt den Test ans Styling — fuer strukturelle Elemente ist `data-*` das robustere Mittel.
 ```
 
 Und unter „Architekturregeln":
