@@ -97,8 +97,14 @@ export const de = {
     // Seit der gruppierten Ausgabe (Task 6) gibt es keine eigene Sektion fuer
     // Verbrauchsmaterial mehr, auf die man verweisen koennte - derselbe Fund
     // hat vorher schon einmal ins Leere gezeigt, als die Sektion noch stand.
+    // Erreichbar ist dieser Text nur noch bei einem Kategorien-Ladefehler
+    // (siehe Kommentar bei saveGear in rig.vue) - "trag es einfach ueber
+    // dasselbe Feld noch einmal ein" fuehrt in genau diesem Fall wieder in
+    // denselben Fehlschlag. Der Text bleibt deshalb bei dem, was in dieser
+    // Lage tatsaechlich wahr ist: ein Neuversuch, keine Anleitung, die eine
+    // funktionierende Kategorien-Abfrage voraussetzt.
     errorConsumableAsGear:
-      'Das ist Verbrauchsmaterial. Trag es über dasselbe Feld noch einmal ein, dann landet es automatisch in der passenden Gruppe deines Equipments.',
+      'Das ist Verbrauchsmaterial. Das konnte gerade nicht richtig zugeordnet werden, versuch es gleich noch einmal.',
     // Eigener Text statt eines stillen leeren Abschnitts - ein Fehlschlag
     // beim Laden von Equipment, Praeferenzen oder Wunschliste soll nicht wie
     // "du hast noch nichts eingetragen" aussehen (Fix-Runde Abschluss).

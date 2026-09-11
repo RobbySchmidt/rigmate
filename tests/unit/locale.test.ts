@@ -87,8 +87,20 @@ describe('Textschicht', () => {
   })
 
   it('hat für jede Kategorie aus dem Schema ein Label', () => {
+    // Diese Liste ist eine bewusste, handgepflegte Kopie der categories-Zeilen
+    // aus den Migrationen (zuletzt 20260906100512_catalog.sql und
+    // 20260911061253_digital_categories.sql) — kein Copy-paste-Unfall. Ein
+    // Offline-Test kann das Schema nicht selbst befragen, ohne von der
+    // Datenbank abhängig zu werden, und genau das soll dieser Test nicht
+    // sein: tests/db/catalog.test.ts ("hat für jede Kategorie in der
+    // Datenbank ein deutsches Label") prüft dieselbe Frage bereits live
+    // gegen die Instanz und ist die eigentliche Autorität. Dieser Test bleibt
+    // trotzdem als Offline-Netz stehen, das schon vor jedem `yarn db:push`
+    // greift. Wer eine Kategorie ergänzt: diese Liste UND den Migrationen
+    // beide nachziehen, sonst veraltet sie wieder unbemerkt wie mit
+    // modeller/loadbox/plugin geschehen.
     const schemaCategories = [
-      'guitar', 'bass', 'amp', 'cabinet', 'pedal',
+      'guitar', 'bass', 'amp', 'modeller', 'cabinet', 'loadbox', 'plugin', 'pedal',
       'pickup', 'preamp', 'accessory', 'strings', 'pick',
     ]
     for (const id of schemaCategories) {

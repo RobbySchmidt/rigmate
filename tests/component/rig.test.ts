@@ -221,6 +221,11 @@ describe('rig.vue - ein Eingabefeld fuer alles', () => {
     // Ohne Kategorien ist unentscheidbar, was Verbrauchsmaterial ist. Das
     // muss sichtbar scheitern statt alles als Geraet zu behandeln.
     expect(wrapper.text()).toContain(de.rig.loadError)
+    // Wie bei den beiden Schwester-Tests unten: groupedRig speist sich
+    // vollstaendig aus categories, also waere die Gruppenliste bei einem
+    // Kategorien-Ladefehler leer - ohne diese Negativ-Assertion bestuende
+    // der Test auch, wenn Fehler- UND Leertext gleichzeitig erschienen.
+    expect(wrapper.text()).not.toContain(de.rig.empty)
   })
 })
 

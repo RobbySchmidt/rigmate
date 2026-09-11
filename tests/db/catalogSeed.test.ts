@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { CATALOG, type RarityBase } from '../../scripts/data/catalog'
+import { DEMO_USERS } from '../../scripts/data/demoUsers'
 import {
   findPruneBlockers,
   orderForDeletion,
@@ -298,25 +299,96 @@ describe('Saitenstaerken im Namen', () => {
     expect(data).toEqual([])
   })
 
-  it('haelt die bestehenden Praeferenzen an den umbenannten Eintraegen', async () => {
-    const { data: items, error: itemsError } = await admin
-      .from('catalog_items')
-      .select('id')
-      .in('name', UMBENANNT)
-    expect(itemsError).toBeNull()
-    expect(items).toHaveLength(3)
+  // Wer welche Saiten bevorzugt, steht in DEMO_USERS (scripts/data/demoUsers.ts).
+  // Von dort kommt die Erwartung, nicht aus einer Gesamtzahl ueber die ganze
+  // geteilte Instanz: eine Zaehlung ueber ALLE Nutzer waere rot geworden,
+  // sobald irgendein echter Nutzer einen dieser weit verbreiteten
+  // D'Addario-Saetze eintraegt - und genau deshalb existiert dieser Branch
+  // ueberhaupt (echte Nutzer sind angekommen). Einzeln je Demo-Nutzer zu
+  // pruefen ist gegen fremde Zeilen immun und nennt im Fehlerfall den
+  // Nutzer, dessen Praeferenz nicht (mehr) auf den umbenannten Eintrag zeigt.
+  const DEMO_MIT_UMBENANNTEN_SAITEN = DEMO_USERS.flatMap((user) =>
+    user.preferences
+      .filter((name) => UMBENANNT.includes(name))
+      .map((name) => ({ displayName: user.displayName, name })),
+  )
 
-    const { count, error } = await admin
-      .from('preferences')
-      .select('id', { count: 'exact', head: true })
-      .in('catalog_item_id', items!.map((row) => row.id))
-
-    expect(error).toBeNull()
-    // Fuenf Demo-Nutzer bevorzugen diese drei Saetze. Waere die Umbenennung
-    // ueber den Seed gelaufen, zeigten sie weiter auf die alten Eintraege
-    // und dieser Wert waere 0.
-    expect(count).toBe(5)
+  it('hat ueberhaupt Demo-Nutzer zum Pruefen der umbenannten Eintraege', () => {
+    // Selbstpruefung der Testdaten: wuerde diese Liste je leer laufen (z.B.
+    // weil jemand die Praeferenzen in demoUsers.ts umschreibt), bestuende
+    // der it.each unten auf einer leeren Schleife - aus dem falschen Grund
+    // gruen, genau das Muster, das dieser Fix beheben soll.
+    expect(DEMO_MIT_UMBENANNTEN_SAITEN.length).toBeGreaterThan(0)
+    for (const name of UMBENANNT) {
+      expect(DEMO_MIT_UMBENANNTEN_SAITEN.some((row) => row.name === name)).toBe(true)
+    }
   })
+
+  // Wie in tests/db/demoSeed.test.ts: ein fehlender `yarn seed:users`-Lauf
+  // sieht sonst wie eine kaputte Umbenennung aus. Dieselbe Unterscheidung
+  // wie dort - ein Datenbankfehler ist kein fehlender Seed - mit einer
+  // eigenen, benannten Meldung statt eines nackten Erwartungswerts.
+  let seededDisplayNames = new Set<string>()
+  let seedProbeError: string | null = null
+
+  beforeAll(async () => {
+    const { data, error } = await admin
+      .from('profiles')
+      .select('display_name')
+      .in('display_name', DEMO_USERS.map((u) => u.displayName))
+    if (error) seedProbeError = error.message
+    seededDisplayNames = new Set((data ?? []).map((row) => row.display_name as string))
+  })
+
+  function requireSeededDemoUser(displayName: string): void {
+    if (seedProbeError !== null) {
+      throw new Error(
+        `Demo-Nutzer "${displayName}" konnte nicht geprüft werden, die Datenbank hat den ` +
+          `Zugriff abgelehnt: ${seedProbeError}. Das ist kein fehlender Seed — erst ` +
+          'SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY in .env prüfen.',
+      )
+    }
+    if (seededDisplayNames.has(displayName)) return
+    throw new Error(
+      `Demo-Nutzer "${displayName}" steht nicht in der Datenbank. Das ist keine Regression ` +
+        'an der Umbenennung, sondern ein fehlender Schritt: erst `yarn seed:users` ausführen.',
+    )
+  }
+
+  it.each(DEMO_MIT_UMBENANNTEN_SAITEN)(
+    'haelt die Praeferenz von $displayName fuer "$name" am umbenannten Eintrag',
+    async ({ displayName, name }) => {
+      requireSeededDemoUser(displayName)
+
+      const { data: profile, error: profileError } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('display_name', displayName)
+        .single()
+      expect(profileError, `Profil fuer "${displayName}" fehlt: ${profileError?.message}`).toBeNull()
+
+      const { data: item, error: itemError } = await admin
+        .from('catalog_items')
+        .select('id')
+        .eq('name', name)
+        .single()
+      expect(itemError, `"${name}" fehlt in der Datenbank: ${itemError?.message}`).toBeNull()
+
+      const { data: preference, error: preferenceError } = await admin
+        .from('preferences')
+        .select('id')
+        .eq('user_id', profile!.id)
+        .eq('catalog_item_id', item!.id)
+        .maybeSingle()
+
+      expect(preferenceError).toBeNull()
+      expect(
+        preference,
+        `${displayName} hat keine Praeferenz, die auf den umbenannten Eintrag "${name}" zeigt - ` +
+          'vermutlich haengt sie noch am alten Eintrag.',
+      ).toBeTruthy()
+    },
+  )
 })
 
 describe('Setup des ersten echten Nutzers', () => {

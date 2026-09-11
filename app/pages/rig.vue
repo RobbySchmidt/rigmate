@@ -127,9 +127,11 @@ async function addPreference(result: any) {
   preferencesError.value = ''
   const { error } = await supabase.from('preferences').insert({ user_id: userId.value!, catalog_item_id: result.id })
   if (error) {
-    // Der Picker filtert hier zwar schon auf Saiten/Plektren, aber die
-    // Datenbank bleibt die letzte Instanz - ein generischer Fehlschlag statt
-    // stiller Nichtigkeit.
+    // Nicht der Picker entscheidet hier ueber Verbrauchsmaterial - er sucht
+    // ueber alle Kategorien. Die Weiche steht in addToRig(): die entscheidet
+    // anhand der Kategorie des Treffers, ob addPreference() ueberhaupt
+    // aufgerufen wird. Die Datenbank bleibt trotzdem die letzte Instanz -
+    // ein generischer Fehlschlag statt stiller Nichtigkeit.
     preferencesError.value = t.rig.errorGeneric
     return
   }
@@ -235,8 +237,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       />
       <p v-if="gearError" class="text-sm text-danger">{{ gearError }}</p>
       <p v-if="preferencesError" class="text-sm text-danger">{{ preferencesError }}</p>
-      <p v-if="categoriesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
-      <p v-if="gearLoadError || preferencesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
+      <p v-if="gearLoadError || preferencesLoadError || categoriesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
       <p v-else-if="rigIstLeer" class="text-muted">{{ t.rig.empty }}</p>
       <div v-else class="flex flex-col gap-6">
         <!-- data-group traegt die Kategorie, nicht bloss eine Testmarke -
