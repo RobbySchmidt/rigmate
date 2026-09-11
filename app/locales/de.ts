@@ -94,8 +94,11 @@ export const de = {
     save: 'Speichern',
     cancel: 'Abbrechen',
     errorGeneric: 'Das hat nicht geklappt. Versuch es noch einmal.',
+    // Seit der gruppierten Ausgabe (Task 6) gibt es keine eigene Sektion fuer
+    // Verbrauchsmaterial mehr, auf die man verweisen koennte - derselbe Fund
+    // hat vorher schon einmal ins Leere gezeigt, als die Sektion noch stand.
     errorConsumableAsGear:
-      'Das ist Verbrauchsmaterial. Trag es weiter unten bei „Saiten und Plektren" ein statt hier als Equipment.',
+      'Das ist Verbrauchsmaterial. Trag es über dasselbe Feld noch einmal ein, dann landet es automatisch in der passenden Gruppe deines Equipments.',
     // Eigener Text statt eines stillen leeren Abschnitts - ein Fehlschlag
     // beim Laden von Equipment, Praeferenzen oder Wunschliste soll nicht wie
     // "du hast noch nichts eingetragen" aussehen (Fix-Runde Abschluss).

@@ -321,4 +321,99 @@ describe('rig.vue - gruppierte Ausgabe', () => {
     expect(wrapper.text()).toContain(de.rig.empty)
     expect(wrapper.findAll('[data-group]')).toHaveLength(0)
   })
+
+  // Fix-Runde 1: bisher stubte kein Test hier einen Lesefehler auf
+  // gear_items/preferences - der wiederkehrende Fehler des Projekts (ein
+  // kaputter Read sieht aus wie ein leeres Rig) waere unbemerkt geblieben.
+  // Die Negativ-Assertion ist der eigentliche Punkt: ohne sie bestuende der
+  // Test auch, wenn Fehler- UND Leertext gleichzeitig erschienen.
+  it('zeigt bei einem fehlgeschlagenen Lesezugriff auf Exemplare die Fehlermeldung statt des Leerzustands', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: {
+        categories: { data: KATEGORIEN },
+        gear_items: { error: { message: 'permission denied for table gear_items' } },
+        preferences: { data: [] },
+        wishlist_items: { data: [] },
+      },
+    })
+    const wrapper = await mountRig(supabase)
+
+    expect(wrapper.text()).toContain(de.rig.loadError)
+    expect(wrapper.text()).not.toContain(de.rig.empty)
+    expect(wrapper.findAll('[data-group]')).toHaveLength(0)
+  })
+
+  it('zeigt bei einem fehlgeschlagenen Lesezugriff auf Praeferenzen die Fehlermeldung statt des Leerzustands', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: {
+        categories: { data: KATEGORIEN },
+        gear_items: { data: [] },
+        preferences: { error: { message: 'permission denied for table preferences' } },
+        wishlist_items: { data: [] },
+      },
+    })
+    const wrapper = await mountRig(supabase)
+
+    expect(wrapper.text()).toContain(de.rig.loadError)
+    expect(wrapper.text()).not.toContain(de.rig.empty)
+    expect(wrapper.findAll('[data-group]')).toHaveLength(0)
+  })
+})
+
+describe('rig.vue - Entfernen trifft die richtige Tabelle', () => {
+  // Fix-Runde 1: die gruppierte Zeile fuehrt seit Task 6 ein table-Feld
+  // (gear_items vs. preferences), ueber das removeRow() entscheidet, wo
+  // geloescht wird. Ungetestet haette eine vertauschte Zuordnung niemand
+  // bemerkt - ein Klick auf "Entfernen" haette lautlos die falsche Tabelle
+  // getroffen. Es wird auf ALLE .from()-Aufrufe NACH dem Mounten geprueft
+  // (Loeschen + der anschliessende Refresh), nicht nur auf den letzten -
+  // beide muessen zur selben, richtigen Tabelle gehoeren.
+  function rigMitJeEinerZeile() {
+    return createSupabaseStub({
+      initialReads: {
+        categories: { data: [
+          { id: 'guitar', is_consumable: false, sort_order: 10 },
+          { id: 'strings', is_consumable: true, sort_order: 90 },
+        ] },
+        gear_items: { data: [
+          { id: 'g1', year: null, finish: null, installed_in_id: null,
+            catalog_items: { id: 'c1', name: 'Alexi-600', category_id: 'guitar', brands: { name: 'LTD' } } },
+        ] },
+        preferences: { data: [
+          { id: 'p1', catalog_items: { id: 'c2', name: 'EXL140 (10-52)', category_id: 'strings', brands: { name: "D'Addario" } } },
+        ] },
+        wishlist_items: { data: [] },
+      },
+      writes: {
+        gear_items: [{ error: null }],
+        preferences: [{ error: null }],
+      },
+    })
+  }
+
+  it('entfernt ein Exemplar ueber gear_items', async () => {
+    const supabase = rigMitJeEinerZeile()
+    const wrapper = await mountRig(supabase)
+    const aufrufeVorKlick = supabase.from.mock.calls.length
+
+    await wrapper.get('[data-group="guitar"]').get('button').trigger('click')
+    await flushPromises()
+
+    const neueAufrufe = supabase.from.mock.calls.slice(aufrufeVorKlick).map((call: any[]) => call[0])
+    // Loeschen und der Refresh danach muessen BEIDE gear_items treffen -
+    // nicht preferences.
+    expect(neueAufrufe).toEqual(['gear_items', 'gear_items'])
+  })
+
+  it('entfernt eine Praeferenz ueber preferences', async () => {
+    const supabase = rigMitJeEinerZeile()
+    const wrapper = await mountRig(supabase)
+    const aufrufeVorKlick = supabase.from.mock.calls.length
+
+    await wrapper.get('[data-group="strings"]').get('button').trigger('click')
+    await flushPromises()
+
+    const neueAufrufe = supabase.from.mock.calls.slice(aufrufeVorKlick).map((call: any[]) => call[0])
+    expect(neueAufrufe).toEqual(['preferences', 'preferences'])
+  })
 })
