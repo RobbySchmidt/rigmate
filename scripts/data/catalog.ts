@@ -1452,25 +1452,29 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['paradigm'],
     rarity: 'special',
   },
+  // Gauge belongs in the name where an entry denotes ONE concrete set: an
+  // EXL110 is 10-46, always. Entries that denote a SERIES sold in many
+  // gauges -- Elixir Nanoweb, Ernie Ball Slinky -- stay without one, because
+  // a gauge on those would simply be wrong.
   {
     brand: "D'Addario",
-    name: 'EXL110',
+    name: 'EXL110 (10-46)',
     category: 'strings',
-    synonyms: ['exl110', 'exl 110'],
+    synonyms: ['exl110', 'exl 110', '10-46'],
     rarity: 'mass',
   },
   {
     brand: "D'Addario",
-    name: 'EXL120',
+    name: 'EXL120 (9-42)',
     category: 'strings',
-    synonyms: ['exl120', 'exl 120'],
+    synonyms: ['exl120', 'exl 120', '9-42'],
     rarity: 'common',
   },
   {
     brand: "D'Addario",
-    name: 'NYXL1046',
+    name: 'NYXL1046 (10-46)',
     category: 'strings',
-    synonyms: ['nyxl', 'nyxl1046'],
+    synonyms: ['nyxl', 'nyxl1046', '10-46'],
     rarity: 'common',
   },
   {

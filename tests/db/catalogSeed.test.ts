@@ -40,7 +40,7 @@ const PROTECTED_NAMES = [
   'Jazz Swing',
   'Tortex',
   'Jazz III',
-  'EXL110',
+  'EXL110 (10-46)',
   'Super Slinky',
 ]
 
@@ -275,5 +275,46 @@ describe('Bereinigte preamp-Kategorie', () => {
     for (const [name, kategorie] of UMZUEGE) {
       expect(kategorieInDb.get(name), `"${name}" fehlt in der Datenbank`).toBe(kategorie)
     }
+  })
+})
+
+describe('Saitenstaerken im Namen', () => {
+  const UMBENANNT = ['EXL110 (10-46)', 'EXL120 (9-42)', 'NYXL1046 (10-46)']
+  const ALT = ['EXL110', 'EXL120', 'NYXL1046']
+
+  it.each(UMBENANNT)('fuehrt "%s" genau einmal', async (name) => {
+    const { data, error } = await admin.from('catalog_items').select('id').eq('name', name)
+
+    expect(error).toBeNull()
+    expect(data).toHaveLength(1)
+  })
+
+  // Der eigentliche Punkt: die Umbenennung darf keine Dublette erzeugt
+  // haben. Genau das passiert, wenn jemand sie ueber den Seed loest.
+  it.each(ALT)('hat "%s" nicht als zweiten Eintrag stehen lassen', async (name) => {
+    const { data, error } = await admin.from('catalog_items').select('id').eq('name', name)
+
+    expect(error).toBeNull()
+    expect(data).toEqual([])
+  })
+
+  it('haelt die bestehenden Praeferenzen an den umbenannten Eintraegen', async () => {
+    const { data: items, error: itemsError } = await admin
+      .from('catalog_items')
+      .select('id')
+      .in('name', UMBENANNT)
+    expect(itemsError).toBeNull()
+    expect(items).toHaveLength(3)
+
+    const { count, error } = await admin
+      .from('preferences')
+      .select('id', { count: 'exact', head: true })
+      .in('catalog_item_id', items!.map((row) => row.id))
+
+    expect(error).toBeNull()
+    // Fuenf Demo-Nutzer bevorzugen diese drei Saetze. Waere die Umbenennung
+    // ueber den Seed gelaufen, zeigten sie weiter auf die alten Eintraege
+    // und dieser Wert waere 0.
+    expect(count).toBe(5)
   })
 })

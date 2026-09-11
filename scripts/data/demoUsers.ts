@@ -65,7 +65,7 @@ export const DEMO_USERS: DemoUser[] = [
       { item: '1960A' },
       { item: 'JB', installedIn: 'Les Paul Standard' },
     ],
-    preferences: ['EXL110', 'Jazz III'],
+    preferences: ['EXL110 (10-46)', 'Jazz III'],
     wishlist: ['White Falcon'],
   },
   {
@@ -150,7 +150,7 @@ export const DEMO_USERS: DemoUser[] = [
       { item: 'Big Muff Pi' },
       { item: 'Phase 90' },
     ],
-    preferences: ['EXL110', 'Nylon Standard'],
+    preferences: ['EXL110 (10-46)', 'Nylon Standard'],
     wishlist: ['Les Paul Custom'],
   },
   {
@@ -163,7 +163,7 @@ export const DEMO_USERS: DemoUser[] = [
       { item: 'Rectifier 4x12' },
       { item: '81', installedIn: 'RG' },
     ],
-    preferences: ['EXL120', 'Jazz III'],
+    preferences: ['EXL120 (9-42)', 'Jazz III'],
     wishlist: ['E-II Eclipse'],
   },
   {
@@ -275,7 +275,7 @@ export const DEMO_USERS: DemoUser[] = [
       { item: '1960B' },
       { item: 'CE-2 Chorus' },
     ],
-    preferences: ['EXL110', 'Nylon Standard'],
+    preferences: ['EXL110 (10-46)', 'Nylon Standard'],
     wishlist: ['Plexi'],
   },
   {
@@ -287,7 +287,7 @@ export const DEMO_USERS: DemoUser[] = [
       { item: 'PPC212' },
       { item: 'Plumes' },
     ],
-    preferences: ['NYXL1046', 'Tortex'],
+    preferences: ['NYXL1046 (10-46)', 'Tortex'],
     wishlist: ['Core Custom 24'],
   },
   {
