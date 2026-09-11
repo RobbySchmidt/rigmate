@@ -38,7 +38,7 @@ const { data: gear, refresh: refreshGear } = await useAsyncData('rig-gear', asyn
 const { data: preferences, refresh: refreshPreferences } = await useAsyncData('rig-preferences', async () => {
   const { data, error } = await supabase
     .from('preferences')
-    .select('id, catalog_items ( id, name, brands ( name ) )')
+    .select('id, catalog_items ( id, name, category_id, brands ( name ) )')
     .eq('user_id', userId.value!)
   if (error) {
     preferencesLoadError.value = true
@@ -86,6 +86,43 @@ const ownedGear = computed(() =>
     .map((row: any) => ({ id: row.id, label: label(row) })),
 )
 
+// Gruppiert Exemplare und Praeferenzen gemeinsam nach Kategorie. Die
+// Reihenfolge kommt aus sort_order in der Datenbank, nicht aus einer
+// Reihenfolge im Frontend - sonst gaebe es zwei Wahrheiten.
+const groupedRig = computed(() => {
+  const labels = t.categories as Record<string, string>
+  const zeilen = [
+    ...(gear.value ?? []).map((row: any) => ({
+      key: `gear-${row.id}`,
+      table: 'gear_items' as const,
+      id: row.id,
+      label: label(row),
+      detail: [row.year, row.finish].filter(Boolean).join(' · '),
+      categoryId: row.catalog_items.category_id,
+    })),
+    ...(preferences.value ?? []).map((row: any) => ({
+      key: `pref-${row.id}`,
+      table: 'preferences' as const,
+      id: row.id,
+      label: label(row),
+      detail: '',
+      categoryId: row.catalog_items.category_id,
+    })),
+  ]
+
+  return (categories.value ?? [])
+    .slice()
+    .sort((a: any, b: any) => a.sort_order - b.sort_order)
+    .map((category: any) => ({
+      categoryId: category.id,
+      label: labels[category.id] ?? category.id,
+      rows: zeilen.filter((zeile) => zeile.categoryId === category.id),
+    }))
+    .filter((group: any) => group.rows.length > 0)
+})
+
+const rigIstLeer = computed(() => groupedRig.value.length === 0)
+
 async function addPreference(result: any) {
   preferencesError.value = ''
   const { error } = await supabase.from('preferences').insert({ user_id: userId.value!, catalog_item_id: result.id })
@@ -131,10 +168,12 @@ async function saveGear(details: any) {
     installed_in_id: details.installedInId,
   })
   if (error) {
-    // Der Gear-Picker filtert bewusst keine Kategorie heraus (Abschnitt 6),
-    // deshalb kann hier echtes Verbrauchsmaterial ankommen. Der Trigger
-    // enforce_gear_item_rules() lehnt das ab - und genau dieser Fall bekommt
-    // eine eigene, ehrliche Erklaerung statt eines generischen Fehlschlags.
+    // Seit Task 5 entscheidet die Kategorie schon in addToRig() zwischen
+    // Exemplar und Praeferenz - dieser Pfad wird im Regelfall gar nicht mehr
+    // erreicht, nur noch bei einem Kategorien-Ladefehler oder inkonsistenten
+    // Daten. Der Trigger enforce_gear_item_rules() bleibt trotzdem die
+    // letzte Instanz, und genau dieser Fall bekommt weiterhin eine eigene,
+    // ehrliche Erklaerung statt eines generischen Fehlschlags.
     gearError.value =
       classifyGearWriteError(error) === 'consumable' ? t.rig.errorConsumableAsGear : t.rig.errorGeneric
     return
@@ -197,34 +236,26 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       <p v-if="gearError" class="text-sm text-danger">{{ gearError }}</p>
       <p v-if="preferencesError" class="text-sm text-danger">{{ preferencesError }}</p>
       <p v-if="categoriesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
-      <!-- Liste bleibt hier unveraendert, Task 6 ersetzt sie -->
-      <p v-if="gearLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
-      <p v-else-if="(gear ?? []).length === 0" class="text-muted">{{ t.rig.empty }}</p>
-      <ul v-else class="divide-y divide-line-soft rounded border border-line">
-        <li v-for="row in gear" :key="row.id" class="flex items-center gap-2 px-3 py-2">
-          <span>{{ label(row) }}</span>
-          <span v-if="row.year" class="text-sm text-muted">{{ row.year }}</span>
-          <span v-if="row.finish" class="text-sm text-muted">{{ row.finish }}</span>
-          <button type="button" class="ml-auto text-sm underline" @click="removeRow('gear_items', row.id)">
-            {{ t.rig.remove }}
-          </button>
-        </li>
-      </ul>
-    </section>
-
-    <section class="flex flex-col gap-4">
-      <h2 class="text-f-2xl font-semibold">{{ t.rig.preferences }}</h2>
-      <p v-if="preferencesError" class="text-sm text-danger">{{ preferencesError }}</p>
-      <p v-if="preferencesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
-      <p v-else-if="(preferences ?? []).length === 0" class="text-muted">{{ t.rig.emptyPreferences }}</p>
-      <ul v-else class="divide-y divide-line-soft rounded border border-line">
-        <li v-for="row in preferences" :key="row.id" class="flex items-center px-3 py-2">
-          <span>{{ label(row) }}</span>
-          <button type="button" class="ml-auto text-sm underline" @click="removeRow('preferences', row.id)">
-            {{ t.rig.remove }}
-          </button>
-        </li>
-      </ul>
+      <p v-if="gearLoadError || preferencesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
+      <p v-else-if="rigIstLeer" class="text-muted">{{ t.rig.empty }}</p>
+      <div v-else class="flex flex-col gap-6">
+        <!-- data-group traegt die Kategorie, nicht bloss eine Testmarke -
+             dasselbe Muster wie data-count und data-pip im Projekt. -->
+        <div v-for="group in groupedRig" :key="group.categoryId" :data-group="group.categoryId" class="flex flex-col gap-2">
+          <h3 class="text-f-sm font-semibold uppercase tracking-wide text-muted">
+            {{ group.label }}
+          </h3>
+          <ul class="divide-y divide-line-soft rounded border border-line">
+            <li v-for="row in group.rows" :key="row.key" class="flex items-center gap-2 px-3 py-2">
+              <span>{{ row.label }}</span>
+              <span v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</span>
+              <button type="button" class="ml-auto text-sm underline" @click="removeRow(row.table, row.id)">
+                {{ t.rig.remove }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <section class="flex flex-col gap-4">

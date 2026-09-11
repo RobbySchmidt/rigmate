@@ -256,3 +256,69 @@ describe('rig.vue - neu anlegen', () => {
     expect(wrapper.text()).toContain('Ganz Neu')
   })
 })
+
+describe('rig.vue - gruppierte Ausgabe', () => {
+  const KATEGORIEN = [
+    { id: 'guitar', is_consumable: false, sort_order: 10 },
+    { id: 'amp', is_consumable: false, sort_order: 30 },
+    { id: 'pedal', is_consumable: false, sort_order: 50 },
+    { id: 'strings', is_consumable: true, sort_order: 90 },
+  ]
+
+  function rigMitInhalt() {
+    return createSupabaseStub({
+      initialReads: {
+        categories: { data: KATEGORIEN },
+        gear_items: { data: [
+          { id: 'g1', year: null, finish: null, installed_in_id: null,
+            catalog_items: { id: 'c1', name: 'Satan 120', category_id: 'amp', brands: { name: 'Randall' } } },
+          { id: 'g2', year: null, finish: null, installed_in_id: null,
+            catalog_items: { id: 'c2', name: 'Alexi-600', category_id: 'guitar', brands: { name: 'LTD' } } },
+        ] },
+        preferences: { data: [
+          { id: 'p1', catalog_items: { id: 'c3', name: 'EXL140 (10-52)', category_id: 'strings', brands: { name: "D'Addario" } } },
+        ] },
+        wishlist_items: { data: [] },
+      },
+    })
+  }
+
+  it('gruppiert nach Kategorie in sort_order-Reihenfolge', async () => {
+    const wrapper = await mountRig(rigMitInhalt())
+
+    const gruppen = wrapper.findAll('[data-group]')
+
+    // Vollstaendiger Vergleich, keine Teilmenge: ein toContain bestuende
+    // auch, wenn die Reihenfolge falsch waere.
+    expect(gruppen.map((n) => n.attributes('data-group'))).toEqual(['guitar', 'amp', 'strings'])
+    expect(gruppen.map((n) => n.get('h3').text())).toEqual([
+      de.categories.guitar, de.categories.amp, de.categories.strings,
+    ])
+  })
+
+  it('laesst leere Kategorien weg', async () => {
+    const wrapper = await mountRig(rigMitInhalt())
+
+    // "pedal" ist als Kategorie bekannt, aber nichts liegt darin - sonst
+    // staenden dreizehn Ueberschriften ueber einem fast leeren Rig.
+    expect(wrapper.findAll('[data-group]').map((n) => n.attributes('data-group')))
+      .not.toContain('pedal')
+  })
+
+  it('zeigt Verbrauchsmaterial in derselben Liste', async () => {
+    const wrapper = await mountRig(rigMitInhalt())
+
+    const saiten = wrapper.get('[data-group="strings"]')
+    expect(saiten.text()).toContain("D'Addario EXL140 (10-52)")
+  })
+
+  it('zeigt den Leerzustand, wenn nichts eingetragen ist', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: { ...EMPTY_RIG, categories: { data: KATEGORIEN } },
+    })
+    const wrapper = await mountRig(supabase)
+
+    expect(wrapper.text()).toContain(de.rig.empty)
+    expect(wrapper.findAll('[data-group]')).toHaveLength(0)
+  })
+})
