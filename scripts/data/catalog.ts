@@ -327,6 +327,24 @@ export const CATALOG: SeedLine[] = [
     rarity: 'common',
   },
   {
+    // Edwards is ESP's Japanese sub-brand, and gets its own brand row for
+    // the same reason LTD does: price bracket and rarity stay separable.
+    // The synonyms carry discoverability through the parent brand, since
+    // `buildSearchable` also matches "brand + synonym".
+    brand: 'Edwards',
+    name: 'Alexi Arrowhead',
+    category: 'guitar',
+    synonyms: ['esp alexi', 'edwards alexi', 'alexi arrowhead', 'arrowhead', 'alexi laiho'],
+    rarity: 'rare',
+  },
+  {
+    brand: 'LTD',
+    name: 'Alexi-600',
+    category: 'guitar',
+    synonyms: ['alexi 600', 'alexi600', 'esp alexi', 'alexi laiho'],
+    rarity: 'special',
+  },
+  {
     brand: 'Music Man',
     name: 'Axis',
     category: 'guitar',
@@ -396,6 +414,19 @@ export const CATALOG: SeedLine[] = [
     category: 'guitar',
     synonyms: ['hellraiser'],
     rarity: 'common',
+  },
+  {
+    // The C-8 is the reason this line is two-tiered: an eight-string ATX is
+    // a different proposition from the six-string one.
+    brand: 'Schecter',
+    name: 'Blackjack ATX',
+    category: 'guitar',
+    synonyms: ['blackjack atx', 'blackjack'],
+    rarity: 'special',
+    variants: [
+      { name: 'Blackjack ATX C-1', synonyms: ['atx c1', 'blackjack c1'], rarity: 'common' },
+      { name: 'Blackjack ATX C-8', synonyms: ['atx c8', 'blackjack c8', '8 string'], rarity: 'rare' },
+    ],
   },
   {
     brand: 'Strandberg',
@@ -763,6 +794,13 @@ export const CATALOG: SeedLine[] = [
     category: 'amp',
     synonyms: ['5150', '5150 iii'],
     rarity: 'common',
+  },
+  {
+    brand: 'Randall',
+    name: 'Satan 120',
+    category: 'amp',
+    synonyms: ['satan', 'satan 120', 'ola englund'],
+    rarity: 'special',
   },
   {
     brand: 'Friedman',
@@ -1186,6 +1224,33 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['broadcast'],
     rarity: 'special',
   },
+  // Fortin is a boutique brand, and that is NOT what rarity measures. The
+  // Zuul sits on half the metal boards there are, and the Natas pedal is
+  // more common than its price suggests. Price and prestige are not the
+  // scale -- how surprising a shared ownership would be is.
+  {
+    brand: 'Fortin',
+    name: 'Grind',
+    category: 'pedal',
+    synonyms: ['grind', 'fortin grind'],
+    rarity: 'special',
+  },
+  {
+    brand: 'Fortin',
+    name: 'Zuul+',
+    category: 'pedal',
+    synonyms: ['zuul', 'zuul plus', 'fortin zuul'],
+    rarity: 'common',
+  },
+  {
+    // Named "Natas Distortion" so Fortin's actual Natas amp can sit beside
+    // it later without a name collision -- names are unique file-wide.
+    brand: 'Fortin',
+    name: 'Natas Distortion',
+    category: 'pedal',
+    synonyms: ['natas', 'fortin natas'],
+    rarity: 'common',
+  },
   {
     brand: 'Line 6',
     name: 'DL4',
@@ -1267,6 +1332,17 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    brand: 'Seymour Duncan',
+    name: 'Nazgul',
+    category: 'pickup',
+    synonyms: ['nazgul'],
+    rarity: 'common',
+    variants: [
+      { name: 'Nazgul 7', synonyms: ['nazgul 7 string', 'nazgul7'], rarity: 'special' },
+      { name: 'Nazgul 8', synonyms: ['nazgul 8 string', 'nazgul8'], rarity: 'special' },
+    ],
+  },
+  {
     brand: 'DiMarzio',
     name: 'Super Distortion',
     category: 'pickup',
@@ -1292,6 +1368,13 @@ export const CATALOG: SeedLine[] = [
     name: '85',
     category: 'pickup',
     synonyms: ['emg 85'],
+    rarity: 'common',
+  },
+  {
+    brand: 'EMG',
+    name: 'HZ-H2',
+    category: 'pickup',
+    synonyms: ['hz h2', 'hzh2', 'emg hz'],
     rarity: 'common',
   },
   {
@@ -1407,6 +1490,24 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
   },
   {
+    brand: 'Two Notes',
+    name: 'Torpedo Reload',
+    category: 'loadbox',
+    synonyms: ['reload', 'torpedo reload'],
+    rarity: 'special',
+  },
+  {
+    // A plugin is its own product under its own brand -- Neural DSP, not
+    // Fortin. It is deliberately NOT a variant of any physical cabinet: the
+    // database enforces that a variant shares its line's brand, so a
+    // third-party IR could never hang under the original anyway.
+    brand: 'Neural DSP',
+    name: 'Fortin NTS Suite',
+    category: 'plugin',
+    synonyms: ['nts', 'fortin nts', 'nts suite'],
+    rarity: 'special',
+  },
+  {
     brand: 'Tech 21',
     name: 'SansAmp',
     category: 'preamp',
@@ -1421,6 +1522,22 @@ export const CATALOG: SeedLine[] = [
     category: 'preamp',
     synonyms: ['g1 four', 'g1x four', 'zoom g1'],
     rarity: 'mass',
+  },
+  {
+    // Onboard preamps, not rack units. The category holds both; what tells
+    // them apart on a rig page is `installed_in_id`, not the category.
+    brand: 'EMG',
+    name: 'ABQ',
+    category: 'preamp',
+    synonyms: ['abq', 'emg abq'],
+    rarity: 'special',
+  },
+  {
+    brand: 'ESP',
+    name: 'MM-04',
+    category: 'preamp',
+    synonyms: ['mm04', 'mm 04', 'esp mm04'],
+    rarity: 'rare',
   },
 
   // ---- Strings (consumable) ----
@@ -1476,6 +1593,22 @@ export const CATALOG: SeedLine[] = [
     category: 'strings',
     synonyms: ['nyxl', 'nyxl1046', '10-46'],
     rarity: 'common',
+  },
+  {
+    brand: "D'Addario",
+    name: 'EXL140 (10-52)',
+    category: 'strings',
+    synonyms: ['exl140', 'exl 140', '10-52'],
+    rarity: 'mass',
+  },
+  {
+    // An eight-string set is a strong signal: it says downtuned before the
+    // owner says anything.
+    brand: "D'Addario",
+    name: 'NYXL0980 (9-80)',
+    category: 'strings',
+    synonyms: ['nyxl0980', 'nyxl 0980', '9-80'],
+    rarity: 'special',
   },
   {
     // Elixir IS the coated-string market, not the exception to it.

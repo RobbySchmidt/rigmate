@@ -318,3 +318,49 @@ describe('Saitenstaerken im Namen', () => {
     expect(count).toBe(5)
   })
 })
+
+describe('Setup des ersten echten Nutzers', () => {
+  const ERWARTET: Array<{ brand: string; name: string; category: string; rarity: RarityBase }> = [
+    { brand: 'LTD', name: 'Alexi-600', category: 'guitar', rarity: 'special' },
+    { brand: 'Edwards', name: 'Alexi Arrowhead', category: 'guitar', rarity: 'rare' },
+    { brand: 'EMG', name: 'HZ-H2', category: 'pickup', rarity: 'common' },
+    { brand: 'EMG', name: 'ABQ', category: 'preamp', rarity: 'special' },
+    { brand: 'ESP', name: 'MM-04', category: 'preamp', rarity: 'rare' },
+    { brand: 'Randall', name: 'Satan 120', category: 'amp', rarity: 'special' },
+    { brand: 'Fortin', name: 'Grind', category: 'pedal', rarity: 'special' },
+    { brand: 'Fortin', name: 'Zuul+', category: 'pedal', rarity: 'common' },
+    { brand: 'Fortin', name: 'Natas Distortion', category: 'pedal', rarity: 'common' },
+    { brand: 'Two Notes', name: 'Torpedo Reload', category: 'loadbox', rarity: 'special' },
+    { brand: 'Neural DSP', name: 'Fortin NTS Suite', category: 'plugin', rarity: 'special' },
+    { brand: "D'Addario", name: 'EXL140 (10-52)', category: 'strings', rarity: 'mass' },
+    { brand: "D'Addario", name: 'NYXL0980 (9-80)', category: 'strings', rarity: 'special' },
+  ]
+
+  it.each(ERWARTET)('fuehrt $brand $name als $category ($rarity)', ({ brand, name, category, rarity }) => {
+    const line = CATALOG.find((entry) => entry.name === name)
+    expect(line, `"${name}" fehlt im Katalog`).toBeDefined()
+    expect(line!.brand).toBe(brand)
+    expect(line!.category).toBe(category)
+    expect(line!.rarity).toBe(rarity)
+  })
+
+  // Zweistufig nur dort, wo die Seltenheit wirklich spreizt. Eine Linie mit
+  // genau einer Ausfuehrung behauptet eine Spreizung, die es nicht gibt -
+  // darum wird die jeweils verbreitete Ausfuehrung mit angelegt.
+  it.each([
+    { linie: 'Blackjack ATX', ausfuehrungen: ['Blackjack ATX C-1', 'Blackjack ATX C-8'] },
+    { linie: 'Nazgul', ausfuehrungen: ['Nazgul 7', 'Nazgul 8'] },
+  ])('spreizt $linie ueber mehrere Ausfuehrungen', ({ linie, ausfuehrungen }) => {
+    const line = CATALOG.find((entry) => entry.name === linie)
+    expect(line, `Linie "${linie}" fehlt`).toBeDefined()
+    const namen = line!.variants?.map((v) => v.name) ?? []
+    expect(namen).toEqual(ausfuehrungen)
+
+    const stufen = new Set([line!.rarity, ...(line!.variants?.map((v) => v.rarity) ?? [])])
+    expect(stufen.size).toBeGreaterThan(1)
+  })
+
+  it.each(['Randall', 'Fortin', 'Edwards'])('kennt die Marke %s', (brand) => {
+    expect(CATALOG.some((entry) => entry.brand === brand)).toBe(true)
+  })
+})

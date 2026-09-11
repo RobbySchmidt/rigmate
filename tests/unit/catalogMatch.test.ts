@@ -149,3 +149,47 @@ describe('needsPrecisionHint', () => {
     expect(needsPrecisionHint(AC30, [a, b])).toBe(false)
   })
 })
+
+describe('Auffindbarkeit ueber die Dachmarke', () => {
+  it('findet die Edwards ueber "ESP Alexi", obwohl die Marke Edwards heisst', () => {
+    const entries = buildSearchable([
+      {
+        id: 'edwards-alexi',
+        name: 'Alexi Arrowhead',
+        slug: 'edwards-alexi-arrowhead',
+        brandName: 'Edwards',
+        categoryId: 'guitar',
+        parentId: null,
+        lineId: 'edwards-alexi',
+        synonyms: ['esp alexi', 'edwards alexi', 'arrowhead', 'alexi laiho'],
+        rarityBase: 'rare',
+        isVerified: true,
+      },
+    ])
+
+    const treffer = matchCatalog('ESP Alexi', entries, { limit: 5 })
+
+    expect(treffer.map((m) => m.entry.id)).toContain('edwards-alexi')
+  })
+
+  it('findet einen Saitensatz ueber seine Staerke', () => {
+    const entries = buildSearchable([
+      {
+        id: 'exl140',
+        name: 'EXL140 (10-52)',
+        slug: 'daddario-exl140-10-52',
+        brandName: "D'Addario",
+        categoryId: 'strings',
+        parentId: null,
+        lineId: 'exl140',
+        synonyms: ['exl140', 'exl 140', '10-52'],
+        rarityBase: 'mass',
+        isVerified: true,
+      },
+    ])
+
+    const treffer = matchCatalog('10-52', entries, { limit: 5 })
+
+    expect(treffer.map((m) => m.entry.id)).toContain('exl140')
+  })
+})
