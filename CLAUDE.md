@@ -6,7 +6,7 @@ Soziales Netzwerk für Gitarristen, bei dem **das Equipment den sozialen Graphen
 
 **Der Profilumbau ist ebenfalls auf `main`.** 13 Migrationen, 444 Unit- und Komponententests plus 38 API-Tests, alle grün. Die Profilseite ist zweispaltig neu gebaut (Equipment-Panel links, Feed rechts), die Signalkette lässt sich per Drag and Drop pflegen, und es gibt ein Farbtoken-System samt Dunkelmodus. Was danach noch offen ist, steht unter „Was noch aussteht".
 
-**Katalogerweiterung und Rig-Eingabe-Umbau sind auf `development` abgeschlossen, aber noch nicht auf `main` gemergt.** Ausgelöst vom ersten echten Nutzer, von dessen Setup kein einziger Eintrag im Katalog stand: drei neue Kategorien (Modeller, Loadbox, Plugins), eine bereinigte `preamp`-Schublade, Saitenstärken im Namen, 19 neue Katalogeinträge, ein einziges Eingabefeld auf `/rig` statt dreier nach Kategorie, und die Ausgabe gruppiert nach Kategorie. 514 Unit- und Komponententests plus 38 API-Tests, alle grün. Der Branch wartet auf ein Review über den gesamten Verlauf, bevor gemergt und gepusht wird.
+**Katalogerweiterung und Rig-Eingabe-Umbau sind ebenfalls auf `main`.** Ausgelöst vom ersten echten Nutzer, von dessen Setup kein einziger Eintrag im Katalog stand: drei neue Kategorien (Modeller, Loadbox, Plugins), eine bereinigte `preamp`-Schublade, Saitenstärken im Namen, 19 neue Katalogeinträge, ein einziges Eingabefeld auf `/rig` statt dreier nach Kategorie, und die Ausgabe gruppiert nach Kategorie. 519 Unit- und Komponententests plus 38 API-Tests, alle grün. **Die gruppierte Rig-Seite hat allerdings noch niemand mit eigenen Augen gesehen** — Einzelheiten unter „Was noch aussteht".
 
 ## Zuerst lesen
 
@@ -20,7 +20,7 @@ Das ist die **Quelle der Wahrheit** für alles Inhaltliche: Datenmodell, Empfehl
 
 Der Plan für Stufe 1, vollständig abgearbeitet. Sein Abschnitt „Was dieser Plan über die Spec hinaus festlegt" listet die Entscheidungen, die beim Planen dazukamen. **Achtung: der Plan ist an mehreren Stellen überholt** — während der Umsetzung wurden Fehler darin gefunden und gegen ihn entschieden. Im Zweifel gilt der Code, nicht der Plan. Stufe 2 und 3 haben noch keine Pläne.
 
-### Zur Katalogerweiterung (auf `development`, noch nicht gemergt)
+### Zur Katalogerweiterung
 
 > **[docs/superpowers/specs/2026-09-11-rigmate-katalog-erweiterung-design.md](docs/superpowers/specs/2026-09-11-rigmate-katalog-erweiterung-design.md)**
 
@@ -173,6 +173,8 @@ Gemeldet, noch nicht entschieden — Einzelheiten im Plan unter „Offen nach de
 
 - **Selbst angelegte Katalogeinträge landen weiterhin auf `rarity_base = 'common'`** (Tabellen-Default). Der Fehlanreiz aus Abschnitt 12 der Spec bleibt, solange es kein Katalog-Backoffice gibt.
 - **Der Katalog bleibt dünn für Nischen-Setups.** Dieser Plan füllt genau ein reales Rig auf (19 neue Einträge) — das nächste ungewöhnliche Setup trifft wieder auf Lücken.
+- **Entscheidung für Robby: `HX Stomp` und `OX Amp Top Box` stehen weiter unter `preamp`.** Ersteres ist ein Line-6-Modeller, letzteres eine reaktive Loadbox — nach dem Kriterium aus Abschnitt 3 der Katalog-Spec gehören beide in die neuen Kategorien. Der Branch hat sie stehengelassen, weil die Spec nur fünf Umzügler namentlich aufzählt; das war Disziplin gegenüber der Spec, keine inhaltliche Entscheidung. Beides wäre ein Einzeiler im Seed plus `yarn seed:catalog`.
+- **Unbestätigt, aber ernst: die Fehler-Flags aus `useAsyncData` überleben die Hydration womöglich nicht.** `gearLoadError` und Geschwister werden als Seiteneffekt **im** Handler gesetzt. Beim SSR läuft der Handler serverseitig, auf dem Client aber nicht erneut — der `ref` stünde dort wieder auf `false`. Falls das zutrifft, erscheint die Fehlermeldung im ausgelieferten HTML und verschwindet beim Hydrieren wieder: **der wiederkehrende Projektfehler an sechs Stellen gleichzeitig**, in `rig.vue` und `profile/[id].vue`. Das stammt **nicht** aus der Katalogerweiterung, es liegt seit Stufe 1 so auf `main`. Prüfen: `/rig` mit unterbrochener Verbindung zur Instanz laden und sehen, ob die rote Zeile nach dem Hydrieren stehenbleibt. Wenn nicht, gehört der Fehlerzustand in den Rückgabewert des Handlers statt in einen `ref` daneben.
 
 ### Danach
 
