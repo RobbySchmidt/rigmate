@@ -4,7 +4,9 @@ Soziales Netzwerk für Gitarristen, bei dem **das Equipment den sozialen Graphen
 
 **Ausbaustufe 1 ist gebaut und auf `main` gemergt.** Der Gear-Graph funktioniert nachweislich: wer eine Rarität teilt, steht mit Faktor 3–5 über dem, der ein Allerweltspedal teilt.
 
-**Aktuell in Arbeit: der Profilumbau auf `feature/profil-umbau`.** 43 Commits, 13 Migrationen, 444 Unit- und Komponententests plus 38 API-Tests, alle grün. Die Profilseite ist zweispaltig neu gebaut (Equipment-Panel links, Feed rechts), die Signalkette lässt sich per Drag and Drop pflegen. **Alle 20 Tasks sind durch**; was danach noch offen ist, steht unter „Was noch aussteht".
+**Der Profilumbau ist ebenfalls auf `main`.** 13 Migrationen, 444 Unit- und Komponententests plus 38 API-Tests, alle grün. Die Profilseite ist zweispaltig neu gebaut (Equipment-Panel links, Feed rechts), die Signalkette lässt sich per Drag and Drop pflegen, und es gibt ein Farbtoken-System samt Dunkelmodus. Was danach noch offen ist, steht unter „Was noch aussteht".
+
+**Aktuell in Arbeit: Katalogerweiterung und Rig-Eingabe auf `development`.** Ausgelöst vom ersten echten Nutzer, von dessen Setup kein einziger Eintrag im Katalog stand.
 
 ## Zuerst lesen
 
@@ -18,7 +20,13 @@ Das ist die **Quelle der Wahrheit** für alles Inhaltliche: Datenmodell, Empfehl
 
 Der Plan für Stufe 1, vollständig abgearbeitet. Sein Abschnitt „Was dieser Plan über die Spec hinaus festlegt" listet die Entscheidungen, die beim Planen dazukamen. **Achtung: der Plan ist an mehreren Stellen überholt** — während der Umsetzung wurden Fehler darin gefunden und gegen ihn entschieden. Im Zweifel gilt der Code, nicht der Plan. Stufe 2 und 3 haben noch keine Pläne.
 
-### Für den laufenden Profilumbau
+### Für das laufende Vorhaben
+
+> **[docs/superpowers/specs/2026-09-11-rigmate-katalog-erweiterung-design.md](docs/superpowers/specs/2026-09-11-rigmate-katalog-erweiterung-design.md)**
+
+Domänengrenze für digitales und virtuelles Equipment, drei neue Kategorien, der Umbau der Rig-Eingabe. Ergänzt die Hauptspec und **ersetzt deren Kategorien-Aufzählung in Abschnitt 3 durch ein Kriterium**: rein kommt, was den Klang formt; draußen bleibt, was das Signal nur transportiert oder aufzeichnet.
+
+### Zum abgeschlossenen Profilumbau
 
 > **[docs/superpowers/specs/2026-09-07-rigmate-profil-design.md](docs/superpowers/specs/2026-09-07-rigmate-profil-design.md)**
 
@@ -58,8 +66,8 @@ Supabase-Projekt: `rigmate`, Region `eu-west-1`, Postgres 17.6. Lokales Supabase
 | | |
 |---|---|
 | `yarn dev` | Dev-Server auf Port 3000 |
-| `yarn test` | Unit-, Komponenten- und DB-Tests (444 auf dem Profil-Branch, 259 auf `main`) |
-| `yarn test:api` | API-Tests (38 bzw. 33) — **braucht einen laufenden `yarn dev`**, und zwar auf Port 3000; sonst `TEST_BASE_URL` setzen (siehe Fallstricke) |
+| `yarn test` | Unit-, Komponenten- und DB-Tests (444) |
+| `yarn test:api` | API-Tests (38) — **braucht einen laufenden `yarn dev`**, und zwar auf Port 3000; sonst `TEST_BASE_URL` setzen (siehe Fallstricke) |
 | `yarn db:new <name>` | neue Migration anlegen |
 | `yarn db:push` | Migrationen auf die Instanz anwenden |
 | `yarn seed:catalog` | Katalog einspielen, idempotent |
@@ -137,19 +145,11 @@ Die Schwester davon: **Tests, die aus dem falschen Grund grün sind.** Ebenfalls
 
 ## Was noch aussteht
 
-### Zuerst: der Profilumbau auf `feature/profil-umbau`
+### Reste aus dem Profilumbau
 
-> **Wiedereinstieg (Stand 7. September 2026).** Der Branch ist fertig umgesetzt und **nicht gemergt** — bewusst, weil der visuelle Durchgang noch aussteht. In dieser Reihenfolge weitermachen:
->
-> 1. `yarn dev`, dann die sieben umgestellten Seiten plus `/gear/<slug>` und `/rig` **je einmal hell und einmal dunkel** ansehen. Dunkel erreichst du über die System-Einstellung oder mit `data-theme="dark"` am `<html>` in den DevTools.
-> 2. Die Kontrastfrage zu `--rm-muted` entscheiden (siehe unten). Sie trifft die ganze App, also besser vor dem Merge.
-> 3. Danach mergen oder die drei übrigen Punkte unten noch mitnehmen.
->
-> **Achtung beim Testen:** `yarn test:api` zeigt fest auf Port 3000. Ist der belegt, weicht Nuxt auf 3001 aus, und die Tests befragen still, was auf 3000 antwortet. Vorher mit einem HTTP-Aufruf belegen, wer da ist — Einzelheiten unter „Fallstricke".
+**Der Profilumbau liegt seit dem 11. September 2026 auf `main`**, der Branch `feature/profil-umbau` ist gelöscht. `app/` enthält keine fest verdrahtete Palettenfarbe mehr — geprüft über einen Scan aller Tailwind-Farbfamilien, nicht über die vier Muster aus dem Plan (die ließen `amber-*`, `green-700` und `neutral-400` durch). Der Dunkelmodus ist durchgängig statt halb.
 
-**Alle 20 Tasks sind durch.** `app/` enthält keine fest verdrahtete Palettenfarbe mehr — geprüft über einen Scan aller Tailwind-Farbfamilien, nicht über die vier Muster aus dem Plan (die ließen `amber-*`, `green-700` und `neutral-400` durch). Der Dunkelmodus ist damit durchgängig statt halb, der Branch ist auslieferbar.
-
-Offen ist noch **das Ansehen mit eigenen Augen.** Messbar geprüft sind: alle Utilities existieren im generierten CSS, die beiden Dunkel-Blöcke sind zeichengleich, jedes benutzte Farbpaar hat einen Kontrastwert. Nicht geprüft ist, ob es gut aussieht — dafür braucht es einen Menschen vor `yarn dev`, hell und dunkel.
+Der **vollständige visuelle Durchgang steht weiter aus.** Beim Merge war `/rig` im Hellmodus angesehen, mehr nicht. Messbar geprüft sind: alle Utilities existieren im generierten CSS, die beiden Dunkel-Blöcke sind zeichengleich, jedes benutzte Farbpaar hat einen Kontrastwert. Nicht geprüft ist, ob es gut aussieht — dafür braucht es einen Menschen vor `yarn dev`, hell und dunkel. Dunkel erreichst du über die System-Einstellung oder mit `data-theme="dark"` am `<html>` in den DevTools.
 
 **Eine Designentscheidung wartet auf Robby:** Im Hellmodus liegt `muted` auf `bg` bei **4,01:1** und damit unter den 4,5:1, die WCAG AA für Fließtext verlangt; `rare` liegt bei 3,80, `special` bei 4,05. Im Dunkelmodus bestehen alle Paare. Das sind Werte aus Task 3, keine Folge der Umstellung — aber `text-muted` reicht seit Task 18/19 deutlich weiter als vorher. Ein etwas dunkleres `--rm-muted` im `:root`-Block würde es lösen und die ganze App treffen. Nachrechnen lässt sich das jederzeit neu; die Formel steht in dieser Datei nicht, die Werte stehen in [app/assets/css/main.css](app/assets/css/main.css).
 
@@ -167,9 +167,9 @@ Gemeldet, noch nicht entschieden — Einzelheiten im Plan unter „Offen nach de
 
 - **Review der Spec durch Robby** — nach wie vor offen, und der günstigste Zeitpunkt für Kurskorrekturen
 - **Pläne für Stufe 2** (Feed, Posts, Kommentare, Likes, Folgen, Freundschaft, DMs, Benachrichtigungen) **und Stufe 3**
-- Registrierung mit einem echten Konto über `/register` einmal komplett durchspielen — Mail, Bestätigungslink, Anmelden. Das hat noch **niemand** end-to-end getestet, weil die Automatisierung keine Mails empfangen kann. Achtung: das Projekt hat kein eigenes SMTP, der eingebaute Dienst schickt nur an Adressen von Mitgliedern der Supabase-Organisation und ist auf **2 Mails pro Stunde** begrenzt.
+- ~~Registrierung mit einem echten Konto end-to-end durchspielen~~ — **am 11. September 2026 erledigt**, Mail und Bestätigungslink funktionieren. Die Grenzen gelten weiter: kein eigenes SMTP, der eingebaute Dienst schickt nur an Adressen von Mitgliedern der Supabase-Organisation und ist auf **2 Mails pro Stunde** begrenzt.
 - Offene Punkte aus Abschnitt 14 der Spec: **Hosting des Frontends**, **Reaktionstypen** und **Bild-Limits** (die letzten beiden betreffen erst Stufe 2)
-- shadcn-nuxt fehlt weiterhin (Registry war beim Aufsetzen nicht erreichbar). Die fluiden Tailwind-Klassen in [app/assets/css/main.css](app/assets/css/main.css) sind da, die Farbtokens nicht.
+- shadcn-nuxt fehlt weiterhin (Registry war beim Aufsetzen nicht erreichbar). Die fluiden Tailwind-Klassen **und** die Farbtokens in [app/assets/css/main.css](app/assets/css/main.css) sind seit dem Profilumbau da — die Komponentenbibliothek nicht.
 
 ### Zurückgestellt für den Produktivbetrieb (zu Abschnitt 15)
 
@@ -192,6 +192,7 @@ Aus dem Profilumbau dazugekommen:
 ## Arbeitsweise
 
 - Auf Deutsch, locker im Ton.
+- **Gearbeitet wird auf `development`**, `main` bleibt stabil. Feature-Branches nur, wenn zwei Themen gleichzeitig laufen. Gemergt wird per fast-forward — `main` hat bisher keinen einzigen Merge-Commit.
 - **Oberflächensprache:** Bezeichner, Tabellen, Spalten, Dateinamen und Routen englisch, sichtbare Texte deutsch über `app/locales/de.ts`. **Kommentare deutsch.**
 - Vor Umsetzung erst Konzept klären — dieses Projekt ist aus einem Brainstorming entstanden und lebt davon, dass Entscheidungen begründet sind.
 - Was bewusst **nicht** gebaut wird: Marktplatz, Ortsdaten, eigenes Audio- und Video-Hosting. Gründe in Abschnitt 2 der Spec.
