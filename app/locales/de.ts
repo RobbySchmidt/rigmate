@@ -80,7 +80,7 @@ export const de = {
   },
   rig: {
     title: 'Mein Rig',
-    gear: 'Equipment',
+    gear: 'Mein Equipment',
     preferences: 'Saiten und Plektren',
     wishlist: 'Wunschliste',
     addGear: 'Equipment hinzufügen',

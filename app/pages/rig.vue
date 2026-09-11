@@ -59,6 +59,23 @@ const { data: wishlist, refresh: refreshWishlist } = await useAsyncData('rig-wis
   return data ?? []
 })
 
+const categoriesLoadError = ref(false)
+
+// Welche Kategorie Verbrauchsmaterial ist, weiss die Datenbank. Eine Kopie
+// im Frontend waere eine zweite Wahrheit, die auseinanderlaeuft.
+const { data: categories } = await useAsyncData('rig-categories', async () => {
+  const { data, error } = await supabase.from('categories').select('id, is_consumable, sort_order')
+  if (error) {
+    categoriesLoadError.value = true
+    return []
+  }
+  return data ?? []
+})
+
+const consumableIds = computed(
+  () => new Set((categories.value ?? []).filter((row: any) => row.is_consumable).map((row: any) => row.id)),
+)
+
 function label(row: any): string {
   return `${row.catalog_items.brands.name} ${row.catalog_items.name}`
 }
@@ -80,6 +97,16 @@ async function addPreference(result: any) {
     return
   }
   await refreshPreferences()
+}
+
+// Autovervollstaendigung statt Rueckfrage (Abschnitt 5 der Hauptspec): was
+// aus einem Treffer wird, entscheidet seine Kategorie, nicht der Nutzer.
+async function addToRig(result: any) {
+  if (consumableIds.value.has(result.categoryId)) {
+    await addPreference(result)
+    return
+  }
+  pendingItem.value = result
 }
 
 async function addWish(result: any) {
@@ -158,7 +185,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
 
     <section class="flex flex-col gap-4">
       <h2 class="text-f-2xl font-semibold">{{ t.rig.gear }}</h2>
-      <CatalogPicker v-if="!pendingItem" :create-handler="createCatalogItem" @select="pendingItem = $event" />
+      <CatalogPicker v-if="!pendingItem" :create-handler="createCatalogItem" @select="addToRig" />
       <GearItemForm
         v-else
         :catalog-item-label="`${pendingItem.brandName} ${pendingItem.name}`"
@@ -168,6 +195,9 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
         @cancel="pendingItem = null"
       />
       <p v-if="gearError" class="text-sm text-danger">{{ gearError }}</p>
+      <p v-if="preferencesError" class="text-sm text-danger">{{ preferencesError }}</p>
+      <p v-if="categoriesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
+      <!-- Liste bleibt hier unveraendert, Task 6 ersetzt sie -->
       <p v-if="gearLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
       <p v-else-if="(gear ?? []).length === 0" class="text-muted">{{ t.rig.empty }}</p>
       <ul v-else class="divide-y divide-line-soft rounded border border-line">
@@ -184,8 +214,6 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
 
     <section class="flex flex-col gap-4">
       <h2 class="text-f-2xl font-semibold">{{ t.rig.preferences }}</h2>
-      <CatalogPicker category-id="strings" :create-handler="createCatalogItem" @select="addPreference" />
-      <CatalogPicker category-id="pick" :create-handler="createCatalogItem" @select="addPreference" />
       <p v-if="preferencesError" class="text-sm text-danger">{{ preferencesError }}</p>
       <p v-if="preferencesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
       <p v-else-if="(preferences ?? []).length === 0" class="text-muted">{{ t.rig.emptyPreferences }}</p>

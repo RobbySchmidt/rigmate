@@ -102,21 +102,24 @@ describe('rig.vue - abgelehntes Schreiben', () => {
     expect(supabase.inserts.gear_items[0]).toMatchObject({ owner_id: 'test-user' })
   })
 
-  it('zeigt die eigene Meldung, wenn Verbrauchsmaterial als Equipment abgelehnt wird', async () => {
-    // Der Equipment-Picker filtert bewusst keine Kategorie heraus (Abschnitt
-    // 6) - Saiten landen hier also wirklich, und der Trigger lehnt sie ab.
+  it('zeigt die eigene Meldung, wenn die Datenbank Verbrauchsmaterial als Geraet ablehnt', async () => {
+    // Unerreichbar ueber die Oberflaeche, seit die Kategorie entscheidet -
+    // aber der Trigger bleibt die letzte Instanz, und wenn er zuschlaegt,
+    // muss die Meldung stimmen statt generisch zu sein.
     const supabase = createSupabaseStub({
-      initialReads: EMPTY_RIG,
+      initialReads: {
+        ...EMPTY_RIG,
+        categories: { data: [{ id: 'strings', is_consumable: false, sort_order: 90 }] },
+      },
       writes: { gear_items: [{ error: { message: 'consumable items belong in preferences, not in gear_items' } }] },
     })
     const wrapper = await mountRig(supabase)
-    await selectGearItem(wrapper, fakeSearchResult({ id: 'slinky-1', name: 'Regular Slinky', categoryId: 'strings' }))
+    await selectGearItem(wrapper, fakeSearchResult({ categoryId: 'strings' }))
 
     await wrapper.get('form').trigger('submit.prevent')
     await flushPromises()
 
     expect(wrapper.text()).toContain(de.rig.errorConsumableAsGear)
-    expect(supabase.inserts.gear_items[0]).toMatchObject({ owner_id: 'test-user' })
   })
 })
 
@@ -129,7 +132,13 @@ describe('rig.vue - eigene Nutzer-Id in jedem Schreibzugriff', () => {
   // Praeferenz und Wunschliste gab es dafuer bislang gar keinen Test.
   it('schreibt die eigene Nutzer-Id in Praeferenz- und Wunschlisten-Eintraege', async () => {
     const supabase = createSupabaseStub({
-      initialReads: EMPTY_RIG,
+      initialReads: {
+        ...EMPTY_RIG,
+        // Seit dem einen Eingabefeld (Task 5) entscheidet die Kategorie
+        // ueber addToRig(), nicht mehr ein eigener Picker - ohne diese
+        // Kategorie bliebe der Saiten-Treffer unten ein Geraet.
+        categories: { data: [{ id: 'strings', is_consumable: true, sort_order: 90 }] },
+      },
       writes: {
         preferences: [{ error: null }],
         wishlist_items: [{ error: null }],
@@ -137,17 +146,12 @@ describe('rig.vue - eigene Nutzer-Id in jedem Schreibzugriff', () => {
     })
     const wrapper = await mountRig(supabase)
 
-    // Reihenfolge im Template: Equipment(0), Saiten-Praeferenz(1),
-    // Plektrum-Praeferenz(2), Wunschliste(3) - siehe app/pages/rig.vue.
-    const preferencePicker = wrapper.findAllComponents(CatalogPicker)[1]!
-    vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({ results: [fakeSearchResult({ id: 'slinky-1', name: 'Regular Slinky', categoryId: 'strings' })] }))
-    await preferencePicker.get('input').setValue('Slinky')
-    await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_WAIT_MS))
-    await flushPromises()
-    await preferencePicker.get('li button').trigger('click')
-    await flushPromises()
+    // Reihenfolge im Template: Equipment/Praeferenz ueber Kategorie (0),
+    // Wunschliste (1) - die eigenen Saiten-/Plektrum-Picker sind mit dem
+    // einen Eingabefeld (Task 5) entfallen, siehe app/pages/rig.vue.
+    await selectGearItem(wrapper, fakeSearchResult({ id: 'slinky-1', name: 'Regular Slinky', categoryId: 'strings' }))
 
-    const wishlistPicker = wrapper.findAllComponents(CatalogPicker)[3]!
+    const wishlistPicker = wrapper.findAllComponents(CatalogPicker)[1]!
     vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({ results: [fakeSearchResult({ id: 'wish-1', name: 'Traumgitarre' })] }))
     await wishlistPicker.get('input').setValue('Traum')
     await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_WAIT_MS))
@@ -157,6 +161,66 @@ describe('rig.vue - eigene Nutzer-Id in jedem Schreibzugriff', () => {
 
     expect(supabase.inserts.preferences[0]).toMatchObject({ user_id: 'test-user' })
     expect(supabase.inserts.wishlist_items[0]).toMatchObject({ user_id: 'test-user' })
+  })
+})
+
+describe('rig.vue - ein Eingabefeld fuer alles', () => {
+  it('legt Verbrauchsmaterial still als Praeferenz an, ohne Exemplar-Formular', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: {
+        ...EMPTY_RIG,
+        categories: { data: [
+          { id: 'guitar', is_consumable: false, sort_order: 10 },
+          { id: 'strings', is_consumable: true, sort_order: 90 },
+        ] },
+      },
+      writes: { preferences: [{ data: [{ id: 'pref-1' }] }] },
+    })
+    const wrapper = await mountRig(supabase)
+
+    await selectGearItem(wrapper, fakeSearchResult({
+      id: 'exl140', name: 'EXL140 (10-52)', brandName: "D'Addario", categoryId: 'strings',
+    }))
+
+    // Kein Formular: bei Verbrauchsmaterial gibt es kein Baujahr und keine
+    // Modifikation, danach zu fragen waere eine Rueckfrage nach etwas
+    // bereits Bekanntem.
+    expect(wrapper.findComponent(GearItemForm).exists()).toBe(false)
+    // Die Nutzlast wird gelesen, nicht nur der Aufruf beobachtet.
+    expect(supabase.inserts.preferences[0]).toMatchObject({
+      user_id: 'test-user',
+      catalog_item_id: 'exl140',
+    })
+    expect(supabase.inserts.gear_items ?? []).toHaveLength(0)
+  })
+
+  it('oeffnet fuer ein Geraet weiterhin das Exemplar-Formular', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: {
+        ...EMPTY_RIG,
+        categories: { data: [{ id: 'guitar', is_consumable: false, sort_order: 10 }] },
+      },
+    })
+    const wrapper = await mountRig(supabase)
+
+    await selectGearItem(wrapper, fakeSearchResult())
+
+    expect(wrapper.findComponent(GearItemForm).exists()).toBe(true)
+    expect(supabase.inserts.preferences ?? []).toHaveLength(0)
+  })
+
+  it('zeigt einen Fehler, wenn die Kategorien nicht geladen werden koennen', async () => {
+    const supabase = createSupabaseStub({
+      initialReads: {
+        ...EMPTY_RIG,
+        categories: { error: { message: 'permission denied for table categories' } },
+      },
+    })
+    const wrapper = await mountRig(supabase)
+
+    // Ohne Kategorien ist unentscheidbar, was Verbrauchsmaterial ist. Das
+    // muss sichtbar scheitern statt alles als Geraet zu behandeln.
+    expect(wrapper.text()).toContain(de.rig.loadError)
   })
 })
 
