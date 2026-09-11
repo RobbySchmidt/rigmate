@@ -85,7 +85,7 @@ Supabase-Projekt: `rigmate`, Region `eu-west-1`, Postgres 17.6. Lokales Supabase
 - **Logik gehört in Nuxt-Server-Routen**, nicht in den Client. Empfehlungen, Checker und die öffentliche Gear-Seite aggregieren über alle Nutzer — das rechnet der Browser nicht.
 - Einfaches Lesen und Schreiben (Profil, Rig) darf direkt vom Client gegen Supabase laufen, abgesichert über RLS.
 - **RLS ist Pflicht.** Ohne aktivierte Policies ist bei Supabase alles offen.
-- **Schema ist Code.** Alle Änderungen als versionierte Migrationen unter `supabase/migrations/`, niemals von Hand im Dashboard oder per MCP. Stand: 13 Migrationen, lokal und auf der Instanz synchron.
+- **Schema ist Code.** Alle Änderungen als versionierte Migrationen unter `supabase/migrations/`, niemals von Hand im Dashboard oder per MCP. Stand: 15 Migrationen, lokal und auf der Instanz synchron.
 - `service_role` key bleibt **serverseitig** — `server/`, `scripts/`, `tests/`, nie in `app/`. Nach jedem Build prüfen: `yarn build && grep -r "service_role" .output/public/` muss leer bleiben.
 - In [nuxt.config.ts](nuxt.config.ts) steht `supabase.redirect: false` mit Absicht — sonst würde jeder Nicht-Angemeldete auf `/login` geschickt, aber Gear-Seiten sollen laut Abschnitt 10 öffentlich sein. Der Schutz läuft stattdessen per Seite über `app/middleware/auth.ts`.
 - **Gemeinsame Regeln liegen unter `shared/utils/`** und dürfen nicht kopiert werden: `modelYearRule.ts` (kein Baujahr im Modellnamen), `rarityBase.ts`, `suggestionReason.ts`, `rarityStyle.ts` (Seltenheitsstufe → CSS-Klasse), `rigEvents.ts` (Feed-Ereignisse aus `gear_items.created_at`). Jede dieser Dateien entstand, weil eine Regel vorher zwei- bis sechsmal existierte und auseinanderlief.
