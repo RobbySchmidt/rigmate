@@ -1,6 +1,6 @@
 # Rigmate — Katalogerweiterung und Rig-Eingabe
 
-**Stand:** 2026-09-11 · **Status:** wartet auf Review durch Robby
+**Stand:** 2026-09-11 · **Status:** Umsetzung abgeschlossen (auf `development`, ungemergt), Review der Spec durch Robby weiterhin offen
 
 Diese Spec ergänzt die [Hauptspec](2026-09-06-rigmate-design.md) um die **Domänengrenze für digitales
 und virtuelles Equipment** und baut die **Eingabe auf `/rig`** um. Wo sie der Hauptspec widerspricht,

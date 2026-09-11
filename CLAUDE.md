@@ -6,7 +6,7 @@ Soziales Netzwerk für Gitarristen, bei dem **das Equipment den sozialen Graphen
 
 **Der Profilumbau ist ebenfalls auf `main`.** 13 Migrationen, 444 Unit- und Komponententests plus 38 API-Tests, alle grün. Die Profilseite ist zweispaltig neu gebaut (Equipment-Panel links, Feed rechts), die Signalkette lässt sich per Drag and Drop pflegen, und es gibt ein Farbtoken-System samt Dunkelmodus. Was danach noch offen ist, steht unter „Was noch aussteht".
 
-**Aktuell in Arbeit: Katalogerweiterung und Rig-Eingabe auf `development`.** Ausgelöst vom ersten echten Nutzer, von dessen Setup kein einziger Eintrag im Katalog stand.
+**Katalogerweiterung und Rig-Eingabe-Umbau sind auf `development` abgeschlossen, aber noch nicht auf `main` gemergt.** Ausgelöst vom ersten echten Nutzer, von dessen Setup kein einziger Eintrag im Katalog stand: drei neue Kategorien (Modeller, Loadbox, Plugins), eine bereinigte `preamp`-Schublade, Saitenstärken im Namen, 19 neue Katalogeinträge, ein einziges Eingabefeld auf `/rig` statt dreier nach Kategorie, und die Ausgabe gruppiert nach Kategorie. 514 Unit- und Komponententests plus 38 API-Tests, alle grün. Der Branch wartet auf ein Review über den gesamten Verlauf, bevor gemergt und gepusht wird.
 
 ## Zuerst lesen
 
@@ -20,11 +20,15 @@ Das ist die **Quelle der Wahrheit** für alles Inhaltliche: Datenmodell, Empfehl
 
 Der Plan für Stufe 1, vollständig abgearbeitet. Sein Abschnitt „Was dieser Plan über die Spec hinaus festlegt" listet die Entscheidungen, die beim Planen dazukamen. **Achtung: der Plan ist an mehreren Stellen überholt** — während der Umsetzung wurden Fehler darin gefunden und gegen ihn entschieden. Im Zweifel gilt der Code, nicht der Plan. Stufe 2 und 3 haben noch keine Pläne.
 
-### Für das laufende Vorhaben
+### Zur Katalogerweiterung (auf `development`, noch nicht gemergt)
 
 > **[docs/superpowers/specs/2026-09-11-rigmate-katalog-erweiterung-design.md](docs/superpowers/specs/2026-09-11-rigmate-katalog-erweiterung-design.md)**
 
-Domänengrenze für digitales und virtuelles Equipment, drei neue Kategorien, der Umbau der Rig-Eingabe. Ergänzt die Hauptspec und **ersetzt deren Kategorien-Aufzählung in Abschnitt 3 durch ein Kriterium**: rein kommt, was den Klang formt; draußen bleibt, was das Signal nur transportiert oder aufzeichnet.
+Domänengrenze für digitales und virtuelles Equipment, drei neue Kategorien, der Umbau der Rig-Eingabe. Ergänzt die Hauptspec und **ersetzt deren Kategorien-Aufzählung in Abschnitt 3 durch ein Kriterium**: rein kommt, was den Klang formt; draußen bleibt, was das Signal nur transportiert oder aufzeichnet. Die Umsetzung ist erfolgt, das Review der Spec durch Robby steht wie bei den beiden anderen Specs weiterhin aus.
+
+> **[docs/superpowers/plans/2026-09-11-rigmate-katalog-erweiterung.md](docs/superpowers/plans/2026-09-11-rigmate-katalog-erweiterung.md)**
+
+Der Umsetzungsplan, 7 Tasks, vollständig abgearbeitet.
 
 ### Zum abgeschlossenen Profilumbau
 
@@ -66,7 +70,7 @@ Supabase-Projekt: `rigmate`, Region `eu-west-1`, Postgres 17.6. Lokales Supabase
 | | |
 |---|---|
 | `yarn dev` | Dev-Server auf Port 3000 |
-| `yarn test` | Unit-, Komponenten- und DB-Tests (444) |
+| `yarn test` | Unit-, Komponenten- und DB-Tests (514) |
 | `yarn test:api` | API-Tests (38) — **braucht einen laufenden `yarn dev`**, und zwar auf Port 3000; sonst `TEST_BASE_URL` setzen (siehe Fallstricke) |
 | `yarn db:new <name>` | neue Migration anlegen |
 | `yarn db:push` | Migrationen auf die Instanz anwenden |
@@ -162,6 +166,13 @@ Gemeldet, noch nicht entschieden — Einzelheiten im Plan unter „Offen nach de
 - **Unbestätigt:** `login.vue` navigiert nach dem Anmelden womöglich nicht weiter. Der Code sieht richtig aus, der Befund stammt aus einer headless-Umgebung — **vor einem Fix reproduzieren**
 
 **Demo-Daten, die dabei verändert wurden:** Halbtakt-Hanno hat auf der geteilten Instanz jetzt eine Signalkette (Strat → DS-1 → TS9) und zwei Profil-Links. Kein Demo-Nutzer hatte vorher beides, und ohne ist die halbe Profilseite nicht anzusehen. `yarn seed:users` räumt die Kette weg, die Links nicht.
+
+### Reste aus der Katalogerweiterung
+
+**Die neue gruppierte Rig-Seite hat noch niemand mit eigenen Augen gesehen.** Task 6 wurde nur funktional per curl verifiziert — kein Mensch hat `/rig` mit den neuen Gruppen je im Browser geöffnet, weder hell noch dunkel. Das fällt mit dem oben schon offenen visuellen Durchgang aus dem Profilumbau zusammen; beides gehört in denselben Anlauf, sobald jemand vor `yarn dev` sitzt.
+
+- **Selbst angelegte Katalogeinträge landen weiterhin auf `rarity_base = 'common'`** (Tabellen-Default). Der Fehlanreiz aus Abschnitt 12 der Spec bleibt, solange es kein Katalog-Backoffice gibt.
+- **Der Katalog bleibt dünn für Nischen-Setups.** Dieser Plan füllt genau ein reales Rig auf (19 neue Einträge) — das nächste ungewöhnliche Setup trifft wieder auf Lücken.
 
 ### Danach
 
