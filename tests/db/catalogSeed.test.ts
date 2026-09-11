@@ -260,4 +260,20 @@ describe('Bereinigte preamp-Kategorie', () => {
     // Leerraeumen denselben gruenen Test.
     expect(preamps.length).toBeGreaterThan(0)
   })
+
+  it('steht mit der umgezogenen Kategorie auch wirklich in der Datenbank, nicht nur in CATALOG', async () => {
+    const { data, error } = await admin
+      .from('catalog_items')
+      .select('name, category_id')
+      .in(
+        'name',
+        UMZUEGE.map(([name]) => name),
+      )
+    expect(error).toBeNull()
+
+    const kategorieInDb = new Map((data ?? []).map((row) => [row.name, row.category_id]))
+    for (const [name, kategorie] of UMZUEGE) {
+      expect(kategorieInDb.get(name), `"${name}" fehlt in der Datenbank`).toBe(kategorie)
+    }
+  })
 })
