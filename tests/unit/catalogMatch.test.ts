@@ -172,7 +172,13 @@ describe('Auffindbarkeit ueber die Dachmarke', () => {
     expect(treffer.map((m) => m.entry.id)).toContain('edwards-alexi')
   })
 
-  it('findet einen Saitensatz ueber seine Staerke', () => {
+  it('findet den EXL140-Satz ueber seine Staerke, weil die Staerke im Namen steht', () => {
+    // Achtung: dieser Fall belegt NICHT den Synonym-Pfad. Der Name traegt die
+    // Staerke selbst ("EXL140 (10-52)"), buildSearchable baut daraus einen
+    // eigenen Haystack, und "10-52" trifft den ueber den Namen -- auch ganz
+    // ohne das Synonym unten. Das prueft die Nutzeranforderung "10-52 findet
+    // den Satz", nicht den Synonym-Mechanismus. Der isoliert diesen Nachweis
+    // im naechsten Test.
     const entries = buildSearchable([
       {
         id: 'exl140',
@@ -191,5 +197,30 @@ describe('Auffindbarkeit ueber die Dachmarke', () => {
     const treffer = matchCatalog('10-52', entries, { limit: 5 })
 
     expect(treffer.map((m) => m.entry.id)).toContain('exl140')
+  })
+
+  it('findet einen Satz ausschliesslich ueber sein Staerke-Synonym, wenn die Staerke nicht im Namen steht', () => {
+    // Isoliert den Synonym-Pfad: der Name enthaelt keine Ziffern, also kann
+    // ausschliesslich das Synonym "9-80" den Treffer tragen. Faellt das
+    // Synonym weg, muss dieser Test rot werden -- im Unterschied zum Test
+    // oben, den ein fehlendes Synonym gar nicht beruehrt.
+    const entries = buildSearchable([
+      {
+        id: 'custom-gauge',
+        name: 'Custom Gauge Set',
+        slug: 'daddario-custom-gauge-set',
+        brandName: "D'Addario",
+        categoryId: 'strings',
+        parentId: null,
+        lineId: 'custom-gauge',
+        synonyms: ['9-80'],
+        rarityBase: 'special',
+        isVerified: true,
+      },
+    ])
+
+    const treffer = matchCatalog('9-80', entries, { limit: 5 })
+
+    expect(treffer.map((m) => m.entry.id)).toContain('custom-gauge')
   })
 })

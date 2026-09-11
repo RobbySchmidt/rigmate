@@ -425,7 +425,7 @@ export const CATALOG: SeedLine[] = [
     rarity: 'special',
     variants: [
       { name: 'Blackjack ATX C-1', synonyms: ['atx c1', 'blackjack c1'], rarity: 'common' },
-      { name: 'Blackjack ATX C-8', synonyms: ['atx c8', 'blackjack c8', '8 string'], rarity: 'rare' },
+      { name: 'Blackjack ATX C-8', synonyms: ['atx c8', 'blackjack c8', 'blackjack 8 string'], rarity: 'rare' },
     ],
   },
   {

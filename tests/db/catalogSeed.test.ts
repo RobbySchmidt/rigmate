@@ -363,4 +363,61 @@ describe('Setup des ersten echten Nutzers', () => {
   it.each(['Randall', 'Fortin', 'Edwards'])('kennt die Marke %s', (brand) => {
     expect(CATALOG.some((entry) => entry.brand === brand)).toBe(true)
   })
+
+  // Alle 19 Eintraege, diesmal gegen echte Supabase-Queries statt gegen das
+  // statische CATALOG-Array. Iteriert wird ueber die Erwartungsliste, nicht
+  // ueber das Abfrageergebnis -- sonst waere eine leere Antwort ebenfalls
+  // gruen (derselbe Fehler, der in Task 2 schon einmal auftrat).
+  const ALLE_NEUEN_EINTRAEGE: Array<{ brand: string; name: string; category: string; rarity: RarityBase }> = [
+    ...ERWARTET,
+    { brand: 'Schecter', name: 'Blackjack ATX', category: 'guitar', rarity: 'special' },
+    { brand: 'Schecter', name: 'Blackjack ATX C-1', category: 'guitar', rarity: 'common' },
+    { brand: 'Schecter', name: 'Blackjack ATX C-8', category: 'guitar', rarity: 'rare' },
+    { brand: 'Seymour Duncan', name: 'Nazgul', category: 'pickup', rarity: 'common' },
+    { brand: 'Seymour Duncan', name: 'Nazgul 7', category: 'pickup', rarity: 'special' },
+    { brand: 'Seymour Duncan', name: 'Nazgul 8', category: 'pickup', rarity: 'special' },
+  ]
+
+  it.each(ALLE_NEUEN_EINTRAEGE)(
+    'steht $brand $name als $category ($rarity) in der Datenbank',
+    async ({ brand, name, category, rarity }) => {
+      const { data, error } = await admin
+        .from('catalog_items')
+        .select('category_id, rarity_base, brands ( name )')
+        .eq('name', name)
+        .single()
+
+      expect(error, `Query fuer "${name}" schlug fehl: ${error?.message}`).toBeNull()
+      expect(data, `"${name}" fehlt in der Datenbank`).toBeTruthy()
+      expect((data as any)?.brands?.name).toBe(brand)
+      expect(data?.category_id).toBe(category)
+      expect(data?.rarity_base).toBe(rarity)
+    },
+  )
+
+  // Die Zweistufigkeit ist nur echt, wenn die Ausfuehrungen auch in der
+  // Datenbank per parent_id an ihrer Linie haengen, nicht nur im
+  // CATALOG-Array nebeneinanderstehen.
+  it.each([
+    { linie: 'Blackjack ATX', ausfuehrungen: ['Blackjack ATX C-1', 'Blackjack ATX C-8'] },
+    { linie: 'Nazgul', ausfuehrungen: ['Nazgul 7', 'Nazgul 8'] },
+  ])('haengt die Ausfuehrungen von $linie in der Datenbank per parent_id an ihrer Linie', async ({ linie, ausfuehrungen }) => {
+    const { data: lineRow, error: lineError } = await admin
+      .from('catalog_items')
+      .select('id')
+      .eq('name', linie)
+      .single()
+    expect(lineError, `Linie "${linie}" fehlt in der Datenbank`).toBeNull()
+    expect(lineRow).toBeTruthy()
+
+    for (const name of ausfuehrungen) {
+      const { data, error } = await admin
+        .from('catalog_items')
+        .select('parent_id')
+        .eq('name', name)
+        .single()
+      expect(error, `"${name}" fehlt in der Datenbank`).toBeNull()
+      expect(data?.parent_id, `"${name}" haengt nicht per parent_id an "${linie}"`).toBe(lineRow!.id)
+    }
+  })
 })
