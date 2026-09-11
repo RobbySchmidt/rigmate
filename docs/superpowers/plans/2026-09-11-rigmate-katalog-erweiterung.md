@@ -1096,11 +1096,14 @@ describe('rig.vue - gruppierte Ausgabe', () => {
   it('gruppiert nach Kategorie in sort_order-Reihenfolge', async () => {
     const wrapper = await mountRig(rigMitInhalt())
 
-    const ueberschriften = wrapper.findAll('[data-test="rig-group-label"]').map((n) => n.text())
+    const gruppen = wrapper.findAll('[data-group]')
 
     // Vollstaendiger Vergleich, keine Teilmenge: ein toContain bestuende
     // auch, wenn die Reihenfolge falsch waere.
-    expect(ueberschriften).toEqual([de.categories.guitar, de.categories.amp, de.categories.strings])
+    expect(gruppen.map((n) => n.attributes('data-group'))).toEqual(['guitar', 'amp', 'strings'])
+    expect(gruppen.map((n) => n.get('h3').text())).toEqual([
+      de.categories.guitar, de.categories.amp, de.categories.strings,
+    ])
   })
 
   it('laesst leere Kategorien weg', async () => {
@@ -1108,14 +1111,14 @@ describe('rig.vue - gruppierte Ausgabe', () => {
 
     // "pedal" ist als Kategorie bekannt, aber nichts liegt darin - sonst
     // staenden dreizehn Ueberschriften ueber einem fast leeren Rig.
-    expect(wrapper.findAll('[data-test="rig-group-label"]').map((n) => n.text()))
-      .not.toContain(de.categories.pedal)
+    expect(wrapper.findAll('[data-group]').map((n) => n.attributes('data-group')))
+      .not.toContain('pedal')
   })
 
   it('zeigt Verbrauchsmaterial in derselben Liste', async () => {
     const wrapper = await mountRig(rigMitInhalt())
 
-    const saiten = wrapper.get('[data-test="rig-group-strings"]')
+    const saiten = wrapper.get('[data-group="strings"]')
     expect(saiten.text()).toContain("D'Addario EXL140 (10-52)")
   })
 
@@ -1126,7 +1129,7 @@ describe('rig.vue - gruppierte Ausgabe', () => {
     const wrapper = await mountRig(supabase)
 
     expect(wrapper.text()).toContain(de.rig.empty)
-    expect(wrapper.findAll('[data-test="rig-group-label"]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-group]')).toHaveLength(0)
   })
 })
 ```
@@ -1201,11 +1204,13 @@ Damit wird auch `t.rig.preferences` („Saiten und Plektren") als Überschrift f
       <p v-if="gearLoadError || preferencesLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
       <p v-else-if="rigIstLeer" class="text-muted">{{ t.rig.empty }}</p>
       <div v-else class="flex flex-col gap-6">
-        <div v-for="group in groupedRig" :key="group.categoryId" class="flex flex-col gap-2">
-          <h3 data-test="rig-group-label" class="text-f-sm font-semibold uppercase tracking-wide text-muted">
+        <!-- data-group traegt die Kategorie, nicht bloss eine Testmarke -
+             dasselbe Muster wie data-count und data-pip im Projekt. -->
+        <div v-for="group in groupedRig" :key="group.categoryId" :data-group="group.categoryId" class="flex flex-col gap-2">
+          <h3 class="text-f-sm font-semibold uppercase tracking-wide text-muted">
             {{ group.label }}
           </h3>
-          <ul :data-test="`rig-group-${group.categoryId}`" class="divide-y divide-line-soft rounded border border-line">
+          <ul class="divide-y divide-line-soft rounded border border-line">
             <li v-for="row in group.rows" :key="row.key" class="flex items-center gap-2 px-3 py-2">
               <span>{{ row.label }}</span>
               <span v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</span>
