@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { adminClient, anonClient } from '../helpers/supabase'
+import { de } from '../../app/locales/de'
 
 const admin = adminClient()
 const anon = anonClient()
@@ -246,5 +247,42 @@ describe('Katalog-RLS', () => {
     await anon.from('catalog_items').delete().eq('id', lineId)
     const { data } = await admin.from('catalog_items').select('id').eq('id', lineId)
     expect(data).toHaveLength(1)
+  })
+})
+
+describe('Digitale Kategorien', () => {
+  it('kennt modeller, loadbox und plugin als nicht-verbrauchbare Kategorien', async () => {
+    const { data, error } = await admin
+      .from('categories')
+      .select('id, is_consumable, sort_order')
+      .in('id', ['modeller', 'loadbox', 'plugin'])
+      .order('sort_order')
+
+    expect(error).toBeNull()
+    expect(data).toEqual([
+      { id: 'modeller', is_consumable: false, sort_order: 35 },
+      { id: 'loadbox', is_consumable: false, sort_order: 45 },
+      { id: 'plugin', is_consumable: false, sort_order: 47 },
+    ])
+  })
+
+  it('sortiert die neuen Kategorien in die Verstaerkungskette ein', async () => {
+    const { data, error } = await admin.from('categories').select('id').order('sort_order')
+
+    expect(error).toBeNull()
+    expect(data?.map((row) => row.id)).toEqual([
+      'guitar', 'bass', 'amp', 'modeller', 'cabinet', 'loadbox', 'plugin',
+      'pedal', 'pickup', 'preamp', 'accessory', 'strings', 'pick',
+    ])
+  })
+
+  it('hat fuer jede Kategorie in der Datenbank ein deutsches Label', async () => {
+    const { data, error } = await admin.from('categories').select('id')
+
+    expect(error).toBeNull()
+    expect(data!.length).toBeGreaterThan(0)
+    const labels = de.categories as Record<string, string>
+    const ohneLabel = data!.map((row) => row.id).filter((id) => !labels[id])
+    expect(ohneLabel).toEqual([])
   })
 })
