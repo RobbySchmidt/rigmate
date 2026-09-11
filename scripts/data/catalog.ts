@@ -1361,17 +1361,20 @@ export const CATALOG: SeedLine[] = [
     synonyms: ['ox box', 'ox'],
     rarity: 'special',
   },
+  // Modellers, not preamps. They were filed under `preamp` because there was
+  // nowhere else to put them -- which stayed invisible while the rig list was
+  // flat, and stops being invisible the moment that list groups by category.
   {
     brand: 'Kemper',
     name: 'Profiler',
-    category: 'preamp',
+    category: 'modeller',
     synonyms: ['kemper', 'profiler'],
     rarity: 'special',
   },
   {
     brand: 'Line 6',
     name: 'Helix',
-    category: 'preamp',
+    category: 'modeller',
     synonyms: ['helix'],
     rarity: 'common',
   },
@@ -1385,21 +1388,21 @@ export const CATALOG: SeedLine[] = [
   {
     brand: 'Neural DSP',
     name: 'Quad Cortex',
-    category: 'preamp',
+    category: 'modeller',
     synonyms: ['quad cortex', 'qc'],
     rarity: 'special',
   },
   {
     brand: 'Fractal Audio',
     name: 'Axe-Fx III',
-    category: 'preamp',
+    category: 'modeller',
     synonyms: ['axe fx', 'axefx'],
     rarity: 'special',
   },
   {
     brand: 'Two Notes',
     name: 'Torpedo Captor X',
-    category: 'preamp',
+    category: 'loadbox',
     synonyms: ['captor x', 'torpedo'],
     rarity: 'special',
   },

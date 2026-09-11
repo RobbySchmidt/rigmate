@@ -233,3 +233,31 @@ describe('Katalog nach dem Seed', () => {
     expect(mismatched).toEqual([])
   })
 })
+
+describe('Bereinigte preamp-Kategorie', () => {
+  // Einzeln geprueft statt ueber ein "preamp enthaelt nichts Digitales
+  // mehr" - eine solche Bedingung bestuende auch auf leerer Tabelle.
+  const UMZUEGE: Array<[string, string]> = [
+    ['Profiler', 'modeller'],
+    ['Quad Cortex', 'modeller'],
+    ['Axe-Fx III', 'modeller'],
+    ['Helix', 'modeller'],
+    ['Torpedo Captor X', 'loadbox'],
+  ]
+
+  it.each(UMZUEGE)('fuehrt "%s" in der Kategorie %s', (name, kategorie) => {
+    const line = CATALOG.find((entry) => entry.name === name)
+    expect(line, `"${name}" fehlt im Katalog`).toBeDefined()
+    expect(line!.category).toBe(kategorie)
+  })
+
+  it('laesst keinen Modeller und keine Loadbox mehr unter preamp stehen', () => {
+    const preamps = CATALOG.filter((entry) => entry.category === 'preamp').map((e) => e.name)
+    for (const [name] of UMZUEGE) {
+      expect(preamps).not.toContain(name)
+    }
+    // Die Kategorie bleibt bewohnt - sonst haette ein versehentliches
+    // Leerraeumen denselben gruenen Test.
+    expect(preamps.length).toBeGreaterThan(0)
+  })
+})
