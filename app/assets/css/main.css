@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Tailwind erzeugt eine Utility nur, wenn ihr Klassenname im gescannten
+   Quelltext vorkommt - und gescannt wird von sich aus nur, wo diese Datei
+   liegt. shared/utils/rarityStyle.ts gibt Klassennamen als Strings zurueck
+   ("border-special", "bg-rare") und lag damit ausserhalb.
+
+   Folge, bis das hier stand: bg-rare und border-special fehlten im
+   ausgelieferten CSS. Der Punkt fuer "speziell" war unsichtbar, der fuer
+   "rar" ein Ring statt gefuellt - also genau die Auszeichnung kaputt, die
+   bei Rigmate die Mechanik ist, ueber die Menschen einander finden.
+   rarityStyle.test.ts war die ganze Zeit gruen, weil er den
+   zurueckgegebenen String prueft, nicht die Existenz der Klasse.
+
+   tests/unit/tailwindSources.test.ts haelt das fest. */
+@source "../../../shared";
+
 /* Farbwelt: Verstaerkerfrontplatte, Pedalgehaeuse, Werkstatt - nur dunkel.
    Rigmate hat EIN Thema. Kein prefers-color-scheme, kein data-theme, kein
    Umschalter; die Begruendung steht in Abschnitt 3.1 der Designsprache-Spec.
