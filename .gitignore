@@ -29,3 +29,7 @@ logs
 # Supabase CLI - lokaler Verbindungszustand, gehoert nicht ins Repo
 supabase/.temp
 supabase/.branches
+
+# Arbeitsplatz der subagent-driven-development-Skill: Ledger, Briefs,
+# Reports, Review-Pakete. Reiner Kladdenkram, gehoert nicht in die Historie.
+.superpowers/
