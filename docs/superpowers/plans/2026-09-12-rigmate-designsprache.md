@@ -102,6 +102,20 @@ NEU:  <ul class="flex flex-col gap-2">
         <li class="rounded-card bg-surface px-4 py-3">…</li>
 ```
 
+**Und die Regel, ohne die aus „Liste aus Karten" eine Falle wird: der Innenabstand gehört an das
+anklickbare Element.**
+
+Eine Karte, die anklickbar *aussieht*, bei der aber nur ein kleiner Text darin klickt, ist schlechter als
+die Zeile vorher. Deshalb drei Fälle, und sie sind zu unterscheiden:
+
+| Der Eintrag ist … | Dann … |
+|---|---|
+| **ein Navigationsziel** (die ganze Zeile führt woanders hin) | **der Link IST die Karte.** `<li>` ohne Klassen, darin `<NuxtLink class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2">`. Das `underline` am Link **fällt weg** — in einer Karte mit Hover ist es redundant und liest sich als Wireframe. Vorbild: `PersonSuggestion.vue`, das es schon so macht. |
+| **eine Datenzeile mit einem Link darin** (daneben stehen Metadaten, die nicht zum Link gehören) | **die `<li>` ist die Karte**, der Link bleibt ein Link **mit** `underline` — er muss sich von den Spans daneben unterscheiden, und die Karte ist kein Navigationsziel. |
+| **ein Eintrag in einem Auswahlmenü** (Vorschlagsliste) | **eine Fläche, keine Karten.** Abstand am `<button>`, `w-full text-left`, Hover auf `bg-surface-2`. |
+
+Wer das nicht unterscheidet, baut entweder tote Kartenfläche oder verschluckt Metadaten in einen Link.
+
 **Muster „`font-display` wird `display`".** Gilt für **jedes** Vorkommen, ohne Ausnahme:
 
 ```
@@ -1355,8 +1369,8 @@ Die größte Gruppe: 16 Eingabefelder und 2 Listen. Hier greift das Muster „Ei
 | `rounded border border-line p-3` (Formularkasten) | `rounded-card bg-surface p-3` |
 | `rounded bg-surface-2 p-2` (Hinweis) | `rounded-card bg-surface-2 p-2` |
 | `rounded border border-line px-1` (Chip „ungeprüft") | `rounded-btn bg-surface-2 px-1` |
-| `mt-1 divide-y divide-line-soft rounded border border-line bg-surface` (Vorschlagsliste) | `mt-1 rounded-field bg-surface` — die `<li>` bekommen `px-3 py-2`, kein `divide` |
-| `divide-y divide-line-soft rounded border border-line` (Liste) | `flex flex-col gap-2`, die `<li>` bekommen `rounded-card bg-surface px-4 py-3` |
+| `mt-1 divide-y divide-line-soft rounded border border-line bg-surface` (Vorschlagsliste) | `mt-1 rounded-field bg-surface`, kein `divide`. **Der Innenabstand bleibt am `<button>` darin, die `<li>` bekommt keinen** — sonst ist die Hover-Fläche kleiner als der Bereich, der sich wie ein Treffer anfühlt. Der `<button>` wird `w-full text-left`. |
+| `divide-y divide-line-soft rounded border border-line` (Liste) | `flex flex-col gap-2`, die `<li>` bekommen `rounded-card bg-surface px-4 py-3` — **aber siehe die Regel darunter, wenn der Eintrag ein anklickbares Kind hat** |
 
 **Der Fokusring ist Pflicht, nicht Zierde.** Ohne Ruherahmen trägt er allein die Tastaturbedienung. Jedes
 Feld, jeder Knopf und jeder Reiter, der seinen Rahmen verliert, bekommt ihn.
@@ -1568,8 +1582,9 @@ suchmaschinen-auffindbar — sie muss auch ohne Anmeldung gut aussehen.
 | `index.vue:25` | `rounded border border-dashed border-line p-4` | `rounded-card border border-dashed border-line p-4` — gestrichelt bleibt (Leerzustand „Zufällig ausgewählt") |
 | `index.vue:28` | `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `search.vue:101` | `w-full rounded border border-line px-3 py-2` | `w-full rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
-| `search.vue:113`, `:125` | `divide-y divide-line-soft rounded border border-line` | `flex flex-col gap-2`, `<li>` → `rounded-card bg-surface px-4 py-3` |
-| `gear/[slug].vue:73`, `:84` | `divide-y divide-line-soft rounded border border-line` | dito |
+| `search.vue:113`, `:125` | `divide-y divide-line-soft rounded border border-line`, `<li class="px-3 py-2">` mit `<NuxtLink class="underline">` darin | **Navigationsziel — der Link IST die Karte.** `<ul>` → `flex flex-col gap-2`, `<li>` ohne Klassen, `<NuxtLink>` → `block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent`, **ohne `underline`** |
+| `gear/[slug].vue:73` (Ausführungen) | dito | **Navigationsziel**, dieselbe Behandlung wie `search.vue`. Das `text-accent` am Link **bleibt** — auf dieser öffentlichen Seite ist der Akzent die Orientierung |
+| `gear/[slug].vue:84` (Spielerliste) | `<li class="flex gap-2 px-3 py-2">` mit `<NuxtLink>` **plus** zwei Metadaten-Spans (Baujahr, Finish) | **Datenzeile, kein Navigationsziel.** Die `<li>` wird die Karte: `flex gap-2 rounded-card bg-surface px-4 py-3`. Der Link bleibt ein Link **mit** `underline` und `text-accent` — er muss sich von den Spans daneben unterscheiden. Die Karte darf **nicht** anklickbar aussehen, denn sie ist es nicht |
 | `PersonSuggestion.vue:14` | `flex flex-col gap-1 rounded border border-line p-4` | `flex flex-col gap-1 rounded-card bg-surface p-4 transition-colors hover:bg-surface-2` |
 
 `PersonSuggestion` ist ein `NuxtLink` und damit anklickbar — der Hover-Wechsel auf `surface-2` ersetzt den
