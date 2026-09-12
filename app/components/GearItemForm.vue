@@ -73,7 +73,12 @@ function submit() {
     </label>
 
     <div class="flex gap-2">
-      <button type="submit" class="rounded-btn bg-accent px-4 py-2 text-accent-ink">{{ t.rig.save }}</button>
+      <button
+        type="submit"
+        class="rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        {{ t.rig.save }}
+      </button>
       <button
         type="button"
         class="rounded-btn bg-surface-2 px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent"

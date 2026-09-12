@@ -171,7 +171,11 @@ const categoryEntries = computed(() =>
         </select>
       </label>
       <p v-if="createError" class="text-sm text-danger">{{ createError }}</p>
-      <button type="submit" :disabled="creating" class="rounded-btn bg-accent px-3 py-1 text-accent-ink">
+      <button
+        type="submit"
+        :disabled="creating"
+        class="rounded-btn bg-accent px-3 py-1 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
         {{ t.picker.createSubmit }}
       </button>
     </form>
