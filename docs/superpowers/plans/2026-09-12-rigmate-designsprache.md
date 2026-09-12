@@ -39,6 +39,9 @@ Gelten in **jedem** Task. Aus der Spec und aus `CLAUDE.md`.
   `data-state`. Sie sind der Grund, warum ein Klassen-Umbau die Tests nicht umwirft.
 - **Kommentare auf Deutsch.** Bezeichner, Dateinamen und Routen englisch.
 - **`yarn test` muss nach jedem Task grün sein** (Stand heute: 519 Tests in 46 Dateien).
+- **Die `Co-Authored-By:`-Zeile in den Commit-Nachrichten dieses Plans ist ein Beispiel, kein Wert zum
+  Abschreiben.** Wer einen Commit schreibt, setzt die Attribution seines eigenen Modells — sie soll
+  benennen, wer die Arbeit gemacht hat. Der übrige Wortlaut der Nachricht wird wörtlich übernommen.
 - **Nie zwei `yarn test`-Läufe gleichzeitig.** `deleteTestUsers()` räumt **jeden** `rigmate-test-*`-Account
   auf der geteilten Instanz ab, nicht nur die eigenen.
 - **`yarn test:api` braucht einen laufenden `yarn dev` auf Port 3000.** Vor dem Lauf mit einem HTTP-Aufruf
@@ -172,8 +175,9 @@ keine zweite Auszeichnung durch eine Linie darunter.
 | `tests/unit/designTokens.test.ts` | Wächter über `main.css` selbst: Spiegelung, kein zweites Thema, Kontrastwerte |
 | `tests/unit/designUtilities.test.ts` | Wächter über die Benutzung: keine Fremdpalette, nur die vier Radien, kein Schatten |
 
-**Nicht angefasst:** `shared/utils/rarityStyle.ts` (die Klassennamen, auf die es zeigt, existieren
-weiter), jede Migration, jede Server-Route, `app/locales/de.ts`.
+**Nicht angefasst:** `shared/utils/rarityStyle.ts` selbst (seine Rückgabewerte bleiben, wie sie sind —
+Task 2b sorgt nur dafür, dass Tailwind sie überhaupt sieht), jede Migration, jede Server-Route,
+`app/locales/de.ts`.
 
 ---
 
@@ -482,20 +486,27 @@ Run: `yarn test`
 
 Erwartet: PASS, 519 Tests in 46 Dateien plus die 4 neuen — also 523.
 
-- [ ] **Schritt 7: Belegen, dass die neuen Utilities wirklich erzeugt werden**
+- [ ] **Schritt 7: Belegen, dass die Farbschicht wirklich erzeugt wird**
 
 Ein Token in `@theme inline` ist noch keine Klasse. Also nachsehen, nicht annehmen:
 
 ```bash
-yarn dev            # in einem eigenen Terminal, auf Port 3000
-curl -s http://localhost:3000/_nuxt/assets/css/main.css | grep -oE '\.(rounded-(card|field|btn)|bg-surface-2)\b' | sort -u
+yarn dev            # in einem eigenen Terminal
+curl -s http://localhost:3000/_nuxt/assets/css/main.css | grep -oE '\.bg-surface-2\b' | sort -u
 ```
 
-Erwartet: alle vier Klassennamen kommen vor. **Wenn eine fehlt, ist der Task nicht fertig** — eine
-Klasse, die es nicht gibt, fällt wortlos auf den geerbten Wert zurück.
+Erwartet: `.bg-surface-2` kommt vor.
 
-Zwei Fallstricke dabei: Nuxt bindet auf `[::1]:3000`, also IPv6; und auf deutschem Windows heißt der
-Zustand in `netstat` **`ABHÖREN`**, nicht `LISTENING`. Wer prüft, ob der Port läuft, muss beides mitfangen.
+**Warum hier nur die Farbe geprüft wird und nicht die Radien:** Tailwind v4 erzeugt eine Utility nur,
+wenn ihr Klassenname im gescannten Quelltext **vorkommt** — ein Token allein genügt nicht.
+`bg-surface-2` steht schon in fünf `.vue`-Dateien, `rounded-card`/`rounded-field`/`rounded-btn` in
+keiner. Sie erscheinen im CSS, sobald Task 3 sie zum ersten Mal benutzt, und werden **dort** geprüft.
+Eine `@source inline(...)`-Safelist wäre hier der falsche Weg: sie ließe die Gegenprobe bestehen, ohne
+etwas über die echte Benutzung zu beweisen — ein Wächter, der grün ist, ohne zu prüfen.
+
+Zwei Fallstricke dabei: Nuxt bindet auf `[::1]:3000`, also IPv6, und weicht auf **3001** aus, wenn 3000
+belegt ist — erst mit einem HTTP-Aufruf belegen, **welche** App antwortet. Auf deutschem Windows heißt
+der Zustand in `netstat` **`ABHÖREN`**, nicht `LISTENING`.
 
 - [ ] **Schritt 8: Committen**
 
@@ -669,6 +680,262 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 ---
 
+## Task 2b: Tailwind sieht `shared/` nicht — ein Fehler, der schon auf `main` liegt
+
+**Nicht geplant, im Vorflug von Task 1 gefunden.** Dieser Task war im ursprünglichen Plan nicht
+vorgesehen; er kam aus dem Kontrollexperiment des Task-1-Implementierenden und ist am gebauten CSS
+belegt.
+
+### Der Befund
+
+Tailwind v4 erzeugt eine Utility nur, wenn ihr Klassenname im **gescannten** Quelltext vorkommt.
+`shared/` wird nicht gescannt. Von den Klassen, die `shared/utils/rarityStyle.ts` als String
+zurückgibt, fehlen deshalb im ausgelieferten CSS **genau die zwei**, die in keiner `.vue`-Datei
+zusätzlich stehen:
+
+| Klasse | Im gebauten CSS | Warum |
+|---|---|---|
+| `text-rare`, `text-special` | vorhanden | stehen auch in `.vue`-Dateien |
+| `border-rare` | vorhanden | steht auch in `FeedItem.vue:92` |
+| `bg-line`, `bg-surface`, `border-line`, `opacity-55` | vorhanden | stehen auch in `.vue`-Dateien |
+| **`bg-rare`** | **FEHLT** | nur in `rarityStyle.ts:41` und `:63` |
+| **`border-special`** | **FEHLT** | nur in `rarityStyle.ts:42` und `:64` |
+
+**Was das live bedeutet:**
+
+- `rarityPipClass('special')` liefert `border-special`. Die Klasse existiert nicht, und der Punkt trägt
+  als Grundzustand `border-transparent` (`RarityPip.vue:34`) — **der Punkt für „speziell" ist
+  unsichtbar.**
+- `rarityPipClass('rare')` liefert `bg-rare border-rare`. Ohne `bg-rare` ist der „gefüllte" Punkt ein
+  Ring. Der Unterschied zwischen `rare` und `special`, den die Legende behauptet, existiert nicht.
+- Dasselbe für `rarityNodeClass()` an den Kabelknoten im Signalweg.
+
+`tests/unit/rarityStyle.test.ts` ist dabei grün, weil er den zurückgegebenen **String** prüft, nicht die
+Existenz der Klasse. Das ist der wiederkehrende Fehler dieses Projekts und seine Schwester in einem:
+ein Fehlschlag, der aussieht, als sei nichts passiert — und ein Test, der aus dem falschen Grund grün
+ist. Und er trifft die Seltenheitsauszeichnung, also die Mechanik, über die Menschen einander finden.
+
+**Dateien:**
+- Ändern: `app/assets/css/main.css` (eine `@source`-Zeile)
+- Erstellen: `tests/unit/tailwindSources.test.ts`
+
+**Schnittstellen:**
+- Liefert: `bg-rare` und `border-special` im erzeugten CSS. Tasks 4 und 5 setzen das voraus.
+- Ändert **nichts** an `shared/utils/rarityStyle.ts`. Seine Rückgabewerte sind richtig; gefehlt hat die
+  Scan-Abdeckung.
+
+- [ ] **Schritt 1: Den Fehlschlag am gebauten CSS belegen (RED, von Hand)**
+
+```bash
+yarn build
+find .output/public -name "*.css" | xargs grep -o '\.bg-rare[,{ :]' | head
+find .output/public -name "*.css" | xargs grep -o '\.border-special[,{ :]' | head
+```
+
+Erwartet: **beide Befehle geben nichts aus.** Zur Kontrolle, dass die Suche selbst funktioniert:
+
+```bash
+find .output/public -name "*.css" | xargs grep -o '\.border-rare[,{ :]' | head
+```
+
+Erwartet: **eine Ausgabe.** `border-rare` steht auch in einem Template und wird deshalb erzeugt — das
+ist der Beleg, dass nicht der `grep` das Problem ist, sondern die Scan-Abdeckung.
+
+- [ ] **Schritt 2: Den Wächter schreiben**
+
+`tests/unit/tailwindSources.test.ts`:
+
+```ts
+import { describe, it, expect } from 'vitest'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+
+const CSS_PATH = 'app/assets/css/main.css'
+
+// Nur Verzeichnisse, die eigenen Quelltext tragen. node_modules, Build-
+// Ausgaben und die Tests selbst interessieren nicht.
+const CODE_DIRS = ['app', 'shared', 'server', 'scripts']
+
+function walk(dir: string): string[] {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir)
+  } catch {
+    return []
+  }
+  return entries.flatMap((name) => {
+    const full = join(dir, name)
+    return statSync(full).isDirectory() ? walk(full) : [full]
+  })
+}
+
+/**
+ * Die Namen der Projekt-Farbtoken, aus main.css gelesen statt hier
+ * gedoppelt: --color-rare -> "rare". Kommt ein Token dazu, deckt der
+ * Waechter es automatisch mit ab.
+ */
+function projectColorNames(css: string): string[] {
+  return [...css.matchAll(/--color-([a-z0-9-]+)\s*:/g)].map((match) => match[1])
+}
+
+describe('Tailwind-Scanabdeckung', () => {
+  it('nennt jedes Verzeichnis mit Projekt-Utilities in einem @source', () => {
+    const css = readFileSync(CSS_PATH, 'utf8')
+    const names = projectColorNames(css)
+    expect(names.length).toBeGreaterThan(5)
+
+    // bg-rare, text-muted, border-special, divide-line ...
+    const utility = new RegExp(
+      `\\b(?:bg|text|border|divide|ring|outline|fill|stroke|from|via|to)-(?:${names.join('|')})\\b`,
+    )
+
+    // Wo main.css selbst liegt, scannt Tailwind von sich aus - das ist
+    // empirisch belegt: Klassen aus app/ landen im gebauten CSS, Klassen
+    // aus shared/ landen nicht darin.
+    const cssRoot = CSS_PATH.split('/')[0]
+
+    // @source-Pfade stehen relativ zur CSS-Datei. "../../../shared" von
+    // app/assets/css/main.css aus ist shared/ im Projektstamm; hier
+    // interessiert nur das letzte Wegstueck.
+    const declared = new Set(
+      [...css.matchAll(/@source\s+["']([^"']+)["']/g)].map(
+        (match) => match[1].replace(/\/+$/, '').split('/').filter((part) => part !== '..').pop() ?? '',
+      ),
+    )
+
+    const offenses: string[] = []
+
+    for (const dir of CODE_DIRS) {
+      if (dir === cssRoot) continue
+
+      const carriers = walk(dir)
+        .filter((file) => file.endsWith('.ts') || file.endsWith('.vue'))
+        .filter((file) => utility.test(readFileSync(file, 'utf8')))
+
+      if (carriers.length > 0 && !declared.has(dir)) {
+        offenses.push(
+          `${dir}/ traegt Projekt-Utilities (${carriers.join(', ')}), steht aber in keinem ` +
+            `@source in ${CSS_PATH}. Tailwind erzeugt eine Klasse nur, wenn ihr Name im ` +
+            `gescannten Quelltext vorkommt - sonst fehlt sie im CSS und faellt wortlos auf ` +
+            `den geerbten Wert zurueck.`,
+        )
+      }
+    }
+
+    expect(offenses, offenses.join('\n')).toEqual([])
+  })
+
+  it('wuerde ein nicht deklariertes Verzeichnis tatsaechlich melden', () => {
+    // Ein Waechter, der nur ueber heilem Code laeuft, kann auch dann gruen
+    // sein, wenn er gar nichts prueft. Genau das ist hier passiert:
+    // rarityStyle.test.ts prueft den zurueckgegebenen String und war
+    // achtzehn Tasks lang gruen, waehrend border-special im CSS fehlte.
+    const names = ['rare', 'special', 'line']
+    const utility = new RegExp(`\\b(?:bg|text|border)-(?:${names.join('|')})\\b`)
+
+    expect(utility.test(`if (rarity === 'special') return 'border-special'`)).toBe(true)
+    expect(utility.test(`return 'bg-rare border-rare'`)).toBe(true)
+    expect(utility.test(`return 'text-ink'`)).toBe(false)
+
+    const declared = new Set(
+      [...`@source "../../../shared";`.matchAll(/@source\s+["']([^"']+)["']/g)].map(
+        (match) => match[1].split('/').filter((part) => part !== '..').pop() ?? '',
+      ),
+    )
+    expect(declared.has('shared')).toBe(true)
+    expect(declared.has('server')).toBe(false)
+  })
+})
+```
+
+- [ ] **Schritt 3: Wächter laufen lassen, Fehlschlag prüfen**
+
+Run: `yarn vitest run tests/unit/tailwindSources.test.ts`
+
+Erwartet: **FAIL** im ersten Test, mit `shared/ traegt Projekt-Utilities
+(shared/utils/rarityStyle.ts), steht aber in keinem @source`. Der zweite Test ist grün.
+
+- [ ] **Schritt 4: `@source` ergänzen**
+
+In `app/assets/css/main.css` direkt unter `@import "tailwindcss";`:
+
+```css
+/* Tailwind erzeugt eine Utility nur, wenn ihr Klassenname im gescannten
+   Quelltext vorkommt - und gescannt wird von sich aus nur, wo diese Datei
+   liegt. shared/utils/rarityStyle.ts gibt Klassennamen als Strings zurueck
+   ("border-special", "bg-rare") und lag damit ausserhalb.
+
+   Folge, bis das hier stand: bg-rare und border-special fehlten im
+   ausgelieferten CSS. Der Punkt fuer "speziell" war unsichtbar, der fuer
+   "rar" ein Ring statt gefuellt - also genau die Auszeichnung kaputt, die
+   bei Rigmate die Mechanik ist, ueber die Menschen einander finden.
+   rarityStyle.test.ts war die ganze Zeit gruen, weil er den
+   zurueckgegebenen String prueft, nicht die Existenz der Klasse.
+
+   tests/unit/tailwindSources.test.ts haelt das fest. */
+@source "../../../shared";
+```
+
+- [ ] **Schritt 5: Wächter laufen lassen, grün prüfen**
+
+Run: `yarn vitest run tests/unit/tailwindSources.test.ts`
+
+Erwartet: **PASS**, beide Tests.
+
+- [ ] **Schritt 6: Am gebauten CSS belegen (GREEN, von Hand)**
+
+Derselbe Befehl wie in Schritt 1 — das ist der eigentliche Beweis, der Wächter ist nur die
+Regressionssperre:
+
+```bash
+yarn build
+find .output/public -name "*.css" | xargs grep -o '\.bg-rare[,{ :]' | head
+find .output/public -name "*.css" | xargs grep -o '\.border-special[,{ :]' | head
+```
+
+Erwartet: **beide geben jetzt eine Ausgabe.** Fehlt eine weiterhin, ist `@source` nicht der richtige
+Hebel — dann **melden, nicht weiterprobieren**.
+
+- [ ] **Schritt 7: Voller Testlauf**
+
+Run: `yarn test`
+
+Erwartet: PASS, 526 Tests (524 nach Task 2 plus zwei neue).
+
+- [ ] **Schritt 8: Committen**
+
+```bash
+git add app/assets/css/main.css tests/unit/tailwindSources.test.ts
+git commit -m "fix(design): Tailwind scannt shared/, bg-rare und border-special fehlten
+
+Tailwind erzeugt eine Utility nur, wenn ihr Klassenname im gescannten
+Quelltext vorkommt - und gescannt wurde von sich aus nur app/, wo
+main.css liegt. shared/utils/rarityStyle.ts gibt Klassennamen als
+Strings zurueck und lag damit ausserhalb.
+
+Folge, am gebauten CSS belegt: von den Klassen, die rarityStyle.ts
+zurueckgibt, fehlten genau die zwei, die in keinem Template zusaetzlich
+stehen - bg-rare und border-special. Der Punkt fuer "speziell" war
+damit unsichtbar (er traegt als Grundzustand border-transparent), und
+der gefuellte Punkt fuer "rar" war ein Ring. Der Unterschied, den die
+Legende behauptet, existierte nicht.
+
+Das trifft die Seltenheitsauszeichnung, also die Mechanik, ueber die
+Menschen bei Rigmate einander finden. Der Fehler lag seit Stufe 1 auf
+main und ist beim Vorflug von Task 1 aufgefallen - nicht durch einen
+Test, sondern durch ein Kontrollexperiment am ausgelieferten CSS.
+
+rarityStyle.test.ts war die ganze Zeit gruen, weil er den
+zurueckgegebenen String prueft, nicht die Existenz der Klasse. Der neue
+tailwindSources.test.ts prueft die Abdeckung selbst und hat einen
+Gegenprobe-Test, der belegt, dass er fehlschlagen kann.
+"
+```
+
+Die Attributionszeile nach deiner eigenen Sitzungsregel anfügen.
+
+---
+
 ## Task 3: Layout und Navigation
 
 Die kleinste Gruppe und die sichtbarste: die Navigationsleiste hat heute **keinen einzigen Radius** und
@@ -768,7 +1035,20 @@ sein — sonst trägt der Markenname in der Navigationsleiste die Schrift ohne d
 
 Run: `yarn test`
 
-Erwartet: PASS, 525 Tests.
+Erwartet: PASS, 527 Tests.
+
+**Und die Gegenprobe, die Task 1 noch nicht führen konnte.** Dieser Task ist der erste Verbraucher von
+`rounded-card`, also erscheint die Klasse jetzt zum ersten Mal im erzeugten CSS:
+
+```bash
+yarn dev            # erst mit einem HTTP-Aufruf belegen, WELCHE App antwortet
+curl -s http://localhost:3000/_nuxt/assets/css/main.css | grep -oE '\.rounded-card\b' | sort -u
+```
+
+Erwartet: `.rounded-card` kommt vor. **Fehlt sie, ist der Task nicht fertig** — eine Klasse, die es
+nicht gibt, fällt wortlos auf den geerbten Wert zurück, und die Kopfleiste hätte dann gar keine Ecke,
+ohne dass irgendetwas kaputt aussieht. `rounded-field` und `rounded-btn` kommen in Task 6 dazu und
+werden dort genauso belegt.
 
 - [ ] **Schritt 6: Im Browser ansehen**
 
@@ -895,7 +1175,7 @@ Erwartet: keine Ausgabe.
 
 Run: `yarn test`
 
-Erwartet: PASS, 527 Tests.
+Erwartet: PASS, 529 Tests.
 
 - [ ] **Schritt 5: Im Browser ansehen**
 
@@ -947,8 +1227,10 @@ Der heikelste Task. Hier hängt eine Absturzfalle und eine SSR-Einschränkung.
 
 **Schnittstellen:**
 - Konsumiert: alles aus Tasks 1–2 sowie `rarityNodeClass()` aus `shared/utils/rarityStyle.ts` —
-  **unverändert**. Sie gibt `bg-rare border-rare`, `border-special` und `bg-surface border-line` zurück;
-  alle drei Klassen existieren weiter.
+  **unverändert**. Sie gibt `bg-rare border-rare`, `border-special` und `bg-surface border-line` zurück.
+  **Voraussetzung ist Task 2b:** vor ihm existierten `bg-rare` und `border-special` im ausgelieferten
+  CSS überhaupt nicht, weil Tailwind `shared/` nicht scannte. Wenn Task 2b nicht erledigt ist, arbeitet
+  dieser Task auf einer unsichtbaren Seltenheitsauszeichnung.
 
 ### Urteil pro Vorkommen
 
@@ -1012,7 +1294,7 @@ Erwartet: keine Ausgabe.
 
 Run: `yarn test`
 
-Erwartet: PASS, 528 Tests. `draggableItemSlot` muss dabei grün sein — wenn nicht, steht ein Kommentar im
+Erwartet: PASS, 530 Tests. `draggableItemSlot` muss dabei grün sein — wenn nicht, steht ein Kommentar im
 `#item`-Slot.
 
 - [ ] **Schritt 5: Im Browser ansehen — und zwar die Kette bedienen**
@@ -1123,7 +1405,7 @@ Erwartet: keine Ausgabe.
 
 Run: `yarn test`
 
-Erwartet: PASS, 529 Tests.
+Erwartet: PASS, 531 Tests.
 
 - [ ] **Schritt 5: Im Browser ansehen — die Seite, die noch niemand gesehen hat**
 
@@ -1238,7 +1520,7 @@ Erwartet: keine Ausgabe.
 
 Run: `yarn test`
 
-Erwartet: PASS, 530 Tests.
+Erwartet: PASS, 532 Tests.
 
 - [ ] **Schritt 5: Im Browser ansehen — samt der unbestätigten Meldung**
 
@@ -1338,7 +1620,7 @@ Erwartet: keine Ausgabe.
 
 Run: `yarn test`
 
-Erwartet: PASS, 531 Tests.
+Erwartet: PASS, 533 Tests.
 
 Dann die API-Tests, weil `search` und `gear` Server-Routen befragen:
 
@@ -1566,7 +1848,7 @@ stehengeblieben, würde es melden, dass die Utility auf ein Token zeigt, das es 
 
 Run: `yarn test`
 
-Erwartet: PASS, 535 Tests.
+Erwartet: PASS, 537 Tests.
 
 - [ ] **Schritt 6: Belegen, dass die Klasse wirklich verschwunden ist**
 
@@ -1733,7 +2015,7 @@ Die Regel „Die Tokens stehen dreifach: heller Grund vollständig in `:root`, d
   `rounded-sm` ist in v4 `0.25rem`, v3s 2px heißt `rounded-xs`, und blankes `rounded` ist ebenfalls
   `0.25rem`. Zwei Schreibweisen für einen Wert.
 - Den `divide-*`-Kindselektor-Absatz **behalten** — er gilt weiter.
-- Die Befehle-Tabelle: `yarn test` hat **535** Tests, nicht 514.
+- Die Befehle-Tabelle: `yarn test` hat **537** Tests, nicht 514.
 
 - [ ] **Schritt 3: `CLAUDE.md`, „Was noch aussteht"**
 
@@ -1772,7 +2054,7 @@ Einträge die neue Spec überholt hat.
 
 Run: `yarn test`
 
-Erwartet: PASS, 535 Tests. Dann prüfen, dass in `CLAUDE.md` keine abgeschaffte Regel mehr steht:
+Erwartet: PASS, 537 Tests. Dann prüfen, dass in `CLAUDE.md` keine abgeschaffte Regel mehr steht:
 
 ```bash
 grep -n "dreifach\|prefers-color-scheme\|data-theme\|rounded-sm\|line-soft\|514" CLAUDE.md
@@ -1798,7 +2080,7 @@ ausdruecklich stehen.
 
 Erledigt und gestrichen: die offene --rm-muted-Kontrastfrage, der
 ausstehende visuelle Durchgang, die nie gesehene gruppierte Rig-Seite.
-Die Befehle-Tabelle sagt jetzt 535 Tests statt 514.
+Die Befehle-Tabelle sagt jetzt 537 Tests statt 514.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
@@ -1809,7 +2091,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 Nach Task 11:
 
-- [ ] `yarn test` — 535 grün
+- [ ] `yarn test` — 537 grün
 - [ ] `yarn test:api` — 38 grün, mit belegter Basis-URL
 - [ ] `yarn build && grep -r "service_role" .output/public/` — **muss leer bleiben**
 - [ ] `git log --oneline main..development` durchlesen: erzählt die Reihe eine nachvollziehbare Geschichte?
@@ -1848,9 +2130,9 @@ Ergebnis.
 `focus-visible:ring-accent`. `--radius-chip` kommt **nicht** vor (P1). `rarityNameClass()`,
 `rarityPipClass()` und `rarityNodeClass()` bleiben unverändert.
 
-**Testzahlen.** 519 heute → 523 (T1) → 524 (T2) → 525 (T3) → 527 (T4) → 528 (T5) → 529 (T6) → 530 (T7)
-→ 531 (T8) → 535 (T9). Wer eine andere Zahl sieht, hat einen Test übersehen oder einen zu viel
-geschrieben — beides ist ein Befund, kein Rundungsfehler.
+**Testzahlen.** 519 heute → 523 (T1) → 524 (T2) → **526 (T2b)** → 527 (T3) → 529 (T4) → 530 (T5) →
+531 (T6) → 532 (T7) → 533 (T8) → 537 (T9). Wer eine andere Zahl sieht, hat einen Test übersehen oder
+einen zu viel geschrieben — beides ist ein Befund, kein Rundungsfehler.
 
 **Belegte Vorhersagen.** Vier Behauptungen dieses Plans sind am 12. September 2026 gegen den Bestand
 geprüft, nicht geschätzt:
