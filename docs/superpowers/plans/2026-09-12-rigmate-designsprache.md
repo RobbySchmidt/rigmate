@@ -1914,27 +1914,7 @@ stammend — sie liegen in Dateien, die dieser Task ohnehin anfasst:
 - **`tests/unit/designTokens.test.ts`:** `export function contrast(...)` hat keinen Verbraucher außerhalb
   der Datei. Das `export` entfernen, die Funktion selbst bleibt — sie wird in zwei Tests benutzt.
 
-Und ein drittes, das beim Umbau entstanden ist: **die App hat jetzt zwei Fokusmuster.**
-`ProfileHeader.vue` benutzt `focus-visible:outline-2 focus-visible:outline-offset-2
-focus-visible:outline-accent` — das stammt aus der Zeit vor diesem Plan. Die Felder und Knöpfe aus den
-Tasks 6 bis 8 benutzen `outline-none focus-visible:ring-2 focus-visible:ring-accent`. Beide
-funktionieren, aber es ist ein Muster zu viel, und es ist dieselbe Art Duplikat, die zu
-`shared/utils/rarityStyle.ts` und zur `display`-Utility geführt hat: eine Regel, die an zwei Orten
-verschieden ausgedrückt ist, läuft auseinander.
 
-**Auf das Ring-Muster vereinheitlichen** und die `outline-`-Variante in `ProfileHeader.vue` ersetzen. Der
-Ring ist die bessere Wahl, weil `ring-*` eine Farbe aus den Tokens nimmt und `outline-offset` auf einer
-gefüllten Mulde eine Lücke in der Fläche reißt.
-
-**Es sind mindestens vier Fokusbilder, nicht zwei.** Der Review von Task 6 hat zwei weitere gefunden:
-`focus-visible:bg-surface-2` am Ergebniszeilen-Knopf des `CatalogPicker`, und den **nativen
-Browser-Fokus** an den Textknöpfen (`Hinweis ausblenden`, `Entfernen`, `Diesen Eintrag anlegen`), die nie
-einen Rahmen trugen und deshalb regelkonform keinen Ring bekamen. Das war jeweils korrekt entschieden und
-als Ergebnis trotzdem unbefriedigend.
-
-**Danach zählen, nicht schätzen:** jedes interaktive Element in `app/` — `<button>`, `<a>`, `<input>`,
-`<select>`, `<textarea>`, `<NuxtLink>` — trägt genau **ein** Fokusmuster, und es ist dasselbe. Ein Element
-ohne jedes ist ein Befund, und ein Element mit einem eigenen ebenso. Die Zahl gehört in den Bericht.
 
 - [ ] **Schritt 4: Beide Wächter laufen lassen, grün prüfen**
 
@@ -2006,6 +1986,269 @@ ueberhaupt greifen koennen.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
+
+---
+
+## Task 9b: Ein Fokusbild statt vier
+
+**Nicht geplant, aus den Reviews von Task 6 gewachsen.** Dieser Task stand zuerst als Aufräumschritt in
+Task 9 und ist von dort herausgelöst worden: er betrifft jede Datei mit einem interaktiven Element und
+verdient ein eigenes Review-Tor. Ein Reviewer könnte die Wächter aus Task 9 freigeben und diese Arbeit
+ablehnen — genau das Kriterium zum Teilen.
+
+### Der Befund
+
+`ProfileHeader.vue` benutzt `focus-visible:outline-2 focus-visible:outline-offset-2
+focus-visible:outline-accent` — das stammt aus der Zeit vor diesem Plan. Die Felder und Knöpfe aus den
+Tasks 6 bis 8 benutzen `outline-none focus-visible:ring-2 focus-visible:ring-accent`.
+
+**Es sind mindestens vier Fokusbilder, nicht zwei.** Der Review von Task 6 hat zwei weitere gefunden:
+`focus-visible:bg-surface-2` am Ergebniszeilen-Knopf des `CatalogPicker`, und den **nativen
+Browser-Fokus** an den Textknöpfen („Hinweis ausblenden", „Entfernen", „Diesen Eintrag anlegen", „Noch
+kein Konto? Hier anlegen."), die nie einen Rahmen trugen und deshalb regelkonform keinen Ring bekamen.
+
+Jede dieser Entscheidungen war einzeln richtig. Das Ergebnis ist es nicht.
+
+### Warum es zählt
+
+Der Fokusring ist in dieser Designsprache **kein Schmuck**. Seit die Rahmen weg sind, ist er an einem
+Eingabefeld die **einzige** Anzeige, dass die Tastatur dort steht — die Bedienung selbst. Vier
+verschiedene Anzeigen dafür heißen: an drei Vierteln der Oberfläche muss man sie neu lernen, und eine
+davon (der native Browser-Fokus) hat einen Kontrast, der nicht in unserer Hand liegt.
+
+Es ist dazu dieselbe Art Duplikat, die zu `shared/utils/rarityStyle.ts` und zur `display`-Utility geführt
+hat: eine Regel, die an vier Orten verschieden ausgedrückt ist, läuft auseinander.
+
+**Dateien:**
+- Ändern: jede `.vue`-Datei unter `app/` mit einem interaktiven Element
+- Erstellen: `tests/unit/focusVisible.test.ts`
+
+**Schnittstellen:**
+- Konsumiert: nichts Neues.
+- Liefert: genau ein Fokusmuster in der ganzen App, und einen Wächter, der es festhält.
+
+### Das Muster
+
+```
+outline-none focus-visible:ring-2 focus-visible:ring-accent
+```
+
+**Warum der Ring und nicht die Umrisslinie:** beide können ihre Farbe aus den Tokens nehmen, aber
+`outline-offset` reißt auf einer gefüllten Mulde eine Lücke in die Fläche — und die Mulde ist seit Task 6
+die Grundform jedes Eingabefelds. Der Ring legt sich stattdessen außen an.
+
+**Der einzige erlaubte Zusatz:** wo der Ring auf eine Fläche trifft, die ihn verschluckt, kommt
+`focus-visible:ring-offset-2 focus-visible:ring-offset-surface` dazu. Sonst bleibt das Muster
+zeichengleich.
+
+- [ ] **Schritt 1: Zählen, was es gibt**
+
+Erst die Bestandsaufnahme — sonst weiß am Ende niemand, ob etwas fehlt. Schreib dieses Skript nach
+`focus-count.mjs` (Wegwerfdatei, nicht committen) und lass es laufen:
+
+```js
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+
+const walk = (d) =>
+  readdirSync(d).flatMap((n) => {
+    const f = join(d, n)
+    return statSync(f).isDirectory() ? walk(f) : [f]
+  })
+
+for (const f of walk('app').filter((f) => f.endsWith('.vue'))) {
+  const c = readFileSync(f, 'utf8')
+  const interactive = [...c.matchAll(/<(button|input|select|textarea|a|NuxtLink)\b/g)].length
+  if (!interactive) continue
+  const ring = [...c.matchAll(/focus-visible:ring-accent/g)].length
+  const outline = [...c.matchAll(/focus-visible:outline/g)].length
+  const other = [...c.matchAll(/focus-visible:(?!ring-|outline)[a-z][a-z0-9-]*/g)].map((m) => m[0])
+  console.log(
+    f.padEnd(44),
+    'interaktiv ' + String(interactive).padStart(2),
+    '| ring ' + ring,
+    '| outline ' + outline,
+    other.length ? '| sonstige: ' + other.join(', ') : '',
+  )
+}
+```
+
+Run: `node focus-count.mjs`
+
+Die Ausgabe gehört **wörtlich** in den Bericht. Sie ist der Vorher-Stand, gegen den der Nachher-Stand
+gelesen wird.
+
+- [ ] **Schritt 2: Den Wächter schreiben**
+
+`tests/unit/focusVisible.test.ts`. Nach der Regel dieses Plans: die Prüffunktion steht **einmal** auf
+Modulebene, und die Gegenprobe ruft **sie** auf — keine handschriftliche Kopie ihrer Logik.
+
+```ts
+import { describe, it, expect } from 'vitest'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+
+function walk(dir: string): string[] {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir)
+  } catch {
+    return []
+  }
+  return entries.flatMap((name) => {
+    const full = join(dir, name)
+    try {
+      return statSync(full).isDirectory() ? walk(full) : [full]
+    } catch {
+      // Ein kaputter Symlink soll einen Befund ergeben koennen, nicht den
+      // ganzen Lauf abbrechen.
+      return []
+    }
+  })
+}
+
+/**
+ * Genau EIN Fokusbild in der ganzen App.
+ *
+ * Seit die Rahmen weg sind, ist der Ring an einem Eingabefeld die einzige
+ * Anzeige, dass die Tastatur dort steht - kein Schmuck, sondern die
+ * Bedienung selbst. Vor diesem Waechter gab es vier Anzeigen dafuer:
+ * focus-visible:ring-* (neu, aus den Tasks 6 bis 8),
+ * focus-visible:outline-* (in ProfileHeader.vue, von vor dem Umbau),
+ * focus-visible:bg-surface-2 (am Ergebniszeilen-Knopf des CatalogPicker)
+ * und den nativen Browser-Fokus an den Textknoepfen, die nie einen Rahmen
+ * trugen und deshalb aus der Regel fielen. Jede Entscheidung dafuer war
+ * einzeln richtig; das Ergebnis war es nicht.
+ */
+export function focusOffenses(file: string, content: string): string[] {
+  const out: string[] = []
+
+  for (const m of content.matchAll(/focus-visible:outline[a-z0-9[\]/.-]*/g)) {
+    out.push(`${file}: ${m[0]} - das Fokusbild ist der Ring, nicht die Umrisslinie`)
+  }
+
+  for (const m of content.matchAll(
+    /focus-visible:(?!ring-2\b|ring-accent\b|ring-offset)[a-z][a-z0-9-]*/g,
+  )) {
+    out.push(`${file}: ${m[0]} - eigenes Fokusbild; erlaubt ist nur ring-2, ring-accent, ring-offset-*`)
+  }
+
+  // ring-2 ohne ring-accent ist ein FARBLOSER Ring: er faellt auf
+  // currentColor zurueck und ist je nach Textfarbe unsichtbar. Genau die
+  // Sorte Fehlschlag, die aussieht, als sei nichts passiert.
+  const two = [...content.matchAll(/focus-visible:ring-2\b/g)].length
+  const coloured = [...content.matchAll(/focus-visible:ring-accent\b/g)].length
+  if (two !== coloured) {
+    out.push(`${file}: ${two}x ring-2 gegen ${coloured}x ring-accent - beide gehoeren zusammen`)
+  }
+
+  return out
+}
+
+describe('Fokusbild in app/', () => {
+  it('benutzt genau ein Muster, ueberall', () => {
+    const offenses = walk('app')
+      .filter((file) => file.endsWith('.vue'))
+      .flatMap((file) => focusOffenses(file, readFileSync(file, 'utf8')))
+    expect(offenses, offenses.join('\n')).toEqual([])
+  })
+
+  it('wuerde jede Abweichung tatsaechlich melden', () => {
+    // Ruft dieselbe Funktion auf wie der Test darueber, mit konstruierten
+    // schlechten Eingaben. Eine Gegenprobe, die die Regexe nachbaut, wuerde
+    // nur beweisen, dass ein Regex dieser Bauart greift - nicht dass der
+    // benutzte greift.
+    expect(focusOffenses('x.vue', 'focus-visible:outline-2')).toHaveLength(1)
+    expect(focusOffenses('x.vue', 'focus-visible:outline-accent')).toHaveLength(1)
+    expect(focusOffenses('x.vue', 'focus-visible:bg-surface-2')).toHaveLength(1)
+    expect(focusOffenses('x.vue', 'focus-visible:underline')).toHaveLength(1)
+    // Farbloser Ring:
+    expect(focusOffenses('x.vue', 'focus-visible:ring-2')).toHaveLength(1)
+    expect(focusOffenses('x.vue', 'focus-visible:ring-accent')).toHaveLength(1)
+    // Das erlaubte Muster meldet nichts, auch mit Offset:
+    expect(focusOffenses('x.vue', 'outline-none focus-visible:ring-2 focus-visible:ring-accent')).toEqual([])
+    expect(
+      focusOffenses(
+        'x.vue',
+        'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+      ),
+    ).toEqual([])
+  })
+})
+```
+
+- [ ] **Schritt 3: Wächter laufen lassen, Fehlschlag prüfen**
+
+Run: `yarn vitest run tests/unit/focusVisible.test.ts`
+
+Erwartet: **FAIL** im ersten Test, mit mindestens diesen Befunden — `ProfileHeader.vue` mit
+`focus-visible:outline-*` (drei Treffer) und `CatalogPicker.vue` mit `focus-visible:bg-surface-2`. Der
+zweite Test ist grün.
+
+**Wenn der erste Test grün ist, greift der Wächter nicht — melden, nicht anpassen.**
+
+- [ ] **Schritt 4: Umstellen**
+
+Jede gemeldete Stelle auf das Muster bringen. Und aus der Zählung von Schritt 1: **jedes interaktive
+Element ohne jedes Fokusbild bekommt eines.** Das sind vor allem die Textknöpfe, die nie einen Rahmen
+trugen und deshalb bisher aus der Regel fielen.
+
+**Bei `<a>`- und `<NuxtLink>`-Elementen, die mitten im Fließtext stehen**, ist ein Ring um eine Textzeile
+unschön. Dort trotzdem den Ring nehmen, mit `rounded-btn`, damit er eine Form hat. Das ist die Stelle,
+an der eine Ausnahme am ehesten zu rechtfertigen wäre — wer sie will, **begründet sie im Bericht**, statt
+sie stillschweigend zu bauen.
+
+**Ein `<a href>` in einer Nutzer-Bio oder in `profiles.links` ist kein Bedienelement der App**, sondern
+Inhalt. Dort ist der native Fokus in Ordnung; benenn diese Stellen im Bericht, damit die Nachher-Zählung
+aufgeht.
+
+- [ ] **Schritt 5: Wächter und Suite laufen lassen**
+
+Run: `yarn vitest run tests/unit/focusVisible.test.ts` → PASS, beide Tests.
+
+Run: `yarn test` → PASS, **539 Tests** (537 nach Task 9 plus zwei neue).
+
+- [ ] **Schritt 6: Nachher-Zählung**
+
+`node focus-count.mjs` erneut laufen lassen. Die Ausgabe gehört **wörtlich** in den Bericht, neben die
+Vorher-Zählung.
+
+**Jede Zeile muss `outline 0` zeigen und keine „sonstige".** Wo die Ring-Zahl nicht zur Zahl der
+interaktiven Elemente passt, gehört die Abweichung benannt und begründet — nicht weggerundet.
+
+Danach `focus-count.mjs` löschen.
+
+- [ ] **Schritt 7: Committen**
+
+```bash
+git add app/ tests/unit/focusVisible.test.ts
+git commit -m "feat(design): ein Fokusbild statt vier
+
+Seit die Rahmen weg sind, ist der Fokusring an einem Eingabefeld die
+einzige Anzeige, dass die Tastatur dort steht - kein Schmuck, sondern
+die Bedienung selbst. Es gab vier Anzeigen dafuer: ring-* aus den Tasks
+6 bis 8, outline-* in ProfileHeader.vue von vor dem Umbau,
+bg-surface-2 am Ergebniszeilen-Knopf des CatalogPicker, und den nativen
+Browser-Fokus an den Textknoepfen, die nie einen Rahmen trugen und
+deshalb aus der Regel fielen.
+
+Jede dieser Entscheidungen war einzeln richtig. Vier Fokusbilder in
+einer Anwendung sind trotzdem drei zu viel - an drei Vierteln der
+Oberflaeche muesste man sie neu lernen, und der native Fokus hat einen
+Kontrast, der nicht in unserer Hand liegt.
+
+Jetzt ueberall outline-none focus-visible:ring-2
+focus-visible:ring-accent. Der Ring statt der Umrisslinie, weil
+outline-offset auf einer gefuellten Mulde eine Luecke in die Flaeche
+reisst und die Mulde seit Task 6 die Grundform jedes Eingabefelds ist.
+
+focusVisible.test.ts haelt es fest und prueft dabei auch, dass ring-2
+und ring-accent immer zusammen stehen: ein farbloser Ring faellt auf
+currentColor zurueck und ist je nach Textfarbe unsichtbar - genau die
+Sorte Fehlschlag, die aussieht, als sei nichts passiert."
+```
+
+Die Attributionszeile nach deiner eigenen Sitzungsregel anfügen.
 
 ---
 
@@ -2137,7 +2380,7 @@ Die Regel „Die Tokens stehen dreifach: heller Grund vollständig in `:root`, d
   `rounded-sm` ist in v4 `0.25rem`, v3s 2px heißt `rounded-xs`, und blankes `rounded` ist ebenfalls
   `0.25rem`. Zwei Schreibweisen für einen Wert.
 - Den `divide-*`-Kindselektor-Absatz **behalten** — er gilt weiter.
-- Die Befehle-Tabelle: `yarn test` hat **537** Tests, nicht 514.
+- Die Befehle-Tabelle: `yarn test` hat **539** Tests, nicht 514.
 
 - [ ] **Schritt 3: `CLAUDE.md`, „Was noch aussteht"**
 
@@ -2176,7 +2419,7 @@ Einträge die neue Spec überholt hat.
 
 Run: `yarn test`
 
-Erwartet: PASS, 537 Tests. Dann prüfen, dass in `CLAUDE.md` keine abgeschaffte Regel mehr steht:
+Erwartet: PASS, 539 Tests. Dann prüfen, dass in `CLAUDE.md` keine abgeschaffte Regel mehr steht:
 
 ```bash
 grep -n "dreifach\|prefers-color-scheme\|data-theme\|rounded-sm\|line-soft\|514" CLAUDE.md
@@ -2202,7 +2445,7 @@ ausdruecklich stehen.
 
 Erledigt und gestrichen: die offene --rm-muted-Kontrastfrage, der
 ausstehende visuelle Durchgang, die nie gesehene gruppierte Rig-Seite.
-Die Befehle-Tabelle sagt jetzt 537 Tests statt 514.
+Die Befehle-Tabelle sagt jetzt 539 Tests statt 514.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
@@ -2213,7 +2456,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 Nach Task 11:
 
-- [ ] `yarn test` — 537 grün
+- [ ] `yarn test` — 539 grün
 - [ ] `yarn test:api` — 38 grün, mit belegter Basis-URL
 - [ ] `yarn build && grep -r "service_role" .output/public/` — **muss leer bleiben**
 - [ ] `git log --oneline main..development` durchlesen: erzählt die Reihe eine nachvollziehbare Geschichte?
@@ -2253,7 +2496,7 @@ Ergebnis.
 `rarityPipClass()` und `rarityNodeClass()` bleiben unverändert.
 
 **Testzahlen.** 519 heute → 523 (T1) → 524 (T2) → **526 (T2b)** → 527 (T3) → 529 (T4) → 530 (T5) →
-531 (T6) → 532 (T7) → 533 (T8) → 537 (T9). Wer eine andere Zahl sieht, hat einen Test übersehen oder
+531 (T6) → 532 (T7) → 533 (T8) → 537 (T9) → 539 (T9b). Wer eine andere Zahl sieht, hat einen Test übersehen oder
 einen zu viel geschrieben — beides ist ein Befund, kein Rundungsfehler.
 
 **Belegte Vorhersagen.** Vier Behauptungen dieses Plans sind am 12. September 2026 gegen den Bestand
