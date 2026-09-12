@@ -30,30 +30,43 @@ function projectColorNames(css: string): string[] {
   return [...css.matchAll(/--color-([a-z0-9-]+)\s*:/g)].map((match) => match[1])
 }
 
+/**
+ * Ob ein Quelltext eine der Projekt-Farbutilities benutzt (bg-rare,
+ * text-muted, border-special, divide-line, ...). Steht einmal auf
+ * Modulebene, damit die Gegenprobe unten sie aufruft statt den Regex
+ * nachzubauen - ein nachgebauter Regex wuerde nur beweisen, dass ein Regex
+ * dieser Bauart greift, nicht dass der tatsaechlich benutzte greift.
+ */
+function carriesProjectUtility(content: string, names: string[]): boolean {
+  const utility = new RegExp(
+    `\\b(?:bg|text|border|divide|ring|outline|fill|stroke|from|via|to)-(?:${names.join('|')})\\b`,
+  )
+  return utility.test(content)
+}
+
+/**
+ * Die Verzeichnisnamen aus den @source-Deklarationen einer CSS-Datei.
+ * @source-Pfade stehen relativ zur CSS-Datei; hier interessiert nur das
+ * letzte Wegstueck. "../../../shared" wird zu "shared".
+ */
+function declaredSourceDirs(css: string): string[] {
+  return [...css.matchAll(/@source\s+["']([^"']+)["']/g)].map(
+    (match) => match[1].replace(/\/+$/, '').split('/').filter((part) => part !== '..').pop() ?? '',
+  )
+}
+
 describe('Tailwind-Scanabdeckung', () => {
   it('nennt jedes Verzeichnis mit Projekt-Utilities in einem @source', () => {
     const css = readFileSync(CSS_PATH, 'utf8')
     const names = projectColorNames(css)
     expect(names.length).toBeGreaterThan(5)
 
-    // bg-rare, text-muted, border-special, divide-line ...
-    const utility = new RegExp(
-      `\\b(?:bg|text|border|divide|ring|outline|fill|stroke|from|via|to)-(?:${names.join('|')})\\b`,
-    )
-
     // Wo main.css selbst liegt, scannt Tailwind von sich aus - das ist
     // empirisch belegt: Klassen aus app/ landen im gebauten CSS, Klassen
     // aus shared/ landen nicht darin.
     const cssRoot = CSS_PATH.split('/')[0]
 
-    // @source-Pfade stehen relativ zur CSS-Datei. "../../../shared" von
-    // app/assets/css/main.css aus ist shared/ im Projektstamm; hier
-    // interessiert nur das letzte Wegstueck.
-    const declared = new Set(
-      [...css.matchAll(/@source\s+["']([^"']+)["']/g)].map(
-        (match) => match[1].replace(/\/+$/, '').split('/').filter((part) => part !== '..').pop() ?? '',
-      ),
-    )
+    const declared = new Set(declaredSourceDirs(css))
 
     const offenses: string[] = []
 
@@ -62,7 +75,7 @@ describe('Tailwind-Scanabdeckung', () => {
 
       const carriers = walk(dir)
         .filter((file) => file.endsWith('.ts') || file.endsWith('.vue'))
-        .filter((file) => utility.test(readFileSync(file, 'utf8')))
+        .filter((file) => carriesProjectUtility(readFileSync(file, 'utf8'), names))
 
       if (carriers.length > 0 && !declared.has(dir)) {
         offenses.push(
@@ -82,19 +95,21 @@ describe('Tailwind-Scanabdeckung', () => {
     // sein, wenn er gar nichts prueft. Genau das ist hier passiert:
     // rarityStyle.test.ts prueft den zurueckgegebenen String und war
     // achtzehn Tasks lang gruen, waehrend border-special im CSS fehlte.
+    //
+    // Diese Gegenprobe ruft DIESELBEN Funktionen auf wie der Test oben.
+    // Ein nachgebauter Regex wuerde nur beweisen, dass ein Regex dieser
+    // Bauart greift - nicht dass der tatsaechlich benutzte greift.
     const names = ['rare', 'special', 'line']
-    const utility = new RegExp(`\\b(?:bg|text|border)-(?:${names.join('|')})\\b`)
 
-    expect(utility.test(`if (rarity === 'special') return 'border-special'`)).toBe(true)
-    expect(utility.test(`return 'bg-rare border-rare'`)).toBe(true)
-    expect(utility.test(`return 'text-ink'`)).toBe(false)
-
-    const declared = new Set(
-      [...`@source "../../../shared";`.matchAll(/@source\s+["']([^"']+)["']/g)].map(
-        (match) => match[1].split('/').filter((part) => part !== '..').pop() ?? '',
-      ),
+    expect(carriesProjectUtility(`if (rarity === 'special') return 'border-special'`, names)).toBe(
+      true,
     )
-    expect(declared.has('shared')).toBe(true)
-    expect(declared.has('server')).toBe(false)
+    expect(carriesProjectUtility(`return 'bg-rare border-rare'`, names)).toBe(true)
+    expect(carriesProjectUtility(`return 'text-ink'`, names)).toBe(false)
+
+    // Und eine Zusicherung, die tatsaechlich etwas aussagt, statt einer
+    // Menge nur ein Element abzufragen, das nie hineingelangen konnte:
+    // "../../../shared" wird auf genau "shared" abgebildet.
+    expect(declaredSourceDirs('@source "../../../shared";')).toEqual(['shared'])
   })
 })

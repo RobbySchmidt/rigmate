@@ -22,7 +22,7 @@
    eigener Spec - nicht als halb gebauten zweiten Block.
 
    Zwei Akzente mit strikt getrennten Rollen: Petrol fuehrt durch die
-   Oberfläche, Bernstein gehoert AUSSCHLIESSLICH der Seltenheit. Sie ist bei
+   Oberflaeche, Bernstein gehoert AUSSCHLIESSLICH der Seltenheit. Sie ist bei
    Rigmate keine Verzierung, sondern die Mechanik, ueber die Menschen
    einander finden. Wer Bernstein woanders benutzt, macht sie unlesbar. */
 :root {
@@ -39,10 +39,6 @@
      innerhalb einer Flaeche - nie als Rahmen um eine. Zwei Staerken waren
      ein Erbe des Hellmodus. */
   --rm-line: #3c4447;
-  /* Uebergangsweise, bis die 17 Benutzungen weg sind (Task 9 dieses Plans).
-     Zeigt bewusst auf denselben Wert wie --rm-line: die Unterscheidung ist
-     schon aufgehoben, nur die Aufrufstellen wissen es noch nicht. */
-  --rm-line-soft: #3c4447;
 
   --rm-ink: #eae7e0;
   --rm-muted: #9aa1a4;
@@ -110,7 +106,6 @@
   --color-ink: var(--rm-ink);
   --color-muted: var(--rm-muted);
   --color-line: var(--rm-line);
-  --color-line-soft: var(--rm-line-soft);
   --color-accent: var(--rm-accent);
   --color-accent-ink: var(--rm-accent-ink);
   --color-accent-wash: var(--rm-accent-wash);

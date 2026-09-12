@@ -42,7 +42,7 @@ function luminance(hex: string): number {
   )
 }
 
-export function contrast(a: string, b: string): number {
+function contrast(a: string, b: string): number {
   const la = luminance(a)
   const lb = luminance(b)
   const hi = Math.max(la, lb)
