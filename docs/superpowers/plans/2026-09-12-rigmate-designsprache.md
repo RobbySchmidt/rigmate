@@ -1673,9 +1673,40 @@ Wächter greifen, der die alten Werte verbietet.
 - Liefert: den Wächter, der verhindert, dass ein späterer Task oder eine spätere Ausbaustufe die alten
   Muster wieder einschleppt.
 
+### Eine Regel für alle Wächter dieses Plans
+
+**Die Gegenprobe muss denselben Code aufrufen wie die Prüfung.** Der Review von Task 2b hat gezeigt,
+dass die Gegenproben in `tailwindSources.test.ts` die Logik der Prüfung **handschriftlich duplizieren**,
+statt sie zu benutzen — mit eigenen, verkürzten Regexen und hartkodierten Werten. Damit beweisen sie nur,
+dass *ein Regex dieser Bauart* den schlechten Fall trifft, nicht dass *der tatsächlich benutzte* ihn
+trifft. Ein Fehler, der künftig in der echten Logik entsteht, bliebe unentdeckt. Dazu war eine Zusicherung
+tautologisch: `expect(declared.has('server')).toBe(false)` kann bei einer Eingabe, die nur `"shared"`
+enthält, nicht anders ausgehen.
+
+Das ist dieselbe Familie wie der Fehler, der diesen Plan ausgelöst hat: ein Test, der aus dem falschen
+Grund grün ist.
+
+**Deshalb gilt ab hier, und rückwirkend für die beiden vorhandenen Wächter:** jede Prüffunktion steht
+**einmal** auf Modulebene, und die Gegenprobe ruft **sie** auf, mit einem konstruierten schlechten Fall
+als Eingabe. Kein zweiter Regex, keine zweite Ableitung, keine hartkodierte Kopie.
+
+Dieser Task zieht das nach:
+
+- **`tests/unit/tailwindSources.test.ts`:** die Utility-Regex und die `@source`-Ableitung aus dem ersten
+  Test in je eine Funktion auf Modulebene heben (`carriesProjectUtility(content, names)` und
+  `declaredSourceDirs(css)`). Beide Tests rufen sie auf. Die tautologische `server`-Zusicherung durch eine
+  ersetzen, die etwas aussagt — etwa dass `declaredSourceDirs('@source "../../../shared";')` genau
+  `['shared']` ergibt.
+- **`tests/unit/designTokens.test.ts`:** `contrast()` steht dort schon auf Modulebene und wird von beiden
+  Tests benutzt — hier ist nur das unnötige `export` zu entfernen (siehe Schritt 3).
+- **Der neue Wächter unten** ist von Anfang an so gebaut: `paletteOffenses`, `radiusOffenses` und
+  `legacyOffenses` stehen auf Modulebene, und der vierte Test füttert sie mit konstruierten schlechten
+  Eingaben.
+
 - [ ] **Schritt 1: Den Wächter schreiben**
 
-`tests/unit/designUtilities.test.ts`:
+`tests/unit/designUtilities.test.ts` — **jede Prüfung als Funktion auf Modulebene**, damit der
+Gegenprobe-Test sie aufrufen kann statt sie zu doppeln:
 
 ```ts
 import { describe, it, expect } from 'vitest'
@@ -1683,9 +1714,21 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir)
+  } catch {
+    return []
+  }
+  return entries.flatMap((name) => {
     const full = join(dir, name)
-    return statSync(full).isDirectory() ? walk(full) : [full]
+    try {
+      return statSync(full).isDirectory() ? walk(full) : [full]
+    } catch {
+      // Ein kaputter Symlink soll einen Befund ergeben koennen, nicht den
+      // ganzen Lauf abbrechen.
+      return []
+    }
   })
 }
 
@@ -1713,114 +1756,123 @@ const COLOR_PREFIXES = [
   'fill', 'stroke', 'from', 'via', 'to', 'shadow', 'accent', 'caret', 'decoration', 'placeholder',
 ]
 
+const ALLOWED_RADII = new Set(['rounded-card', 'rounded-field', 'rounded-btn', 'rounded-full'])
+
+/* --- Die drei Pruefungen. Jede steht hier EINMAL, und der vierte Test ruft
+   genau diese Funktionen mit konstruierten schlechten Eingaben auf. Eine
+   Gegenprobe, die die Logik nachbaut statt sie zu benutzen, beweist nur,
+   dass ein Regex dieser Bauart greift - nicht dass der benutzte greift. --- */
+
+export function paletteOffenses(file: string, content: string): string[] {
+  const families = new RegExp(
+    `\\b(?:${COLOR_PREFIXES.join('|')})-(?:${TAILWIND_FAMILIES.join('|')})(?:-\\d{2,3})?\\b`,
+    'g',
+  )
+  const plain = /\b(?:bg|text|border|divide)-(?:white|black)\b/g
+  return [
+    ...[...content.matchAll(families)].map((m) => m[0]),
+    ...[...content.matchAll(plain)].map((m) => m[0]),
+  ].map((hit) => `${file}: ${hit} - Farben kommen aus den Tokens in main.css`)
+}
+
+export function radiusOffenses(file: string, content: string): string[] {
+  // JEDE rounded-Schreibweise einsammeln und gegen die Erlaubnisliste
+  // halten - nicht die verbotenen aufzaehlen. Eine Aufzaehlung waere
+  // lueckenhaft: sie uebersieht rounded-t-lg, rounded-l-sm und
+  // rounded-[4px] alle drei.
+  const anyRounded = /\brounded(?:-[a-z0-9[\]%.-]+)?/g
+  return [...content.matchAll(anyRounded)]
+    .map((m) => m[0])
+    .filter((name) => !ALLOWED_RADII.has(name))
+    .map(
+      (hit) =>
+        `${file}: "${hit}" - erlaubt sind nur ${[...ALLOWED_RADII].join(', ')}. ` +
+        'Fuer eine neue Form gehoert ein Token mit Rollenbezug in main.css, kein Einzelwert.',
+    )
+}
+
+export function legacyOffenses(file: string, content: string): string[] {
+  const out: string[] = []
+  for (const m of content.matchAll(/\b(?:border|divide|bg|text|ring)-line-soft\b/g)) {
+    out.push(`${file}: ${m[0]} - es gibt nur noch --rm-line`)
+  }
+  // font-display setzt nur die Familie. display setzt Familie plus Breite 88
+  // plus Laufweite - und die Breite ist der sichtbarste Teil der ganzen
+  // Designsprache. Eine Stelle, die font-display behaelt, traegt die Schrift
+  // ohne die Verengung und faellt aus dem Bild. Genau das waere fast
+  // passiert: font-display stand an 14 Stellen in 7 Dateien.
+  for (const m of content.matchAll(/\bfont-display\b/g)) {
+    out.push(`${file}: ${m[0]} - die Display-Rolle heisst "display" und bringt die Breite mit`)
+  }
+  // Tiefe kommt aus Flaechenfarbe. Die einzige Hierarchie, die auf dieser
+  // Oberflaeche etwas bedeuten soll, ist die Seltenheit - ein Schatten, der
+  // "dieses Element ist wichtiger" sagt, konkurriert damit. shadow-none ist
+  // erlaubt, es schaltet ja gerade ab.
+  for (const m of content.matchAll(/\bshadow-(?!none\b)[a-z0-9-]+/g)) {
+    out.push(`${file}: ${m[0]} - die Designsprache ist flach`)
+  }
+  return out
+}
+
+function scan(check: (file: string, content: string) => string[]): string[] {
+  return sources().flatMap((file) => check(file, readFileSync(file, 'utf8')))
+}
+
 describe('Design-Utilities in app/ und shared/', () => {
   it('benutzt keine fest verdrahtete Tailwind-Palettenfarbe', () => {
-    const pattern = new RegExp(
-      `\\b(?:${COLOR_PREFIXES.join('|')})-(?:${TAILWIND_FAMILIES.join('|')})(?:-\\d{2,3})?\\b`,
-      'g',
-    )
-    const offenses: string[] = []
-
-    for (const file of sources()) {
-      const content = readFileSync(file, 'utf8')
-      for (const match of content.matchAll(pattern)) {
-        offenses.push(`${file}: ${match[0]} - Farben kommen aus den Tokens in main.css`)
-      }
-      // bg-white und bg-black sind keine Familie, aber derselbe Fehler.
-      for (const match of content.matchAll(/\b(?:bg|text|border|divide)-(?:white|black)\b/g)) {
-        offenses.push(`${file}: ${match[0]} - Farben kommen aus den Tokens in main.css`)
-      }
-    }
-
+    const offenses = scan(paletteOffenses)
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 
   it('benutzt nur die drei Radien-Rollen und rounded-full', () => {
-    // JEDE rounded-Schreibweise einsammeln und gegen die Erlaubnisliste
-    // halten - nicht die verbotenen aufzaehlen. Eine Aufzaehlung waere
-    // lueckenhaft: sie uebersieht rounded-t-lg, rounded-l-sm und
-    // rounded-[4px] alle drei. Das ist derselbe Fehler wie ein Farb-Scan
-    // ueber eine Handvoll ausgedachter Muster, nur eine Ebene tiefer.
-    const anyRounded = /\brounded(?:-[a-z0-9[\]%.-]+)?/g
-    const ALLOWED = new Set(['rounded-card', 'rounded-field', 'rounded-btn', 'rounded-full'])
-    const offenses: string[] = []
-
-    for (const file of sources()) {
-      for (const match of readFileSync(file, 'utf8').matchAll(anyRounded)) {
-        if (ALLOWED.has(match[0])) continue
-        offenses.push(
-          `${file}: "${match[0]}" - erlaubt sind nur ${[...ALLOWED].join(', ')}. ` +
-            'Fuer eine neue Form gehoert ein Token mit Rollenbezug in main.css, kein Einzelwert.',
-        )
-      }
-    }
-
+    const offenses = scan(radiusOffenses)
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 
   it('benutzt kein line-soft, kein font-display und keinen Schatten', () => {
-    const offenses: string[] = []
-
-    for (const file of sources()) {
-      const content = readFileSync(file, 'utf8')
-      for (const match of content.matchAll(/\b(?:border|divide|bg|text|ring)-line-soft\b/g)) {
-        offenses.push(`${file}: ${match[0]} - es gibt nur noch --rm-line`)
-      }
-      // font-display setzt nur die Familie. display setzt Familie plus
-      // Breite 88 plus Laufweite - und die Breite ist der sichtbarste Teil
-      // der ganzen Designsprache. Eine Stelle, die font-display behaelt,
-      // traegt die Schrift ohne die Verengung und faellt aus dem Bild.
-      // Genau das waere hier fast passiert: font-display stand an 14
-      // Stellen in 7 Dateien, und der Plan stellte zuerst nur eine um.
-      for (const match of content.matchAll(/\bfont-display\b/g)) {
-        offenses.push(`${file}: ${match[0]} - die Display-Rolle heisst "display" und bringt die Breite mit`)
-      }
-      // Tiefe kommt aus Flaechenfarbe. Die einzige Hierarchie, die auf
-      // dieser Oberflaeche etwas bedeuten soll, ist die Seltenheit - ein
-      // Schatten, der "dieses Element ist wichtiger" sagt, konkurriert
-      // damit. shadow-none ist erlaubt, es schaltet ja gerade ab.
-      for (const match of content.matchAll(/\bshadow-(?!none\b)[a-z0-9-]+/g)) {
-        offenses.push(`${file}: ${match[0]} - die Designsprache ist flach`)
-      }
-    }
-
+    const offenses = scan(legacyOffenses)
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 
   it('wuerde jedes der drei Muster tatsaechlich melden', () => {
-    // Ein Waechter, der nur ueber heilem Code laeuft, kann auch dann gruen
-    // sein, wenn er gar nichts prueft. Also einmal die kaputten Faelle.
-    const families = new RegExp(`\\b(?:bg|text)-(?:${TAILWIND_FAMILIES.join('|')})(?:-\\d{2,3})?\\b`)
-    expect(families.test('class="text-amber-700"')).toBe(true)
-    expect(families.test('class="text-neutral-400"')).toBe(true)
-    expect(families.test('class="bg-green-700"')).toBe(true)
-    expect(families.test('class="text-rare"')).toBe(false)
+    // Diese Gegenprobe ruft DIESELBEN Funktionen auf wie die drei Tests
+    // oben. Eine Gegenprobe, die die Regexe nachbaut, beweist nur, dass ein
+    // Regex dieser Bauart greift - nicht dass der benutzte greift. Genau das
+    // hat der Review von Task 2b an der ersten Fassung dieser Waechter
+    // beanstandet, und es ist dieselbe Familie wie der Fehler, der diesen
+    // Plan ausgeloest hat: ein Test, der aus dem falschen Grund gruen ist.
+    const hits = (found: string[]) => found.map((line) => line.split(': ')[1]?.split(' - ')[0] ?? line)
 
-    const anyRounded = /\brounded(?:-[a-z0-9[\]%.-]+)?/g
-    const ALLOWED = new Set(['rounded-card', 'rounded-field', 'rounded-btn', 'rounded-full'])
-    const caught = (source: string) =>
-      [...source.matchAll(anyRounded)].map((m) => m[0]).filter((name) => !ALLOWED.has(name))
+    expect(hits(paletteOffenses('x.vue', 'class="text-amber-700"'))).toEqual(['text-amber-700'])
+    expect(hits(paletteOffenses('x.vue', 'class="text-neutral-400 bg-green-700"'))).toEqual([
+      'text-neutral-400',
+      'bg-green-700',
+    ])
+    expect(paletteOffenses('x.vue', 'class="bg-white"')).toHaveLength(1)
+    expect(paletteOffenses('x.vue', 'class="text-rare text-muted bg-surface"')).toEqual([])
 
-    expect(caught('class="rounded border"')).toEqual(['rounded'])
-    expect(caught('class="rounded-sm border"')).toEqual(['rounded-sm'])
-    expect(caught('class="rounded-2xl"')).toEqual(['rounded-2xl'])
     // Die drei Faelle, die eine Aufzaehlung der verbotenen Namen
     // uebersehen haette:
-    expect(caught('class="rounded-t-lg"')).toEqual(['rounded-t-lg'])
-    expect(caught('class="rounded-l-sm"')).toEqual(['rounded-l-sm'])
-    expect(caught('class="rounded-[4px]"')).toEqual(['rounded-[4px]'])
-    // Und die erlaubten bleiben unangetastet.
-    expect(caught('class="rounded-card bg-surface"')).toEqual([])
-    expect(caught('class="rounded-field rounded-btn rounded-full"')).toEqual([])
+    expect(radiusOffenses('x.vue', 'class="rounded border"')).toHaveLength(1)
+    expect(radiusOffenses('x.vue', 'class="rounded-sm"')).toHaveLength(1)
+    expect(radiusOffenses('x.vue', 'class="rounded-t-lg"')).toHaveLength(1)
+    expect(radiusOffenses('x.vue', 'class="rounded-l-sm"')).toHaveLength(1)
+    expect(radiusOffenses('x.vue', 'class="rounded-[4px]"')).toHaveLength(1)
+    // Und die erlaubten bleiben unangetastet, auch mit Variantenpraefix.
+    expect(radiusOffenses('x.vue', 'class="rounded-card rounded-field"')).toEqual([])
+    expect(radiusOffenses('x.vue', 'class="md:rounded-btn hover:rounded-full"')).toEqual([])
 
-    expect(/\bshadow-(?!none\b)[a-z0-9-]+/.test('class="shadow-lg"')).toBe(true)
-    expect(/\bshadow-(?!none\b)[a-z0-9-]+/.test('class="shadow-none"')).toBe(false)
-
-    expect(/\bfont-display\b/.test('class="font-display font-semibold"')).toBe(true)
-    expect(/\bfont-display\b/.test('class="display font-semibold"')).toBe(false)
+    expect(legacyOffenses('x.vue', 'class="divide-line-soft"')).toHaveLength(1)
+    expect(legacyOffenses('x.vue', 'class="font-display font-semibold"')).toHaveLength(1)
+    expect(legacyOffenses('x.vue', 'class="shadow-lg"')).toHaveLength(1)
+    expect(legacyOffenses('x.vue', 'class="shadow-none display border-line"')).toEqual([])
   })
 })
 ```
+
+**Die alte Fassung dieses Blocks ist ersetzt.** Wer den Plan in einer früheren Version gelesen hat: die
+drei Prüfungen standen dort inline in ihren Tests, und der vierte Test baute die Regexe nach. Das war der
+Befund aus dem Review von Task 2b.
 
 - [ ] **Schritt 2: Wächter laufen lassen**
 
