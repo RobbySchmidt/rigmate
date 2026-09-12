@@ -1926,9 +1926,15 @@ verschieden ausgedrückt ist, läuft auseinander.
 Ring ist die bessere Wahl, weil `ring-*` eine Farbe aus den Tokens nimmt und `outline-offset` auf einer
 gefüllten Mulde eine Lücke in der Fläche reißt.
 
+**Es sind mindestens vier Fokusbilder, nicht zwei.** Der Review von Task 6 hat zwei weitere gefunden:
+`focus-visible:bg-surface-2` am Ergebniszeilen-Knopf des `CatalogPicker`, und den **nativen
+Browser-Fokus** an den Textknöpfen (`Hinweis ausblenden`, `Entfernen`, `Diesen Eintrag anlegen`), die nie
+einen Rahmen trugen und deshalb regelkonform keinen Ring bekamen. Das war jeweils korrekt entschieden und
+als Ergebnis trotzdem unbefriedigend.
+
 **Danach zählen, nicht schätzen:** jedes interaktive Element in `app/` — `<button>`, `<a>`, `<input>`,
-`<select>`, `<textarea>`, `<NuxtLink>` — trägt genau ein Fokusmuster, und es ist dasselbe. Ein Element
-ohne jedes ist ein Befund.
+`<select>`, `<textarea>`, `<NuxtLink>` — trägt genau **ein** Fokusmuster, und es ist dasselbe. Ein Element
+ohne jedes ist ein Befund, und ein Element mit einem eigenen ebenso. Die Zahl gehört in den Bericht.
 
 - [ ] **Schritt 4: Beide Wächter laufen lassen, grün prüfen**
 
