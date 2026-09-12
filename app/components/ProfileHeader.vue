@@ -142,7 +142,7 @@ const actionClass =
            echten Wunschbreite rutschen die Aktionen stattdessen in die
            naechste Zeile. -->
       <div class="flex min-w-0 shrink grow basis-[16rem] flex-col gap-[.35rem]">
-        <h1 class="font-display text-f-4xl font-semibold leading-tight text-ink">{{ displayName }}</h1>
+        <h1 class="display text-f-4xl font-semibold leading-tight text-ink">{{ displayName }}</h1>
         <p v-if="realName" class="text-sm text-muted">{{ realName }}</p>
         <p v-if="bio" class="max-w-[60ch] text-[.9375rem] leading-relaxed text-ink">{{ bio }}</p>
         <p v-if="bands.length > 0" class="flex flex-wrap items-baseline gap-2 text-[.875rem] text-ink">

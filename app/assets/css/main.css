@@ -123,3 +123,22 @@
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
+
+/* Die Display-Rolle ist Familie plus Breite plus Laufweite zusammen und
+   steht deshalb an einer Stelle. Vorher wiederholte sich die Kombination in
+   sechs Komponenten, und die Breite fehlte ueberall.
+
+   Breite 88 verengt um 12 Prozent: an einem kurzen Wort kaum zu sehen, an
+   einem Namen oder einer Ueberschrift deutlich. Das ist die editoriale
+   Stimme der Referenz, dosiert - wir haben keinen Hero, an dem 130px Sinn
+   haetten, sondern Profilnamen bei 38px.
+
+   Kein Schriftgewicht: die Namen stehen je nach Ansicht in
+   unterschiedlichen Staerken. Dieselbe Entscheidung wie in
+   rarityNameClass(), die bewusst nur die Farbe setzt. */
+@utility display {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 88;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}

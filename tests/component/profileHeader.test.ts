@@ -176,4 +176,23 @@ describe('ProfileHeader', () => {
     expect(wrapper.get('img').attributes('alt')).toBe('Roehrenglut Ruediger')
     expect(wrapper.find('[data-initials]').exists()).toBe(false)
   })
+
+  it('setzt die Display-Rolle als eine Klasse, nicht als Einzelteile', () => {
+    const wrapper = mountHeader({
+      displayName: 'Roehrenglut Ruediger',
+      deviceCount: 4,
+      rarityCount: 1,
+      specialCount: 2,
+      mateCount: 0,
+    })
+
+    const heading = wrapper.get('h1')
+    // Positive Zusicherung: die Rolle ist EINE Klasse. Ein reines "enthaelt
+    // nicht font-display" waere auch bei einem klassenlosen h1 gruen - und
+    // ein klassenloses h1 hiesse: der Name steht in der Textschrift.
+    expect(heading.classes()).toContain('display')
+    // Und die Einzelteile duerfen daneben nicht noch einmal stehen, sonst
+    // gibt es die Rolle wieder zweimal.
+    expect(heading.classes()).not.toContain('font-display')
+  })
 })
