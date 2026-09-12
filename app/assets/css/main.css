@@ -1,69 +1,50 @@
 @import "tailwindcss";
 
-/* Farbwelt: Verstaerkerfrontplatte, Pedalgehaeuse, Werkstatt.
-   Zwei Akzente mit strikt getrennten Rollen - Petrol fuehrt durch die
-   Oberflaeche, Bernstein gehoert AUSSCHLIESSLICH der Seltenheit. Sie ist
-   bei Rigmate keine Verzierung, sondern die Mechanik, ueber die Menschen
+/* Farbwelt: Verstaerkerfrontplatte, Pedalgehaeuse, Werkstatt - nur dunkel.
+   Rigmate hat EIN Thema. Kein prefers-color-scheme, kein data-theme, kein
+   Umschalter; die Begruendung steht in Abschnitt 3.1 der Designsprache-Spec.
+   Wer hier je ein Hellthema ergaenzt, tut das als bewusste Entscheidung mit
+   eigener Spec - nicht als halb gebauten zweiten Block.
+
+   Zwei Akzente mit strikt getrennten Rollen: Petrol fuehrt durch die
+   Oberfläche, Bernstein gehoert AUSSCHLIESSLICH der Seltenheit. Sie ist bei
+   Rigmate keine Verzierung, sondern die Mechanik, ueber die Menschen
    einander finden. Wer Bernstein woanders benutzt, macht sie unlesbar. */
 :root {
-  --rm-bg: #e9e7e1;
-  --rm-surface: #faf9f6;
-  --rm-surface-2: #f1efe9;
-  --rm-ink: #191c1e;
-  --rm-muted: #6a7175;
-  --rm-line: #cfccc4;
-  --rm-line-soft: #dedbd3;
-  --rm-accent: #0d5a61;
-  --rm-accent-ink: #ffffff;
-  --rm-accent-wash: #dbe8e8;
-  --rm-rare: #a8631a;
-  --rm-rare-wash: #f4e6d3;
-  --rm-special: #8a6a34;
+  /* Die Flaechenleiter. Sie ist die EINZIGE Tiefenquelle der App, seit die
+     Rahmen weg sind - deshalb gespreizt gegenueber den alten Dunkelwerten:
+     #131617 gegen #1d2123 kam auf 1,11:1, hier sind es 1,27:1. Dunkle
+     Themen verlieren Flaechenkontrast, weil in den unteren Helligkeiten
+     wenig Luft ist. tests/unit/designTokens.test.ts haelt die Stufen fest. */
+  --rm-bg: #0e1113;
+  --rm-surface: #23282b;
+  --rm-surface-2: #30373a;
+
+  /* Genau eine Linienstaerke. Sie steht nur noch als INNERE Trennlinie
+     innerhalb einer Flaeche - nie als Rahmen um eine. Zwei Staerken waren
+     ein Erbe des Hellmodus. */
+  --rm-line: #3c4447;
+  /* Uebergangsweise, bis die 17 Benutzungen weg sind (Task 9 dieses Plans).
+     Zeigt bewusst auf denselben Wert wie --rm-line: die Unterscheidung ist
+     schon aufgehoben, nur die Aufrufstellen wissen es noch nicht. */
+  --rm-line-soft: #3c4447;
+
+  --rm-ink: #eae7e0;
+  --rm-muted: #9aa1a4;
+
+  --rm-accent: #5cb8be;
+  --rm-accent-ink: #0a1416;
+  --rm-accent-wash: #183034;
+
+  --rm-rare: #e3a862;
+  --rm-rare-wash: #2e2313;
+  --rm-special: #bd9d6b;
+
   /* Fehler und Zerstoerendes. Eigene Farbe, weil --rm-rare ausschliesslich
      der Seltenheit gehoert - ein roter Fehlertext in Bernstein waere
      doppeldeutig genau dort, wo Eindeutigkeit zaehlt. */
-  --rm-danger: #a33a2b;
-  color-scheme: light;
-}
-
-/* Nur Ueberschreibungen. Jedes Token ist oben vollstaendig definiert - eine
-   Farbe, die es nur hier drin gaebe, faellt im un-gestempelten Zustand auf
-   keinen Wert zurueck. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --rm-bg: #131617;
-    --rm-surface: #1d2123;
-    --rm-surface-2: #24292b;
-    --rm-ink: #e9e7e1;
-    --rm-muted: #929b9e;
-    --rm-line: #343b3d;
-    --rm-line-soft: #2a3032;
-    --rm-accent: #4aacb2;
-    --rm-accent-ink: #0b1416;
-    --rm-accent-wash: #1a3134;
-    --rm-rare: #dfa257;
-    --rm-rare-wash: #2e2313;
-    --rm-special: #b99a68;
-    --rm-danger: #e0897a;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --rm-bg: #131617;
-  --rm-surface: #1d2123;
-  --rm-surface-2: #24292b;
-  --rm-ink: #e9e7e1;
-  --rm-muted: #929b9e;
-  --rm-line: #343b3d;
-  --rm-line-soft: #2a3032;
-  --rm-accent: #4aacb2;
-  --rm-accent-ink: #0b1416;
-  --rm-accent-wash: #1a3134;
-  --rm-rare: #dfa257;
-  --rm-rare-wash: #2e2313;
-  --rm-special: #b99a68;
   --rm-danger: #e0897a;
+
   color-scheme: dark;
 }
 
@@ -122,6 +103,18 @@
   --color-rare-wash: var(--rm-rare-wash);
   --color-special: var(--rm-special);
   --color-danger: var(--rm-danger);
+
+  /* Radien mit Rollenbezug. Die Staffel ist die Aussage, nicht der
+     Einzelwert: unterschiedliche Ecken sagen dem Auge, dass Karte, Feld und
+     Schaltflaeche verschiedene Arten von Ding sind. Vorher hatten 56 von 62
+     Stellen denselben Wert (4px), in zwei Schreibweisen - "rounded" und
+     "rounded-sm" sind in Tailwind 4.3.3 beide 0.25rem.
+
+     Fuer vollrunde Formen gibt es Tailwinds statisches rounded-full; ein
+     eigenes Token daneben waere ein zweiter Name fuer einen Wert. */
+  --radius-card: 16px;
+  --radius-field: 10px;
+  --radius-btn: 8px;
 
   /* Display fuer Ueberschriften und Geraetenamen, Sans fuer Fliesstext,
      Mono fuer Gear-Daten - Baujahr und Finish lesen sich wie technische
