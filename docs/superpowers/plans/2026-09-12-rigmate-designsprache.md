@@ -1348,9 +1348,9 @@ Die größte Gruppe: 16 Eingabefelder und 2 Listen. Hier greift das Muster „Ei
 |---|---|
 | `rounded border border-line px-3 py-2` (Feld) | `rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `rounded border border-line px-2 py-1` (kleines Feld) | `rounded-field bg-surface-2 px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
-| `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink` |
-| `rounded bg-accent px-3 py-1 text-accent-ink` | `rounded-btn bg-accent px-3 py-1 text-accent-ink` |
-| `rounded border border-line px-4 py-2` (Knopf) | `rounded-btn bg-surface-2 px-4 py-2` |
+| `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent` |
+| `rounded bg-accent px-3 py-1 text-accent-ink` | `rounded-btn bg-accent px-3 py-1 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent` |
+| `rounded border border-line px-4 py-2` (Knopf) | `rounded-btn bg-surface-2 px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `rounded border border-line p-4` (Formularkasten) | `rounded-card bg-surface p-4` |
 | `rounded border border-line p-3` (Formularkasten) | `rounded-card bg-surface p-3` |
 | `rounded bg-surface-2 p-2` (Hinweis) | `rounded-card bg-surface-2 p-2` |
@@ -1457,8 +1457,8 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 | Heute | Neu |
 |---|---|
 | `rounded border border-line px-3 py-2` (Feld) | `rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
-| `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink` |
-| `rounded border border-line px-4 py-2` (Knopf) | `rounded-btn bg-surface-2 px-4 py-2` |
+| `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent` |
+| `rounded border border-line px-4 py-2` (Knopf) | `rounded-btn bg-surface-2 px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `<form>` ohne Fläche | `rounded-card bg-surface p-f-6` |
 | `rounded-full` am Avatarbild | bleibt |
 | `font-display` | `display` |
@@ -1566,7 +1566,7 @@ suchmaschinen-auffindbar — sie muss auch ohne Anmeldung gut aussehen.
 | Stelle | Heute | Neu |
 |---|---|---|
 | `index.vue:25` | `rounded border border-dashed border-line p-4` | `rounded-card border border-dashed border-line p-4` — gestrichelt bleibt (Leerzustand „Zufällig ausgewählt") |
-| `index.vue:28` | `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink` |
+| `index.vue:28` | `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `search.vue:101` | `w-full rounded border border-line px-3 py-2` | `w-full rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `search.vue:113`, `:125` | `divide-y divide-line-soft rounded border border-line` | `flex flex-col gap-2`, `<li>` → `rounded-card bg-surface px-4 py-3` |
 | `gear/[slug].vue:73`, `:84` | `divide-y divide-line-soft rounded border border-line` | dito |
@@ -1898,6 +1898,22 @@ stammend — sie liegen in Dateien, die dieser Task ohnehin anfasst:
   nicht.
 - **`tests/unit/designTokens.test.ts`:** `export function contrast(...)` hat keinen Verbraucher außerhalb
   der Datei. Das `export` entfernen, die Funktion selbst bleibt — sie wird in zwei Tests benutzt.
+
+Und ein drittes, das beim Umbau entstanden ist: **die App hat jetzt zwei Fokusmuster.**
+`ProfileHeader.vue` benutzt `focus-visible:outline-2 focus-visible:outline-offset-2
+focus-visible:outline-accent` — das stammt aus der Zeit vor diesem Plan. Die Felder und Knöpfe aus den
+Tasks 6 bis 8 benutzen `outline-none focus-visible:ring-2 focus-visible:ring-accent`. Beide
+funktionieren, aber es ist ein Muster zu viel, und es ist dieselbe Art Duplikat, die zu
+`shared/utils/rarityStyle.ts` und zur `display`-Utility geführt hat: eine Regel, die an zwei Orten
+verschieden ausgedrückt ist, läuft auseinander.
+
+**Auf das Ring-Muster vereinheitlichen** und die `outline-`-Variante in `ProfileHeader.vue` ersetzen. Der
+Ring ist die bessere Wahl, weil `ring-*` eine Farbe aus den Tokens nimmt und `outline-offset` auf einer
+gefüllten Mulde eine Lücke in der Fläche reißt.
+
+**Danach zählen, nicht schätzen:** jedes interaktive Element in `app/` — `<button>`, `<a>`, `<input>`,
+`<select>`, `<textarea>`, `<NuxtLink>` — trägt genau ein Fokusmuster, und es ist dasselbe. Ein Element
+ohne jedes ist ein Befund.
 
 - [ ] **Schritt 4: Beide Wächter laufen lassen, grün prüfen**
 
