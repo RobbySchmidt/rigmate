@@ -2178,7 +2178,9 @@ describe('Fokusbild in app/', () => {
     expect(focusOffenses('x.vue', 'focus-visible:bg-surface-2')).toHaveLength(1)
     expect(focusOffenses('x.vue', 'focus-visible:underline')).toHaveLength(1)
     // Farbloser Ring:
-    expect(focusOffenses('x.vue', 'focus-visible:ring-2')).toHaveLength(1)
+    // ring-2 allein bricht ZWEI Paarungen: die mit ring-accent und die mit
+    // outline-none. Zwei Befunde sind hier also richtig, nicht einer.
+    expect(focusOffenses('x.vue', 'focus-visible:ring-2')).toHaveLength(2)
     expect(focusOffenses('x.vue', 'focus-visible:ring-accent')).toHaveLength(1)
     // Das erlaubte Muster meldet nichts, auch mit Offset:
     // Ring ohne outline-none: der Browser zeigt seinen Umriss zusaetzlich.
@@ -2188,7 +2190,7 @@ describe('Fokusbild in app/', () => {
     expect(
       focusOffenses(
         'x.vue',
-        'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+        'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
       ),
     ).toEqual([])
   })
