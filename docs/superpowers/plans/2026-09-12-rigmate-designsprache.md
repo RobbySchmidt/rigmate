@@ -110,7 +110,7 @@ die Zeile vorher. Deshalb drei Fälle, und sie sind zu unterscheiden:
 
 | Der Eintrag ist … | Dann … |
 |---|---|
-| **ein Navigationsziel** (die ganze Zeile führt woanders hin) | **der Link IST die Karte.** `<li>` ohne Klassen, darin `<NuxtLink class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2">`. Das `underline` am Link **fällt weg** — in einer Karte mit Hover ist es redundant und liest sich als Wireframe. Vorbild: `PersonSuggestion.vue`, das es schon so macht. |
+| **ein Navigationsziel** (die ganze Zeile führt woanders hin) | **der Link IST die Karte.** `<li>` ohne Klassen, darin `<NuxtLink class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 outline-none focus-visible:ring-2 focus-visible:ring-accent">`. Das `underline` am Link **fällt weg** — in einer Karte mit Hover ist es redundant und liest sich als Wireframe. Vorbild: `PersonSuggestion.vue`, das es schon so macht. |
 | **eine Datenzeile mit einem Link darin** (daneben stehen Metadaten, die nicht zum Link gehören) | **die `<li>` ist die Karte**, der Link bleibt ein Link **mit** `underline` — er muss sich von den Spans daneben unterscheiden, und die Karte ist kein Navigationsziel. |
 | **ein Eintrag in einem Auswahlmenü** (Vorschlagsliste) | **eine Fläche, keine Karten.** Abstand am `<button>`, `w-full text-left`, Hover auf `bg-surface-2`. |
 
@@ -1582,7 +1582,7 @@ suchmaschinen-auffindbar — sie muss auch ohne Anmeldung gut aussehen.
 | `index.vue:25` | `rounded border border-dashed border-line p-4` | `rounded-card border border-dashed border-line p-4` — gestrichelt bleibt (Leerzustand „Zufällig ausgewählt") |
 | `index.vue:28` | `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent` |
 | `search.vue:101` | `w-full rounded border border-line px-3 py-2` | `w-full rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
-| `search.vue:113`, `:125` | `divide-y divide-line-soft rounded border border-line`, `<li class="px-3 py-2">` mit `<NuxtLink class="underline">` darin | **Navigationsziel — der Link IST die Karte.** `<ul>` → `flex flex-col gap-2`, `<li>` ohne Klassen, `<NuxtLink>` → `block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent`, **ohne `underline`** |
+| `search.vue:113`, `:125` | `divide-y divide-line-soft rounded border border-line`, `<li class="px-3 py-2">` mit `<NuxtLink class="underline">` darin | **Navigationsziel — der Link IST die Karte.** `<ul>` → `flex flex-col gap-2`, `<li>` ohne Klassen, `<NuxtLink>` → `block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 outline-none focus-visible:ring-2 focus-visible:ring-accent`, **ohne `underline`** |
 | `gear/[slug].vue:73` (Ausführungen) | dito | **Navigationsziel**, dieselbe Behandlung wie `search.vue`. Das `text-accent` am Link **bleibt** — auf dieser öffentlichen Seite ist der Akzent die Orientierung |
 | `gear/[slug].vue:84` (Spielerliste) | `<li class="flex gap-2 px-3 py-2">` mit `<NuxtLink>` **plus** zwei Metadaten-Spans (Baujahr, Finish) | **Datenzeile, kein Navigationsziel.** Die `<li>` wird die Karte: `flex gap-2 rounded-card bg-surface px-4 py-3`. Der Link bleibt ein Link **mit** `underline` und `text-accent` — er muss sich von den Spans daneben unterscheiden. Die Karte darf **nicht** anklickbar aussehen, denn sie ist es nicht |
 | `PersonSuggestion.vue:14` | `flex flex-col gap-1 rounded border border-line p-4` | `flex flex-col gap-1 rounded-card bg-surface p-4 transition-colors hover:bg-surface-2`. **Der Fokusring fehlt hier bewusst** und wird in Task 9b nachgetragen — dort werden alle Fokusbilder der App auf eines gebracht, und diese Stelle ist dort namentlich eingetragen |
@@ -2132,7 +2132,7 @@ export function focusOffenses(file: string, content: string): string[] {
   }
 
   for (const m of content.matchAll(
-    /focus-visible:(?!ring-2\b|ring-accent\b|ring-offset)[a-z][a-z0-9-]*/g,
+    /focus-visible:(?!ring-2\b|ring-accent\b|ring-offset|outline)[a-z][a-z0-9-]*/g,
   )) {
     out.push(`${file}: ${m[0]} - eigenes Fokusbild; erlaubt ist nur ring-2, ring-accent, ring-offset-*`)
   }
@@ -2144,6 +2144,17 @@ export function focusOffenses(file: string, content: string): string[] {
   const coloured = [...content.matchAll(/focus-visible:ring-accent\b/g)].length
   if (two !== coloured) {
     out.push(`${file}: ${two}x ring-2 gegen ${coloured}x ring-accent - beide gehoeren zusammen`)
+  }
+
+
+  // outline-none gehoert zum Muster wie die beiden Ring-Klassen. Fehlt es,
+  // zeigt der Browser seinen eigenen Umriss ZUSAETZLICH zum Ring - zwei
+  // Fokusbilder an einem Element, also genau das, was dieser Task abschafft.
+  // Drei Karten-Links aus Task 8 waren so gebaut, und die erste Fassung
+  // dieses Waechters konnte es nicht sehen.
+  const outlineNone = [...content.matchAll(/outline-none/g)].length
+  if (two > outlineNone) {
+    out.push(`${file}: ${two}x ring-2 gegen ${outlineNone}x outline-none - outline-none gehoert dazu`)
   }
 
   return out
@@ -2170,6 +2181,9 @@ describe('Fokusbild in app/', () => {
     expect(focusOffenses('x.vue', 'focus-visible:ring-2')).toHaveLength(1)
     expect(focusOffenses('x.vue', 'focus-visible:ring-accent')).toHaveLength(1)
     // Das erlaubte Muster meldet nichts, auch mit Offset:
+    // Ring ohne outline-none: der Browser zeigt seinen Umriss zusaetzlich.
+    expect(focusOffenses('x.vue', 'focus-visible:ring-2 focus-visible:ring-accent')).toHaveLength(1)
+    // Das vollstaendige Muster meldet nichts.
     expect(focusOffenses('x.vue', 'outline-none focus-visible:ring-2 focus-visible:ring-accent')).toEqual([])
     expect(
       focusOffenses(
