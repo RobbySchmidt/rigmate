@@ -1831,11 +1831,21 @@ Erwartet: die ersten drei Tests **PASS** (Tasks 3–8 haben aufgeräumt), der vi
 **Wenn einer der ersten drei fehlschlägt, ist eine Stelle aus den Tasks 3–8 übersehen worden.** Die
 Meldung nennt Datei und Klasse. Nachtragen, nicht den Wächter aufweichen.
 
-- [ ] **Schritt 3: `--rm-line-soft` entfernen**
+- [ ] **Schritt 3: `--rm-line-soft` entfernen und zwei Kleinigkeiten aufräumen**
 
 In `app/assets/css/main.css`:
 - die Zeile `--rm-line-soft: #3c4447;` samt dem dreizeiligen Kommentar darüber löschen
 - die Zeile `--color-line-soft: var(--rm-line-soft);` im `@theme inline`-Block löschen
+
+Dazu zwei Befunde aus dem Review von Task 1, beide kosmetisch und beide aus dem Plantext selbst
+stammend — sie liegen in Dateien, die dieser Task ohnehin anfasst:
+
+- **`app/assets/css/main.css`:** im Kommentar über `:root` steht „Petrol fuehrt durch die **Oberfläche**"
+  mit echtem Umlaut, während die ganze Datei sonst transliteriert ist (`Verstaerkerfrontplatte`,
+  `gehoert`, `Flaechenleiter`). Zu `Oberflaeche` ändern. Der Sprachtest scannt nur `.vue` und fängt das
+  nicht.
+- **`tests/unit/designTokens.test.ts`:** `export function contrast(...)` hat keinen Verbraucher außerhalb
+  der Datei. Das `export` entfernen, die Funktion selbst bleibt — sie wird in zwei Tests benutzt.
 
 - [ ] **Schritt 4: Beide Wächter laufen lassen, grün prüfen**
 
