@@ -163,27 +163,27 @@ async function uploadAvatar(event: Event) {
     <p class="text-sm text-muted">{{ t.settings.optionalHint }}</p>
     <p v-if="loadError" class="text-sm text-danger">{{ t.settings.loadError }}</p>
 
-    <form class="flex flex-col gap-4" @submit.prevent="save">
+    <form class="flex flex-col gap-4 rounded-card bg-surface p-f-6" @submit.prevent="save">
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.settings.displayName }}</span>
-        <input v-model="displayName" type="text" required minlength="2" maxlength="40" class="rounded border border-line px-3 py-2" />
+        <input v-model="displayName" type="text" required minlength="2" maxlength="40" class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
         <span class="text-xs text-muted">{{ t.settings.displayNameHint }}</span>
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.settings.realName }}</span>
-        <input v-model="realName" type="text" maxlength="80" class="rounded border border-line px-3 py-2" />
+        <input v-model="realName" type="text" maxlength="80" class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.settings.bio }}</span>
-        <textarea v-model="bio" maxlength="500" rows="4" class="rounded border border-line px-3 py-2" />
+        <textarea v-model="bio" maxlength="500" rows="4" class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.settings.bands }}</span>
-        <input v-model="bandsText" type="text" class="rounded border border-line px-3 py-2" />
+        <input v-model="bandsText" type="text" class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.settings.links }}</span>
-        <textarea v-model="linksText" rows="3" class="rounded border border-line px-3 py-2" />
+        <textarea v-model="linksText" rows="3" class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.settings.avatar }}</span>
@@ -198,7 +198,7 @@ async function uploadAvatar(event: Event) {
       <p v-if="avatarError" class="text-sm text-danger">{{ avatarError }}</p>
       <p v-if="saveError" class="text-sm text-danger">{{ saveError }}</p>
       <p v-if="saved" class="text-sm text-muted">{{ t.settings.saved }}</p>
-      <button type="submit" class="rounded bg-accent px-4 py-2 text-accent-ink">{{ t.settings.save }}</button>
+      <button type="submit" class="rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.settings.save }}</button>
     </form>
   </div>
 </template>

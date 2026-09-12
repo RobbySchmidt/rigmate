@@ -73,6 +73,30 @@ describe('settings.vue - abgelehntes Speichern', () => {
   })
 })
 
+describe('settings.vue - Designsprache', () => {
+  it('gibt jedem Feld eine Mulde mit Fokusring und dem Formular eine Karte', async () => {
+    const { wrapper } = await mountSettings({ profiles: { data: fakeOwnProfile() } })
+
+    const fields = [...wrapper.findAll('input[type="text"]'), ...wrapper.findAll('textarea')]
+    expect(fields.length).toBeGreaterThanOrEqual(5)
+
+    // Jedes Feld einzeln pruefen, nicht nur das erste: eine Schleife ueber
+    // alle ist der Unterschied zwischen "ein Feld stimmt" und "alle
+    // stimmen". Vier von fuenf umgestellt zu haben faellt sonst nicht auf.
+    const offenses: string[] = []
+    for (const field of fields) {
+      const classes = field.classes()
+      if (!classes.includes('rounded-field')) offenses.push(`${field.html().slice(0, 60)}: rounded-field fehlt`)
+      if (!classes.includes('bg-surface-2')) offenses.push(`${field.html().slice(0, 60)}: bg-surface-2 fehlt`)
+      if (!classes.includes('focus-visible:ring-accent')) offenses.push(`${field.html().slice(0, 60)}: Fokusring fehlt`)
+      if (classes.includes('border-line')) offenses.push(`${field.html().slice(0, 60)}: border-line steht noch da`)
+    }
+    expect(offenses, offenses.join('\n')).toEqual([])
+
+    expect(wrapper.get('form').classes()).toContain('rounded-card')
+  })
+})
+
 describe('settings.vue - Links validieren', () => {
   it('lehnt eine Zeile ab, die keine gueltige Adresse ist, statt sie als kaputten Link zu speichern', async () => {
     const { wrapper, supabase } = await mountSettings({ profiles: { data: fakeOwnProfile() } })

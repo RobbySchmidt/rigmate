@@ -27,17 +27,17 @@ async function submit() {
 <template>
   <div class="mx-auto max-w-sm">
     <h1 class="mb-f-6 text-f-3xl font-semibold">{{ t.auth.loginTitle }}</h1>
-    <form class="flex flex-col gap-4" @submit.prevent="submit">
+    <form class="flex flex-col gap-4 rounded-card bg-surface p-f-6" @submit.prevent="submit">
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.auth.email }}</span>
-        <input v-model="email" type="email" required class="rounded border border-line px-3 py-2" />
+        <input v-model="email" type="email" required class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
       </label>
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.auth.password }}</span>
-        <input v-model="password" type="password" required class="rounded border border-line px-3 py-2" />
+        <input v-model="password" type="password" required class="rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent" />
       </label>
       <p v-if="error" class="text-sm text-danger">{{ error }}</p>
-      <button type="submit" :disabled="pending" class="rounded bg-accent px-4 py-2 text-accent-ink">
+      <button type="submit" :disabled="pending" class="rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent">
         {{ t.auth.submitLogin }}
       </button>
     </form>
