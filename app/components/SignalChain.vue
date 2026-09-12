@@ -56,7 +56,7 @@ const t = useText()
           </span>
           <NuxtLink
             :to="`/gear/${station.slug}`"
-            class="inline-block border-b border-transparent font-display text-[.9375rem] font-semibold leading-tight no-underline hover:border-current hover:text-accent"
+            class="inline-block border-b border-transparent display text-[.9375rem] font-semibold leading-tight no-underline hover:border-current hover:text-accent"
             :class="rarityNameClass(station.rarity)"
           >
             {{ station.label }}
@@ -103,7 +103,7 @@ const t = useText()
          die es sonst wie bei addedOne/addedMany zwei Schluessel braeuchte. -->
     <div
       v-if="outsideCount > 0"
-      class="mt-4 border-t border-line-soft pt-[.9rem] text-[.8125rem] text-muted"
+      class="mt-4 border-t border-line pt-[.9rem] text-[.8125rem] text-muted"
     >
       <span class="mb-1 flex items-baseline justify-between gap-2 font-mono text-[.6875rem] uppercase tracking-widest">
         <span>{{ t.profile.chainOutsideTitle }}</span>
@@ -117,9 +117,9 @@ const t = useText()
        fremden waere sie eine Sackgasse, deshalb dort gar nichts. -->
   <div
     v-else-if="isOwn"
-    class="rounded-sm border border-dashed border-line px-4 py-[1.1rem] text-center text-sm text-muted"
+    class="rounded-card border border-dashed border-line px-4 py-[1.1rem] text-center text-sm text-muted"
   >
-    <b class="mb-1 block font-display text-[.9375rem] text-ink">{{ t.profile.chainEmptyOwn }}</b>
+    <b class="mb-1 block display text-[.9375rem] text-ink">{{ t.profile.chainEmptyOwn }}</b>
     {{ t.profile.chainEmptyOwnHint }}
   </div>
 </template>

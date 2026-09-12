@@ -40,7 +40,7 @@ describe('SignalChainEditor', () => {
     // Zwischen Ansehen und Bearbeiten darf sich die Seltenheit nicht anders
     // lesen - beide haengen an derselben Quelle.
     const wrapper = mountEditor()
-    const names = wrapper.findAll('.font-display')
+    const names = wrapper.findAll('.display')
     expect(names.map((name) => name.text())).toEqual([
       'Gretsch White Falcon',
       'Boss CE-2 Chorus',

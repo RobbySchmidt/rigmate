@@ -85,7 +85,7 @@ function remove(index: number): void {
 // deaktivierte Zustand nimmt die Zeigerereignisse mit weg, damit ein Klick am
 // Rand der Kette nicht doch noch irgendwo landet.
 const buttonClass =
-  'grid size-[1.5rem] shrink-0 place-items-center rounded-sm text-muted transition-colors ' +
+  'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted transition-colors ' +
   'hover:bg-surface hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-1 ' +
   'focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-30'
 
@@ -140,7 +140,7 @@ const buttonClass =
             <span v-if="index < stations.length - 1" class="w-px flex-1 bg-line" />
           </div>
 
-          <div class="flex select-none items-start gap-[.45rem] rounded-sm bg-surface-2 px-2 py-[.4rem]">
+          <div class="flex select-none items-start gap-[.45rem] rounded-btn bg-surface-2 px-2 py-[.4rem]">
             <!-- Der Griff ist reine Maus- und Touch-Bedienung und bleibt
                  deshalb aus dem Tab-Lauf heraus: ein fokussierbares Element,
                  das mit der Tastatur nichts kann, waere eine Sackgasse. Die
@@ -169,7 +169,7 @@ const buttonClass =
                 <span class="truncate">{{ element.category }}</span>
               </span>
               <span
-                class="block truncate font-display text-[.9375rem] font-semibold leading-tight"
+                class="block truncate display text-[.9375rem] font-semibold leading-tight"
                 :class="rarityNameClass(element.rarity)"
               >
                 {{ element.label }}
@@ -229,7 +229,7 @@ const buttonClass =
                    er nimmt nur aus der Kette, das Geraet bleibt im Rig. -->
               <button
                 type="button"
-                :class="`${buttonClass} ml-[.15rem] border-l border-line-soft`"
+                :class="`${buttonClass} ml-[.15rem] border-l border-line`"
                 :aria-label="t.profile.chainRemove"
                 :title="t.profile.chainRemove"
                 @click="remove(index)"

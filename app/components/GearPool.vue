@@ -48,7 +48,7 @@ function append(id: string): void {
 //    gelockert wird, und prevent-on-filter="false" stellt sicher, dass der
 //    Klick selbst nicht durch ein internes preventDefault() verschluckt wird.
 const appendButtonClass =
-  'grid size-[1.5rem] shrink-0 place-items-center rounded-sm text-muted transition-colors ' +
+  'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted transition-colors ' +
   'hover:bg-surface hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-1 ' +
   'focus-visible:outline-accent'
 </script>
@@ -56,7 +56,7 @@ const appendButtonClass =
 <template>
   <div class="flex flex-col gap-3">
     <div>
-      <h2 class="font-display text-[.9375rem] font-semibold text-ink">{{ t.profile.chainPoolTitle }}</h2>
+      <h2 class="display text-[.9375rem] font-semibold text-ink">{{ t.profile.chainPoolTitle }}</h2>
       <p class="mt-1 text-[.8125rem] text-muted">{{ t.profile.chainPoolHint }}</p>
     </div>
 
@@ -73,7 +73,7 @@ const appendButtonClass =
       class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2"
     >
       <template #item="{ element }">
-        <div data-gear class="flex select-none items-start gap-[.45rem] rounded-sm border border-line-soft bg-surface-2 p-2">
+        <div data-gear class="flex select-none items-start gap-[.45rem] rounded-btn bg-surface-2 p-2">
           <span
             data-grip
             aria-hidden="true"
@@ -95,7 +95,7 @@ const appendButtonClass =
               {{ element.category }}
             </span>
             <span
-              class="block truncate font-display text-[.9375rem] font-semibold leading-tight"
+              class="block truncate display text-[.9375rem] font-semibold leading-tight"
               :class="rarityNameClass(element.rarity)"
             >
               {{ element.label }}
@@ -134,7 +134,7 @@ const appendButtonClass =
          die nichts tut. -->
     <div
       v-else
-      class="rounded-sm border border-dashed border-line px-4 py-[1.1rem] text-center text-sm text-muted"
+      class="rounded-card border border-dashed border-line px-4 py-[1.1rem] text-center text-sm text-muted"
     >
       {{ t.profile.chainPoolEmpty }}
     </div>

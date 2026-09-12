@@ -51,7 +51,7 @@ describe('GearPool', () => {
 
   it('faerbt eine Besonderheit anders als ein Allerweltsgeraet', () => {
     const wrapper = mountPool()
-    const names = wrapper.findAll('[data-gear] .font-display')
+    const names = wrapper.findAll('[data-gear] .display')
     expect(names).toHaveLength(items.length)
     expect(names[0].classes()).toContain('text-special')
     expect(names[1].classes()).toContain('text-ink')
@@ -64,11 +64,23 @@ describe('GearPool', () => {
         { id: 'g5', slug: 'e', category: 'Gitarre', label: 'Gretsch White Falcon', detail: null, rarity: 'rare' as const },
       ],
     })
-    const name = wrapper.get('[data-gear] .font-display')
+    const name = wrapper.get('[data-gear] .display')
     expect(name.classes()).toContain('text-rare')
     // Die Namen stehen hier schon in font-semibold - font-medium waere eine
     // Abstufung nach unten und gehoert deshalb nur in die GearList.
     expect(name.classes()).not.toContain('font-medium')
+  })
+
+  it('zeigt Geraetekacheln als Flaeche ohne Rahmen', () => {
+    const wrapper = mountPool()
+
+    const tile = wrapper.get('[data-gear]')
+    expect(tile.classes()).toContain('rounded-btn')
+    expect(tile.classes()).toContain('bg-surface-2')
+    // Die Kachel hat eine eigene Flaeche. Ein Rahmen darum waere der
+    // Kasten, den die Rahmen-Regel verbietet.
+    expect(tile.classes()).not.toContain('border')
+    expect(tile.classes()).not.toContain('border-line-soft')
   })
 
   it('sagt es, wenn alles schon in der Kette steht', () => {
