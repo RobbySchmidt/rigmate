@@ -186,7 +186,7 @@ const actionClass =
             type="button"
             disabled
             :title="t.profile.stageTwoHint"
-            class="cursor-not-allowed text-muted opacity-60 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            class="cursor-not-allowed text-muted opacity-60"
             :class="actionClass"
           >
             {{ t.profile.follow }}
@@ -196,7 +196,7 @@ const actionClass =
             type="button"
             disabled
             :title="t.profile.stageTwoHint"
-            class="cursor-not-allowed text-muted opacity-60 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            class="cursor-not-allowed text-muted opacity-60"
             :class="actionClass"
           >
             {{ t.profile.message }}

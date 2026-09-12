@@ -47,9 +47,14 @@ function append(id: string): void {
 //    auch dann von jeder Zug-Heuristik aus, wenn handle spaeter einmal
 //    gelockert wird, und prevent-on-filter="false" stellt sicher, dass der
 //    Klick selbst nicht durch ein internes preventDefault() verschluckt wird.
+// Farb-Hover statt Flaechen-Hover: der Knopf sitzt in einer bg-surface-2-
+// Kachel, und die Leiter hat nur drei Stufen. hover:bg-surface waere hier
+// dunkler als der Grund und risse ein Loch in die Kachel statt sie
+// hervorzuheben - Hellmodus-Logik, die beim Spreizen der Leiter nicht
+// mitgezogen wurde.
 const appendButtonClass =
   'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted outline-none transition-colors ' +
-  'hover:bg-surface hover:text-accent focus-visible:ring-2 focus-visible:ring-accent'
+  'hover:text-accent focus-visible:ring-2 focus-visible:ring-accent'
 </script>
 
 <template>

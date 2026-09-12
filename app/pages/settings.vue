@@ -159,7 +159,7 @@ async function uploadAvatar(event: Event) {
 
 <template>
   <div class="mx-auto flex max-w-lg flex-col gap-4">
-    <h1 class="text-f-4xl font-semibold">{{ t.settings.title }}</h1>
+    <h1 class="display text-f-4xl font-semibold">{{ t.settings.title }}</h1>
     <p class="text-sm text-muted">{{ t.settings.optionalHint }}</p>
     <p v-if="loadError" class="text-sm text-danger">{{ t.settings.loadError }}</p>
 

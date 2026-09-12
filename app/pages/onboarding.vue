@@ -61,7 +61,7 @@ const countLabel = computed(() =>
 <template>
   <div class="mx-auto flex max-w-lg flex-col gap-f-8">
     <div>
-      <h1 class="mb-3 text-f-4xl font-semibold">{{ t.onboarding.title }}</h1>
+      <h1 class="mb-3 display text-f-4xl font-semibold">{{ t.onboarding.title }}</h1>
       <p class="text-muted">{{ t.onboarding.intro }}</p>
     </div>
 

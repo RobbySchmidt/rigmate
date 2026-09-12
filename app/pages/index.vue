@@ -16,7 +16,7 @@ const recommendationsError = computed(() => !!error.value)
 
 <template>
   <div class="flex flex-col gap-f-8">
-    <h1 class="text-f-4xl font-semibold">{{ t.suggestions.title }}</h1>
+    <h1 class="display text-f-4xl font-semibold">{{ t.suggestions.title }}</h1>
 
     <p v-if="recommendationsError" class="text-danger">{{ t.suggestions.loadError }}</p>
     <template v-else>

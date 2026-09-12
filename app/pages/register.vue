@@ -36,7 +36,7 @@ async function submit() {
 
 <template>
   <div class="mx-auto max-w-sm">
-    <h1 class="mb-f-6 text-f-3xl font-semibold">{{ t.auth.registerTitle }}</h1>
+    <h1 class="mb-f-6 display text-f-3xl font-semibold">{{ t.auth.registerTitle }}</h1>
     <template v-if="sent">
       <p class="text-f-lg">{{ t.auth.confirmSent }}</p>
       <NuxtLink to="/login" class="mt-4 block rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.auth.confirmSentLoginHint }}</NuxtLink>

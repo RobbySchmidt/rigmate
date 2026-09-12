@@ -93,7 +93,7 @@ watch(term, (value) => {
 
 <template>
   <div class="flex flex-col gap-f-8">
-    <h1 class="text-f-4xl font-semibold">{{ t.search.title }}</h1>
+    <h1 class="display text-f-4xl font-semibold">{{ t.search.title }}</h1>
     <input
       v-model="term"
       type="search"
@@ -109,7 +109,7 @@ watch(term, (value) => {
     <p v-if="searchError" class="text-danger">{{ t.search.searchError }}</p>
     <template v-else>
       <section v-if="(data?.catalog ?? []).length > 0">
-        <h2 class="mb-3 text-f-2xl font-semibold">{{ t.search.gearHeading }}</h2>
+        <h2 class="mb-3 display text-f-2xl font-semibold">{{ t.search.gearHeading }}</h2>
         <ul class="flex flex-col gap-2">
           <li v-for="hit in data.catalog" :key="hit.id">
             <NuxtLink
@@ -123,7 +123,7 @@ watch(term, (value) => {
       </section>
 
       <section>
-        <h2 class="mb-3 text-f-2xl font-semibold">{{ t.search.peopleHeading }}</h2>
+        <h2 class="mb-3 display text-f-2xl font-semibold">{{ t.search.peopleHeading }}</h2>
         <p v-if="!user" class="text-muted">{{ t.search.peopleLoginHint }}</p>
         <ul v-else-if="(data?.people ?? []).length > 0" class="flex flex-col gap-2">
           <li v-for="hit in data.people" :key="hit.userId">

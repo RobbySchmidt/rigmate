@@ -222,10 +222,10 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
 
 <template>
   <div class="flex flex-col gap-f-12">
-    <h1 class="text-f-4xl font-semibold">{{ t.rig.title }}</h1>
+    <h1 class="display text-f-4xl font-semibold">{{ t.rig.title }}</h1>
 
     <section class="flex flex-col gap-4">
-      <h2 class="text-f-2xl font-semibold">{{ t.rig.gear }}</h2>
+      <h2 class="display text-f-2xl font-semibold">{{ t.rig.gear }}</h2>
       <CatalogPicker v-if="!pendingItem" :create-handler="createCatalogItem" @select="addToRig" />
       <GearItemForm
         v-else
@@ -260,7 +260,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
     </section>
 
     <section class="flex flex-col gap-4">
-      <h2 class="text-f-2xl font-semibold">{{ t.rig.wishlist }}</h2>
+      <h2 class="display text-f-2xl font-semibold">{{ t.rig.wishlist }}</h2>
       <CatalogPicker :create-handler="createCatalogItem" @select="addWish" />
       <p v-if="wishlistError" class="text-sm text-danger">{{ wishlistError }}</p>
       <p v-if="wishlistLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>

@@ -104,6 +104,29 @@ describe('Designtokens in main.css', () => {
       if (!(name in radii)) offenses.push(`${name} fehlt in @theme inline`)
     }
 
+    // Die Signaturleistung des Branches: die Display-Rolle ist Familie plus
+    // Breite 88 plus Laufweite. designUtilities.test.ts verbietet nur
+    // font-display in app/ und shared/ - es prueft nicht, ob @utility
+    // display selbst noch existiert oder noch die richtige Breite setzt.
+    // Faellt der Block weg oder aendert sich der wdth-Wert, faellt jede
+    // Ueberschrift wortlos auf die Sans-Schrift ohne Verengung zurueck, und
+    // alle anderen Tests bleiben gruen, weil sie nur den Klassennamen
+    // "display" am Element pruefen, nicht die Utility dahinter.
+    const displayBlock = /@utility\s+display\s*\{([^}]*)\}/.exec(css)
+    if (!displayBlock) {
+      offenses.push('@utility display fehlt in main.css')
+    } else if (!/font-variation-settings\s*:\s*[^;]*"wdth"\s*88\b/.test(displayBlock[1])) {
+      offenses.push('@utility display setzt "wdth" nicht mehr auf 88')
+    }
+
+    // Und die Achse muss bei Google Fonts ueberhaupt angefordert sein -
+    // ohne sie liefert die Schriftdatei keine variable Breite, und die
+    // font-variation-settings-Deklaration oben liefe ins Leere.
+    const nuxtConfig = readFileSync('nuxt.config.ts', 'utf8')
+    if (!/family=Archivo:wdth,wght@/.test(nuxtConfig)) {
+      offenses.push('nuxt.config.ts fordert die wdth-Achse fuer Archivo nicht mehr an')
+    }
+
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 
@@ -131,6 +154,15 @@ describe('Designtokens in main.css', () => {
       ['--rm-special', '--rm-surface', 'Besonderheit auf Karte'],
       ['--rm-danger', '--rm-bg', 'Fehler auf Grund'],
       ['--rm-danger', '--rm-surface', 'Fehler auf Karte'],
+      // Vier Paare, die tatsaechlich benutzt werden (Eingabefelder und
+      // andere abgesetzte Flaechen), aber bislang keine Abdeckung hatten.
+      // Nachgerechnet: special auf surface-2 liegt bei 4,73 - nur 0,23 Luft
+      // ueber AA, und genau special ist die Auszeichnung, ueber die Menschen
+      // einander finden.
+      ['--rm-rare', '--rm-surface-2', 'Raritaet auf abgesetzter Flaeche'],
+      ['--rm-special', '--rm-surface-2', 'Besonderheit auf abgesetzter Flaeche'],
+      ['--rm-accent', '--rm-surface-2', 'Interaktiv auf abgesetzter Flaeche'],
+      ['--rm-danger', '--rm-surface-2', 'Fehler auf abgesetzter Flaeche'],
     ]
 
     // Flaechenstufen. Sie sind die EINZIGE Tiefenquelle der App, seit die

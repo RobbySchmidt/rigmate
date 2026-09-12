@@ -55,7 +55,7 @@ const rarityClass = computed(() => rarityNameClass(data.value?.item.rarityBase ?
   <article v-if="data" class="flex flex-col gap-f-8">
     <header class="flex flex-col gap-2">
       <p class="text-sm text-muted">{{ categoryLabel }}</p>
-      <h1 class="text-f-5xl font-semibold">{{ data.item.brandName }} {{ data.item.name }}</h1>
+      <h1 class="display text-f-5xl font-semibold">{{ data.item.brandName }} {{ data.item.name }}</h1>
       <p class="text-sm text-muted">
         <span data-rarity :class="rarityClass">{{ t.rarity[data.item.rarityBase as keyof typeof t.rarity] }}</span> ·
         {{ t.gearPage.playersCount.replace('{count}', String(data.stats.ownerCount)) }} ·
@@ -69,7 +69,7 @@ const rarityClass = computed(() => rarityNameClass(data.value?.item.rarityBase ?
     </header>
 
     <section v-if="data.variants.length > 0">
-      <h2 class="mb-3 text-f-2xl font-semibold">{{ t.gearPage.variants }}</h2>
+      <h2 class="mb-3 display text-f-2xl font-semibold">{{ t.gearPage.variants }}</h2>
       <ul class="flex flex-col gap-2">
         <li v-for="variant in data.variants" :key="variant.id">
           <NuxtLink
@@ -83,7 +83,7 @@ const rarityClass = computed(() => rarityNameClass(data.value?.item.rarityBase ?
     </section>
 
     <section>
-      <h2 class="mb-3 text-f-2xl font-semibold">{{ t.gearPage.players }}</h2>
+      <h2 class="mb-3 display text-f-2xl font-semibold">{{ t.gearPage.players }}</h2>
       <p v-if="!user" class="text-muted">{{ t.gearPage.signInToSeePlayers }}</p>
       <p v-else-if="data.players.length === 0" class="text-muted">{{ t.gearPage.noPlayers }}</p>
       <ul v-else class="flex flex-col gap-2">

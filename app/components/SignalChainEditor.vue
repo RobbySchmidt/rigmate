@@ -84,9 +84,15 @@ function remove(index: number): void {
 // Ein Knopf, drei Mal: gleiche Groesse, gleiche Zurueckhaltung. Der
 // deaktivierte Zustand nimmt die Zeigerereignisse mit weg, damit ein Klick am
 // Rand der Kette nicht doch noch irgendwo landet.
+//
+// Farb-Hover statt Flaechen-Hover: der Knopf sitzt in einer bg-surface-2-
+// Kachel, und die Leiter hat nur drei Stufen. hover:bg-surface waere hier
+// dunkler als der Grund und risse ein Loch in die Kachel statt sie
+// hervorzuheben - Hellmodus-Logik, die beim Spreizen der Leiter nicht
+// mitgezogen wurde.
 const buttonClass =
   'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted outline-none transition-colors ' +
-  'hover:bg-surface hover:text-accent focus-visible:ring-2 focus-visible:ring-accent ' +
+  'hover:text-accent focus-visible:ring-2 focus-visible:ring-accent ' +
   'disabled:pointer-events-none disabled:opacity-30'
 
 // ZUM #item-SLOT UNTEN - und warum der Hinweis hier steht statt dort:

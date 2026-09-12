@@ -26,7 +26,7 @@ async function submit() {
 
 <template>
   <div class="mx-auto max-w-sm">
-    <h1 class="mb-f-6 text-f-3xl font-semibold">{{ t.auth.loginTitle }}</h1>
+    <h1 class="mb-f-6 display text-f-3xl font-semibold">{{ t.auth.loginTitle }}</h1>
     <form class="flex flex-col gap-4 rounded-card bg-surface p-f-6" @submit.prevent="submit">
       <label class="flex flex-col gap-1">
         <span class="text-sm">{{ t.auth.email }}</span>

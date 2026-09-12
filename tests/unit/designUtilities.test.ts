@@ -3,12 +3,11 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 function walk(dir: string): string[] {
-  let entries: string[]
-  try {
-    entries = readdirSync(dir)
-  } catch {
-    return []
-  }
+  // Kein aeusseres try/catch mehr: ein verschwundenes Wurzelverzeichnis soll
+  // laut scheitern, nicht als "nichts gefunden" durchgehen - siehe
+  // tests/unit/locale.test.ts und tests/unit/draggableItemSlot.test.ts fuer
+  // dasselbe Muster.
+  const entries = readdirSync(dir)
   return entries.flatMap((name) => {
     const full = join(dir, name)
     try {
@@ -104,7 +103,15 @@ function legacyOffenses(file: string, content: string): string[] {
 }
 
 function scan(check: (file: string, content: string) => string[]): string[] {
-  return sources().flatMap((file) => check(file, readFileSync(file, 'utf8')))
+  const files = sources()
+  // Ohne diese Zusicherung waere jede der drei Pruefungen unten GRUEN, wenn
+  // sources() aus irgendeinem Grund (falscher Pfad, leeres Verzeichnis)
+  // fast nichts mehr findet - offenses bliebe dann leer, ohne dass etwas
+  // geprueft wurde. Heute liegen 39 .vue/.ts-Dateien unter app/ und shared/.
+  expect(files.length, 'Der Waechter hat kaum eine Datei gesehen - Pfade pruefen').toBeGreaterThan(
+    20,
+  )
+  return files.flatMap((file) => check(file, readFileSync(file, 'utf8')))
 }
 
 describe('Design-Utilities in app/ und shared/', () => {

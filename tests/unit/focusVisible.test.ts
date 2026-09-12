@@ -3,12 +3,11 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 function walk(dir: string): string[] {
-  let entries: string[]
-  try {
-    entries = readdirSync(dir)
-  } catch {
-    return []
-  }
+  // Kein aeusseres try/catch mehr: ein verschwundenes Wurzelverzeichnis soll
+  // laut scheitern, nicht als "nichts gefunden" durchgehen - siehe
+  // tests/unit/locale.test.ts und tests/unit/draggableItemSlot.test.ts fuer
+  // dasselbe Muster.
+  const entries = readdirSync(dir)
   return entries.flatMap((name) => {
     const full = join(dir, name)
     try {
@@ -73,14 +72,32 @@ export function focusOffenses(file: string, content: string): string[] {
     out.push(`${file}: ${two}x ring-2 gegen ${outlineNone}x outline-none - outline-none gehoert dazu`)
   }
 
+  // Dasselbe Paar-Argument wie bei ring-2/ring-accent, nur fuer den Versatz:
+  // in Tailwind 4.3.3 ist der Anfangswert von --tw-ring-offset-color #fff -
+  // ein blankes ring-offset-2 zieht auf dieser dunklen Palette einen
+  // WEISSEN Spalt. Heute unbenutzt, also latent.
+  const offsetTwo = [...content.matchAll(/focus-visible:ring-offset-2\b/g)].length
+  const offsetSurface = [...content.matchAll(/focus-visible:ring-offset-surface\b/g)].length
+  if (offsetTwo !== offsetSurface) {
+    out.push(
+      `${file}: ${offsetTwo}x ring-offset-2 gegen ${offsetSurface}x ring-offset-surface - beide gehoeren zusammen`,
+    )
+  }
+
   return out
 }
 
 describe('Fokusbild in app/', () => {
   it('benutzt genau ein Muster, ueberall', () => {
-    const offenses = walk('app')
-      .filter((file) => file.endsWith('.vue'))
-      .flatMap((file) => focusOffenses(file, readFileSync(file, 'utf8')))
+    const files = walk('app').filter((file) => file.endsWith('.vue'))
+    // Ohne diese Zusicherung waere der Test GRUEN, wenn walk('app') aus
+    // irgendeinem Grund (falscher Pfad, leeres Verzeichnis) fast nichts mehr
+    // findet - offenses bliebe dann leer, ohne dass etwas geprueft wurde.
+    // Heute liegen 24 .vue-Dateien unter app/.
+    expect(files.length, 'Der Waechter hat kaum eine Datei gesehen - Pfade pruefen').toBeGreaterThan(
+      10,
+    )
+    const offenses = files.flatMap((file) => focusOffenses(file, readFileSync(file, 'utf8')))
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 
@@ -103,8 +120,14 @@ describe('Fokusbild in app/', () => {
     expect(
       focusOffenses('x.vue', 'outline-none focus-visible:ring-2 focus-visible:ring-accent'),
     ).toEqual([])
+    // Dasselbe Paarungsargument fuer den Versatz: ring-offset-2 ohne
+    // ring-offset-surface faellt auf Tailwinds Anfangswert #fff zurueck.
+    expect(focusOffenses('x.vue', 'focus-visible:ring-offset-2')).toHaveLength(1)
+    expect(focusOffenses('x.vue', 'focus-visible:ring-offset-surface')).toHaveLength(1)
+    expect(
+      focusOffenses('x.vue', 'focus-visible:ring-offset-2 focus-visible:ring-offset-surface'),
+    ).toEqual([])
     // Das erlaubte Muster meldet nichts, auch mit Offset:
-    expect(focusOffenses('x.vue', 'outline-none focus-visible:ring-2 focus-visible:ring-accent')).toEqual([])
     expect(
       focusOffenses(
         'x.vue',

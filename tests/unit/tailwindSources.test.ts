@@ -9,12 +9,11 @@ const CSS_PATH = 'app/assets/css/main.css'
 const CODE_DIRS = ['app', 'shared', 'server', 'scripts']
 
 function walk(dir: string): string[] {
-  let entries: string[]
-  try {
-    entries = readdirSync(dir)
-  } catch {
-    return []
-  }
+  // Kein aeusseres try/catch mehr: ein verschwundenes Wurzelverzeichnis soll
+  // laut scheitern, nicht als "nichts gefunden" durchgehen - siehe
+  // tests/unit/locale.test.ts und tests/unit/draggableItemSlot.test.ts fuer
+  // dasselbe Muster.
+  const entries = readdirSync(dir)
   return entries.flatMap((name) => {
     const full = join(dir, name)
     try {
@@ -37,16 +36,39 @@ function projectColorNames(css: string): string[] {
 }
 
 /**
- * Ob ein Quelltext eine der Projekt-Farbutilities benutzt (bg-rare,
- * text-muted, border-special, divide-line, ...). Steht einmal auf
- * Modulebene, damit die Gegenprobe unten sie aufruft statt den Regex
+ * Dieselbe Ableitung fuer die Radien- und Schrift-Tokens: --radius-card ->
+ * "card", --font-mono -> "mono". Ein 'rounded-card'- oder 'font-mono'-String
+ * in shared/utils/rarityStyle.ts waere sonst so unsichtbar gewesen wie es
+ * 'border-special' vor diesem Waechter war.
+ */
+function projectRadiusNames(css: string): string[] {
+  return [...css.matchAll(/--radius-([a-z0-9-]+)\s*:/g)].map((match) => match[1])
+}
+
+function projectFontNames(css: string): string[] {
+  return [...css.matchAll(/--font-([a-z0-9-]+)\s*:/g)].map((match) => match[1])
+}
+
+const COLOR_UTILITY_PREFIXES = [
+  'bg', 'text', 'border', 'divide', 'ring', 'outline', 'fill', 'stroke', 'from', 'via', 'to',
+]
+
+/**
+ * Ob ein Quelltext eine der Projekt-Utilities benutzt (bg-rare, text-muted,
+ * border-special, divide-line, rounded-card, font-mono, ...). Steht einmal
+ * auf Modulebene, damit die Gegenprobe unten sie aufruft statt den Regex
  * nachzubauen - ein nachgebauter Regex wuerde nur beweisen, dass ein Regex
  * dieser Bauart greift, nicht dass der tatsaechlich benutzte greift.
+ *
+ * `prefixes` ist konfigurierbar, weil Radien und Schriften andere
+ * Praefixe tragen als Farben: rounded-card, nicht bg-card.
  */
-function carriesProjectUtility(content: string, names: string[]): boolean {
-  const utility = new RegExp(
-    `\\b(?:bg|text|border|divide|ring|outline|fill|stroke|from|via|to)-(?:${names.join('|')})\\b`,
-  )
+function carriesProjectUtility(
+  content: string,
+  names: string[],
+  prefixes: string[] = COLOR_UTILITY_PREFIXES,
+): boolean {
+  const utility = new RegExp(`\\b(?:${prefixes.join('|')})-(?:${names.join('|')})\\b`)
   return utility.test(content)
 }
 
@@ -65,7 +87,22 @@ describe('Tailwind-Scanabdeckung', () => {
   it('nennt jedes Verzeichnis mit Projekt-Utilities in einem @source', () => {
     const css = readFileSync(CSS_PATH, 'utf8')
     const names = projectColorNames(css)
+    const radiusNames = projectRadiusNames(css)
+    const fontNames = projectFontNames(css)
     expect(names.length).toBeGreaterThan(5)
+    expect(radiusNames.length).toBeGreaterThan(0)
+    expect(fontNames.length).toBeGreaterThan(0)
+
+    // Nichtleerheits-Zusicherung: heute liegen ueber app/shared/server/
+    // scripts zusammen 60 Dateien. Ohne diese Zusicherung waere der Test
+    // GRUEN, wenn walk() aus irgendeinem Grund (falscher Pfad, leeres
+    // Verzeichnis) fast nichts mehr findet - offenses bliebe dann einfach
+    // leer, ohne dass etwas geprueft wurde.
+    const totalFiles = CODE_DIRS.reduce((sum, dir) => sum + walk(dir).length, 0)
+    expect(
+      totalFiles,
+      'Der Waechter hat in app/shared/server/scripts kaum Dateien gesehen - Pfade pruefen',
+    ).toBeGreaterThan(30)
 
     // Wo main.css selbst liegt, scannt Tailwind von sich aus - das ist
     // empirisch belegt: Klassen aus app/ landen im gebauten CSS, Klassen
@@ -81,7 +118,14 @@ describe('Tailwind-Scanabdeckung', () => {
 
       const carriers = walk(dir)
         .filter((file) => file.endsWith('.ts') || file.endsWith('.vue'))
-        .filter((file) => carriesProjectUtility(readFileSync(file, 'utf8'), names))
+        .filter((file) => {
+          const text = readFileSync(file, 'utf8')
+          return (
+            carriesProjectUtility(text, names) ||
+            carriesProjectUtility(text, radiusNames, ['rounded']) ||
+            carriesProjectUtility(text, fontNames, ['font'])
+          )
+        })
 
       if (carriers.length > 0 && !declared.has(dir)) {
         offenses.push(
@@ -112,6 +156,13 @@ describe('Tailwind-Scanabdeckung', () => {
     )
     expect(carriesProjectUtility(`return 'bg-rare border-rare'`, names)).toBe(true)
     expect(carriesProjectUtility(`return 'text-ink'`, names)).toBe(false)
+
+    // Dieselbe Erkennung fuer Radien und Schriften, mit ihren eigenen
+    // Praefixen: 'rounded-card' und 'font-mono' sind keine bg-/text-/...
+    // Utilities und wuerden ohne den Praefix-Parameter unentdeckt bleiben.
+    expect(carriesProjectUtility(`return 'rounded-card'`, ['card'], ['rounded'])).toBe(true)
+    expect(carriesProjectUtility(`return 'font-mono'`, ['mono'], ['font'])).toBe(true)
+    expect(carriesProjectUtility(`return 'text-ink'`, ['card'], ['rounded'])).toBe(false)
 
     // Und eine Zusicherung, die tatsaechlich etwas aussagt, statt einer
     // Menge nur ein Element abzufragen, das nie hineingelangen konnte:

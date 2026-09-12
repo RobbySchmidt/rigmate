@@ -401,7 +401,7 @@ const feedListClass = 'flex flex-col gap-2'
       </ClientOnly>
 
       <div v-else class="flex min-w-0 flex-col gap-3.5">
-        <h2 class="font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted">{{ t.profile.feedTitle }}</h2>
+        <h2 class="display font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted">{{ t.profile.feedTitle }}</h2>
         <!-- Drei Zustaende, drei Texte: der Verlaufsteil haengt an derselben
              Abfrage wie das Rig, also darf ein Ladefehler hier nicht als
              "Noch nichts passiert" durchgehen. -->
