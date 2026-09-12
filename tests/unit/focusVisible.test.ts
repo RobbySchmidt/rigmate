@@ -63,6 +63,16 @@ export function focusOffenses(file: string, content: string): string[] {
     out.push(`${file}: ${two}x ring-2 gegen ${coloured}x ring-accent - beide gehoeren zusammen`)
   }
 
+  // outline-none gehoert zum Muster wie die beiden Ring-Klassen. Fehlt es,
+  // zeigt der Browser seinen eigenen Umriss ZUSAETZLICH zum Ring - zwei
+  // Fokusbilder an einem Element, also genau das, was dieser Task abschafft.
+  // Drei Karten-Links aus Task 8 waren so gebaut, und der Waechter konnte es
+  // in seiner ersten Fassung nicht sehen.
+  const outlineNone = [...content.matchAll(/\boutline-none\b/g)].length
+  if (two > outlineNone) {
+    out.push(`${file}: ${two}x ring-2 gegen ${outlineNone}x outline-none - outline-none gehoert dazu`)
+  }
+
   return out
 }
 
@@ -83,15 +93,22 @@ describe('Fokusbild in app/', () => {
     expect(focusOffenses('x.vue', 'focus-visible:outline-accent')).toHaveLength(1)
     expect(focusOffenses('x.vue', 'focus-visible:bg-surface-2')).toHaveLength(1)
     expect(focusOffenses('x.vue', 'focus-visible:underline')).toHaveLength(1)
-    // Farbloser Ring:
-    expect(focusOffenses('x.vue', 'focus-visible:ring-2')).toHaveLength(1)
+    // Farbloser Ring UND fehlendes outline-none - zwei unabhaengige
+    // Befunde fuer dieselbe Eingabe, seit outline-none mitgezaehlt wird.
+    expect(focusOffenses('x.vue', 'focus-visible:ring-2')).toHaveLength(2)
     expect(focusOffenses('x.vue', 'focus-visible:ring-accent')).toHaveLength(1)
+    // Ring ohne outline-none: der Browser zeigt seinen Umriss zusaetzlich.
+    expect(focusOffenses('x.vue', 'focus-visible:ring-2 focus-visible:ring-accent')).toHaveLength(1)
+    // Mit outline-none ist das Muster vollstaendig und meldet nichts.
+    expect(
+      focusOffenses('x.vue', 'outline-none focus-visible:ring-2 focus-visible:ring-accent'),
+    ).toEqual([])
     // Das erlaubte Muster meldet nichts, auch mit Offset:
     expect(focusOffenses('x.vue', 'outline-none focus-visible:ring-2 focus-visible:ring-accent')).toEqual([])
     expect(
       focusOffenses(
         'x.vue',
-        'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+        'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
       ),
     ).toEqual([])
   })
