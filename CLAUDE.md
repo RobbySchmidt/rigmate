@@ -149,6 +149,25 @@ Die Schwester davon: **Tests, die aus dem falschen Grund grün sind.** Ebenfalls
 
 ## Was noch aussteht
 
+### Zuerst: die visuelle Ueberarbeitung
+
+> **Wiedereinstieg (Stand 12. September 2026).** Hier wurde ein Chat beendet, weil der Kontext voll lief. Der Arbeitsbaum ist sauber, `main` und `development` stehen beide auf `796c37c`, alles gepusht — **es liegt nichts Halbfertiges herum.**
+>
+> **Robbys Auftrag:** „Ich würde als nächstes die Visualität überarbeiten. Momentan sieht gar nichts nach einer ordentlichen Social-Media-Plattform aus. Machst du mir bitte ein paar Farbpaletten und ein paar Mockups für die Profilseite?"
+>
+> **Sein Befund, wörtlich:** *„Alles wirkt eben wie ein Wireframe-Prototyp mit bisschen Style. Einfach ein ordentliches Design wäre cool."* Das trifft zu: es gibt Farbtokens, aber keine gestalterische Substanz — keine Schattenhierarchie, keine Radien-Systematik, kaum typografische Spannung, Flächen mit Rahmen statt Gewicht.
+>
+> **Der nächste Schritt liegt bei ihm:** Er wollte eine **Design-Referenz** schicken (Screenshot oder Link) und sagen, was ihn daran überzeugt. **Ohne die Referenz nicht anfangen** — sie bestimmt die Richtung, und ohne sie werden die Paletten geraten.
+>
+> **Bereits geklärt, nicht neu fragen:**
+>
+> - **Klassifizierung: architektural.** Eine neue Designsprache überschreibt Abschnitt 3 der [Profil-Spec](docs/superpowers/specs/2026-09-07-rigmate-profil-design.md) und trifft jede Seite. Die Mockups sind in diesem Prozess die „2–3 Ansätze"; danach folgen Spec und Plan.
+> - **Rigmate hat strukturell fast keine Bilder.** Der Avatar ist eine eingefärbte Fläche mit Initialen (Upload existiert, ist ungetestet), `catalog_items.image_path` ist optional und nirgends gefüllt, der Feed besteht aus Rig-Ereignissen als Textzeilen. **Instagram-Anmutung ist damit nicht zu haben**, ohne vorher Datenmodell und Storage anzufassen. Erreichbar ist die Dichte von Letterboxd oder Discogs, wo ebenfalls Katalogdaten die Hauptsache sind — das ist ohnehin das Vorbild aus Abschnitt 1 der Hauptspec.
+>
+> **Harte Randbedingungen für jede neue Palette** (Einzelheiten unter „Architekturregeln"): Bernstein (`--rm-rare`, `--rm-special`) gehört **ausschließlich** der Seltenheit und darf nirgends sonst auftauchen; jedes Token muss dreifach stehen (`:root`, `@media (prefers-color-scheme: dark)`, `[data-theme="dark"]`); eine Farbe wird erst durch ihre Utility im `@theme inline`-Block wahr.
+>
+> **Gleich mit erledigen, wenn die Oberfläche ohnehin angefasst wird:** die offene Kontrastfrage zu `--rm-muted` (4,01:1 im Hellmodus, unter AA) und der visuelle Durchgang durch `/rig` und die Profilseite, hell und dunkel — beides steht unten schon länger.
+
 ### Reste aus dem Profilumbau
 
 **Der Profilumbau liegt seit dem 11. September 2026 auf `main`**, der Branch `feature/profil-umbau` ist gelöscht. `app/` enthält keine fest verdrahtete Palettenfarbe mehr — geprüft über einen Scan aller Tailwind-Farbfamilien, nicht über die vier Muster aus dem Plan (die ließen `amber-*`, `green-700` und `neutral-400` durch). Der Dunkelmodus ist durchgängig statt halb.
