@@ -330,6 +330,17 @@ const dangerClass = 'text-danger'
 // darum waere dieselbe Flaeche in derselben Flaeche - eine Ebene zu viel.
 // Der Abstand zwischen den Karten steht deshalb hier, nicht die Flaeche.
 const feedListClass = 'flex flex-col gap-2'
+
+// Das <h2> ueber der Feed-Liste ("Verlauf") traegt bewusst KEIN display:
+// font-mono uppercase tracking-[.1em] text-muted bei 11px ist nach Spec
+// §3.5 die Daten-Rolle (Versal-Label), nicht die Display-Rolle. Das Tag
+// ist <h2> aus Dokumentstruktur-Gruenden, nicht weil es gestalterisch eine
+// Ueberschrift waere. display wuerde hier ausserdem toten Code erzeugen:
+// .display steht im gebauten CSS vor .font-mono, bei gleicher Spezifitaet
+// gewinnt also font-mono und die font-family aus display liefe ins Leere -
+// uebrig bliebe nur ein letter-spacing, das gegen das absichtliche
+// tracking-[.1em] arbeitet, und ein font-variation-settings auf einer
+// Schrift ohne Breitenachse.
 </script>
 
 <template>
@@ -401,7 +412,7 @@ const feedListClass = 'flex flex-col gap-2'
       </ClientOnly>
 
       <div v-else class="flex min-w-0 flex-col gap-3.5">
-        <h2 class="display font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted">{{ t.profile.feedTitle }}</h2>
+        <h2 class="font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted">{{ t.profile.feedTitle }}</h2>
         <!-- Drei Zustaende, drei Texte: der Verlaufsteil haengt an derselben
              Abfrage wie das Rig, also darf ein Ladefehler hier nicht als
              "Noch nichts passiert" durchgehen. -->
