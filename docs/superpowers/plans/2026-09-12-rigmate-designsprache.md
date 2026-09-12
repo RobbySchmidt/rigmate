@@ -2217,6 +2217,21 @@ sie stillschweigend zu bauen.
 Inhalt. Dort ist der native Fokus in Ordnung; benenn diese Stellen im Bericht, damit die Nachher-Zählung
 aufgeht.
 
+- [ ] **Schritt 4b: Zwei Reste aus dem Review von Task 9**
+
+Beide klein, beide in Testdateien, die du ohnehin anfasst:
+
+- **`tests/unit/designUtilities.test.ts`:** `paletteOffenses`, `radiusOffenses` und `legacyOffenses`
+  tragen `export`, haben aber keinen Verbraucher außerhalb der Datei. Dasselbe Bild, das in Task 9
+  zum Entfernen des `export` an `contrast()` geführt hat — ein Widerspruch innerhalb desselben Tasks.
+  Das `export` an allen drei entfernen; die Funktionen bleiben, der vierte Test benutzt sie ja.
+- **`tests/unit/tailwindSources.test.ts`:** sein `walk()` fängt `readdirSync` ab, aber nicht
+  `statSync` — die Fassung in `designUtilities.test.ts` tut beides. Zwei Fassungen derselben Funktion,
+  die auseinanderlaufen, sind genau die Sorte Duplikat, um die es in diesem Plan durchgehend geht.
+  Die `statSync`-Absicherung nachziehen, damit beide gleich sind. **Nicht** zu einem gemeinsamen Helfer
+  zusammenlegen: es gibt kein `tests/helpers` für Quelltext-Wächter, und das Muster „jede Testdatei hat
+  ihr eigenes `walk()`" ist im Projekt etabliert (`locale.test.ts`, `draggableItemSlot.test.ts`).
+
 - [ ] **Schritt 5: Wächter und Suite laufen lassen**
 
 Run: `yarn vitest run tests/unit/focusVisible.test.ts` → PASS, beide Tests.
