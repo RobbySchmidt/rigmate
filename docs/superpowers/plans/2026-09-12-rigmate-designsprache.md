@@ -1261,7 +1261,7 @@ In `tests/component/gearPool.test.ts` ergänzen:
     // Die Kachel hat eine eigene Flaeche. Ein Rahmen darum waere der
     // Kasten, den die Rahmen-Regel verbietet.
     expect(tile.classes()).not.toContain('border')
-    expect(tile.classes()).not.toContain('border-line-soft|font-display')
+    expect(tile.classes()).not.toContain('border-line-soft')
   })
 ```
 
@@ -1269,7 +1269,7 @@ In `tests/component/gearPool.test.ts` ergänzen:
 
 Run: `yarn vitest run tests/component/gearPool.test.ts -t "Geraetekacheln"`
 
-Erwartet: **FAIL** — `expected [ 'rounded-sm', 'border', 'border-line-soft|font-display', 'bg-surface-2' ] to contain 'rounded-btn'`.
+Erwartet: **FAIL** — `expected [ 'rounded-sm', 'border', 'border-line-soft', 'bg-surface-2' ] to contain 'rounded-btn'`.
 
 - [ ] **Schritt 3: Die drei Dateien nach der Urteilstabelle umstellen**
 
@@ -1604,7 +1604,7 @@ In `tests/component/search.test.ts` ergänzen:
 
 Run: `yarn vitest run tests/component/search.test.ts -t "Karten mit Abstand"`
 
-Erwartet: **FAIL** — `expected [ 'divide-y', 'divide-line-soft|font-display', 'rounded', 'border', 'border-line' ] to contain 'gap-2'`.
+Erwartet: **FAIL** — `expected [ 'divide-y', 'divide-line-soft', 'rounded', 'border', 'border-line' ] to contain 'gap-2'`.
 
 - [ ] **Schritt 3: Die vier Dateien nach der Urteilstabelle umstellen**
 
@@ -1915,12 +1915,35 @@ Erwartet: PASS, 537 Tests.
 - [ ] **Schritt 6: Belegen, dass die Klasse wirklich verschwunden ist**
 
 ```bash
-curl -s http://localhost:3000/_nuxt/assets/css/main.css | grep -c 'line-soft|font-display'
+# Erst belegen, WELCHE App antwortet - Port 3000 ist auf diesem Rechner fremdbelegt,
+# Nuxt weicht auf 3001 aus.
+curl -s http://localhost:3001/ | grep -o '<title>[^<]*</title>'
+curl -s http://localhost:3001/_nuxt/assets/css/main.css > css-probe.txt
+
+grep -cE 'line-soft' css-probe.txt       # erwartet: 0
+grep -cE 'rounded-card' css-probe.txt    # erwartet: mindestens 1
 ```
 
-Erwartet: `0`. **Achtung:** `divide-*` bekommt einen Kindselektor
+Der zweite Befehl ist die **Kontrollprobe**, und er ist nicht optional: ohne ihn belegt eine Null beim
+ersten Befehl nur, dass irgendetwas nichts gefunden hat — eine leere Datei, eine falsche URL, ein
+vertipptes Muster. Erst wenn `rounded-card` **trifft**, heißt die Null beim ersten, dass `line-soft`
+wirklich weg ist.
+
+**Genau hier stand vorher ein Defekt**, und er ist lehrreich genug, um dokumentiert zu bleiben: der
+Befehl lautete `grep -c 'line-soft|font-display'` — **ohne `-E`**. In der Grundsyntax von `grep` ist das
+`|` ein wörtliches Zeichen, das Muster hätte also nach der Zeichenfolge `line-soft|font-display` gesucht
+und nie etwas gefunden. `grep -c` hätte `0` zurückgegeben, und `0` war das erwartete Ergebnis. **Die
+Prüfung hätte immer bestanden, ohne etwas zu prüfen** — derselbe Fehler, gegen den die Wächter dieses
+Plans gebaut sind, in der Prüfvorschrift des Plans selbst. Er kam von einer unvorsichtigen globalen
+Ersetzung, die `line-soft'` in mehreren Zusammenhängen traf, auch in String-Literalen.
+
+**`font-display` wird hier bewusst nicht am CSS geprüft:** das Token `--font-display` existiert in
+`@theme inline` weiter und wird von der `display`-Utility benutzt, ein Treffer wäre also richtig und
+sagte nichts. Die Abwesenheit der **Klasse** `font-display` prüft `designUtilities.test.ts` am Quelltext.
+
+**Und noch ein Fallstrick:** `divide-*` bekommt einen Kindselektor
 (`.divide-line-soft > :not(:last-child)`) — ein Muster auf `.divide-line-soft {` findet das nicht und
-meldet fälschlich „schon weg".
+meldet fälschlich „schon weg". Deshalb steht oben `line-soft` ohne Punkt und ohne Klammer.
 
 - [ ] **Schritt 7: Committen**
 
