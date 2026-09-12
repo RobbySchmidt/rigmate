@@ -99,6 +99,34 @@ NEU:  <ul class="flex flex-col gap-2">
         <li class="rounded-card bg-surface px-4 py-3">…</li>
 ```
 
+**Muster „`font-display` wird `display`".** Gilt für **jedes** Vorkommen, ohne Ausnahme:
+
+```
+ALT:  class="font-display text-f-2xl font-semibold"
+NEU:  class="display text-f-2xl font-semibold"
+```
+
+`font-display` setzt nur die Familie. `display` setzt Familie **plus Breite 88 plus Laufweite plus
+tabular-nums** — und die Breite ist der sichtbarste Teil der ganzen Designsprache. Eine Stelle, die
+`font-display` behält, trägt die Schrift ohne die Verengung und fällt dadurch aus dem Bild.
+
+**Wo `display` die Zahlenformatierung schon mitbringt, fällt ein daneben stehendes `tabular-nums` weg** —
+sonst steht es zweimal.
+
+Das sind **14 Stellen in 7 Dateien**, und sie gehören den Tasks, die die Datei ohnehin besitzen:
+
+| Datei | Zeilen (Stand 12. September 2026) | Task |
+|---|---|---|
+| `app/layouts/default.vue` | 21 | 3 |
+| `app/components/ProfileHeader.vue` | 133, 145, 211, 215, 219, 230 | 2 (nur die `<h1>`), **4 (alle übrigen)** |
+| `app/components/GearPanel.vue` | 254 | 4 |
+| `app/components/FeedItem.vue` | 65 | 4 |
+| `app/components/GearPool.vue` | 59, 98 | 5 |
+| `app/components/SignalChain.vue` | 59, 122 | 5 |
+| `app/components/SignalChainEditor.vue` | 172 | 5 |
+
+Task 9 prüft die Vollständigkeit maschinell — verlassen wird sich darauf nicht.
+
 ---
 
 ## Was dieser Plan über die Spec hinaus festlegt
@@ -729,7 +757,14 @@ Run: `sed -n '1,40p' app/app.vue`
 steht, ist **nichts zu tun** — dann diesen Schritt abhaken und weiter. Falls dort eine Hintergrundfarbe
 oder ein Rahmen steht, gilt dieselbe Regel wie überall: Fläche statt Rahmen.
 
-- [ ] **Schritt 5: Tests laufen lassen, grün prüfen**
+- [ ] **Schritt 5: Gegenprobe und Testlauf**
+
+```bash
+grep -nE 'rounded(-sm)?[" ]|line-soft|font-display' app/app.vue app/layouts/default.vue
+```
+
+Erwartet: keine Ausgabe. Insbesondere muss `font-display` in `default.vue:21` durch `display` ersetzt
+sein — sonst trägt der Markenname in der Navigationsleiste die Schrift ohne die Verengung.
 
 Run: `yarn test`
 
@@ -737,8 +772,9 @@ Erwartet: PASS, 525 Tests.
 
 - [ ] **Schritt 6: Im Browser ansehen**
 
-`yarn dev`, dann `/` öffnen. Die Leiste muss als abgesetzte Karte auf dem Grund stehen. Fenster auf
-~400px verengen: die Navigation darf umbrechen, aber nichts darf abgeschnitten werden.
+`yarn dev`, dann `/` öffnen. Die Leiste muss als abgesetzte Karte auf dem Grund stehen. Der Markenname
+„Rigmate" muss **schmaler** stehen als vorher — wenn nicht, ist die `display`-Utility nicht angekommen.
+Fenster auf ~400px verengen: die Navigation darf umbrechen, aber nichts darf abgeschnitten werden.
 
 - [ ] **Schritt 7: Committen**
 
@@ -850,7 +886,7 @@ den sechs Dateien übrig bleiben.
 Gegenprobe nach dem Umbau:
 
 ```bash
-grep -nE 'rounded(-sm)?[" ]|line-soft' app/pages/profile/\[id\].vue app/components/{ProfileHeader,GearPanel,GearList,RarityPip,FeedItem}.vue
+grep -nE 'rounded(-sm)?[" ]|line-soft|font-display' app/pages/profile/\[id\].vue app/components/{ProfileHeader,GearPanel,GearList,RarityPip,FeedItem}.vue
 ```
 
 Erwartet: keine Ausgabe.
@@ -943,7 +979,7 @@ In `tests/component/gearPool.test.ts` ergänzen:
     // Die Kachel hat eine eigene Flaeche. Ein Rahmen darum waere der
     // Kasten, den die Rahmen-Regel verbietet.
     expect(tile.classes()).not.toContain('border')
-    expect(tile.classes()).not.toContain('border-line-soft')
+    expect(tile.classes()).not.toContain('border-line-soft|font-display')
   })
 ```
 
@@ -951,7 +987,7 @@ In `tests/component/gearPool.test.ts` ergänzen:
 
 Run: `yarn vitest run tests/component/gearPool.test.ts -t "Geraetekacheln"`
 
-Erwartet: **FAIL** — `expected [ 'rounded-sm', 'border', 'border-line-soft', 'bg-surface-2' ] to contain 'rounded-btn'`.
+Erwartet: **FAIL** — `expected [ 'rounded-sm', 'border', 'border-line-soft|font-display', 'bg-surface-2' ] to contain 'rounded-btn'`.
 
 - [ ] **Schritt 3: Die drei Dateien nach der Urteilstabelle umstellen**
 
@@ -967,7 +1003,7 @@ Erwartet: **FAIL** — `expected [ 'rounded-sm', 'border', 'border-line-soft', '
 Gegenprobe:
 
 ```bash
-grep -nE 'rounded(-sm)?[" ]|line-soft' app/components/{SignalChain,SignalChainEditor,GearPool}.vue
+grep -nE 'rounded(-sm)?[" ]|line-soft|font-display' app/components/{SignalChain,SignalChainEditor,GearPool}.vue
 ```
 
 Erwartet: keine Ausgabe.
@@ -1078,7 +1114,7 @@ Erwartet: **FAIL** — `to contain 'rounded-field'`.
 Gegenprobe:
 
 ```bash
-grep -nE 'rounded(-sm)?[" ]|line-soft' app/pages/{rig,onboarding}.vue app/components/{GearItemForm,CatalogPicker}.vue
+grep -nE 'rounded(-sm)?[" ]|line-soft|font-display' app/pages/{rig,onboarding}.vue app/components/{GearItemForm,CatalogPicker}.vue
 ```
 
 Erwartet: keine Ausgabe.
@@ -1136,7 +1172,16 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 ### Ersetzungen
 
-Dieselbe Tabelle wie in Task 6. Konkret:
+| Heute | Neu |
+|---|---|
+| `rounded border border-line px-3 py-2` (Feld) | `rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent` |
+| `rounded bg-accent px-4 py-2 text-accent-ink` | `rounded-btn bg-accent px-4 py-2 text-accent-ink` |
+| `rounded border border-line px-4 py-2` (Knopf) | `rounded-btn bg-surface-2 px-4 py-2` |
+| `<form>` ohne Fläche | `rounded-card bg-surface p-f-6` |
+| `rounded-full` am Avatarbild | bleibt |
+| `font-display` | `display` |
+
+Je Datei:
 
 | Datei | Stellen |
 |---|---|
@@ -1184,7 +1229,7 @@ Erwartet: **FAIL** mit fünf Befunden, einem je Feld.
 Gegenprobe:
 
 ```bash
-grep -nE 'rounded(-sm)?[" ]|line-soft' app/pages/{login,register,confirm,settings}.vue
+grep -nE 'rounded(-sm)?[" ]|line-soft|font-display' app/pages/{login,register,confirm,settings}.vue
 ```
 
 Erwartet: keine Ausgabe.
@@ -1277,14 +1322,14 @@ In `tests/component/search.test.ts` ergänzen:
 
 Run: `yarn vitest run tests/component/search.test.ts -t "Karten mit Abstand"`
 
-Erwartet: **FAIL** — `expected [ 'divide-y', 'divide-line-soft', 'rounded', 'border', 'border-line' ] to contain 'gap-2'`.
+Erwartet: **FAIL** — `expected [ 'divide-y', 'divide-line-soft|font-display', 'rounded', 'border', 'border-line' ] to contain 'gap-2'`.
 
 - [ ] **Schritt 3: Die vier Dateien nach der Urteilstabelle umstellen**
 
 Gegenprobe:
 
 ```bash
-grep -nE 'rounded(-sm)?[" ]|line-soft' app/pages/{index,search}.vue app/pages/gear/\[slug\].vue app/components/PersonSuggestion.vue
+grep -nE 'rounded(-sm)?[" ]|line-soft|font-display' app/pages/{index,search}.vue app/pages/gear/\[slug\].vue app/components/PersonSuggestion.vue
 ```
 
 Erwartet: keine Ausgabe.
@@ -1431,13 +1476,22 @@ describe('Design-Utilities in app/ und shared/', () => {
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 
-  it('benutzt kein line-soft und keinen Schatten', () => {
+  it('benutzt kein line-soft, kein font-display und keinen Schatten', () => {
     const offenses: string[] = []
 
     for (const file of sources()) {
       const content = readFileSync(file, 'utf8')
       for (const match of content.matchAll(/\b(?:border|divide|bg|text|ring)-line-soft\b/g)) {
         offenses.push(`${file}: ${match[0]} - es gibt nur noch --rm-line`)
+      }
+      // font-display setzt nur die Familie. display setzt Familie plus
+      // Breite 88 plus Laufweite - und die Breite ist der sichtbarste Teil
+      // der ganzen Designsprache. Eine Stelle, die font-display behaelt,
+      // traegt die Schrift ohne die Verengung und faellt aus dem Bild.
+      // Genau das waere hier fast passiert: font-display stand an 14
+      // Stellen in 7 Dateien, und der Plan stellte zuerst nur eine um.
+      for (const match of content.matchAll(/\bfont-display\b/g)) {
+        offenses.push(`${file}: ${match[0]} - die Display-Rolle heisst "display" und bringt die Breite mit`)
       }
       // Tiefe kommt aus Flaechenfarbe. Die einzige Hierarchie, die auf
       // dieser Oberflaeche etwas bedeuten soll, ist die Seltenheit - ein
@@ -1479,6 +1533,9 @@ describe('Design-Utilities in app/ und shared/', () => {
 
     expect(/\bshadow-(?!none\b)[a-z0-9-]+/.test('class="shadow-lg"')).toBe(true)
     expect(/\bshadow-(?!none\b)[a-z0-9-]+/.test('class="shadow-none"')).toBe(false)
+
+    expect(/\bfont-display\b/.test('class="font-display font-semibold"')).toBe(true)
+    expect(/\bfont-display\b/.test('class="display font-semibold"')).toBe(false)
   })
 })
 ```
@@ -1514,7 +1571,7 @@ Erwartet: PASS, 535 Tests.
 - [ ] **Schritt 6: Belegen, dass die Klasse wirklich verschwunden ist**
 
 ```bash
-curl -s http://localhost:3000/_nuxt/assets/css/main.css | grep -c 'line-soft'
+curl -s http://localhost:3000/_nuxt/assets/css/main.css | grep -c 'line-soft|font-display'
 ```
 
 Erwartet: `0`. **Achtung:** `divide-*` bekommt einen Kindselektor
