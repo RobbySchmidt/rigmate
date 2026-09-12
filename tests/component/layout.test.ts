@@ -64,4 +64,18 @@ describe('Layout-Navigation', () => {
     expect(hrefs.some((href) => href?.startsWith('/profile/'))).toBe(false)
     expect(wrapper.text()).not.toContain(de.nav.profile)
   })
+
+  it('traegt die Kopfleiste als Flaeche, nicht als Kasten mit Linie', () => {
+    const wrapper = mountLayout('alice-1')
+
+    const header = wrapper.get('header')
+    // Positive Zusicherung: die Leiste IST eine Flaeche mit Ecke.
+    expect(header.classes()).toContain('bg-surface')
+    expect(header.classes()).toContain('rounded-card')
+    // Und sie trennt sich nicht mehr mit einer Linie. Die Flaechenstufe
+    // gegen bg-bg leistet das; eine Linie obendrauf waere die doppelte
+    // Auszeichnung, die die Rahmen-Regel verbietet.
+    expect(header.classes()).not.toContain('border-b')
+    expect(header.classes()).not.toContain('border-line')
+  })
 })
