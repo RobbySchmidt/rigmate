@@ -58,11 +58,12 @@ const actionText = computed(() =>
 
 <template>
   <article
+    data-event
     :aria-label="t.profile.feedEventLabel"
-    class="flex flex-col gap-[.6rem] border-b border-line-soft pb-4 last:border-b-0"
+    class="flex flex-col gap-[.6rem] rounded-card bg-surface p-4"
   >
     <p class="flex flex-wrap items-baseline gap-x-[.35rem] text-[.875rem] text-muted">
-      <span class="font-display text-[.9375rem] font-semibold text-ink">{{ displayName }}</span>
+      <span class="display text-[.9375rem] font-semibold text-ink">{{ displayName }}</span>
       <span>{{ actionText }}</span>
       <!-- datetime traegt den unveraenderten ISO-Tag: die sichtbare
            Schreibweise ist fuer Menschen, das Attribut fuer Maschinen. -->
@@ -89,7 +90,7 @@ const actionText = computed(() =>
     <p
       v-if="event.hasRarity"
       data-rarity-hint
-      class="flex flex-wrap items-baseline gap-x-2 rounded-sm border-l-2 border-rare bg-rare-wash px-3 py-[.4rem] text-[.8125rem] text-ink"
+      class="flex flex-wrap items-baseline gap-x-2 rounded-card border-l-2 border-rare bg-rare-wash px-3 py-[.4rem] text-[.8125rem] text-ink"
     >
       <span class="font-mono text-[.6875rem] uppercase tracking-[.1em] text-rare">{{ t.profile.feedRareTitle }}</span>
       <span>{{ t.profile.feedRareHint }}</span>

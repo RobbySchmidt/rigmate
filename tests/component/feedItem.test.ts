@@ -120,6 +120,15 @@ describe('FeedItem', () => {
     expect(without.text()).not.toContain(de.profile.feedRareHint)
   })
 
+  it('ist eine eigene Karte, keine Zeile mit Trennlinie', () => {
+    const wrapper = mountItem()
+
+    const root = wrapper.get('[data-event]')
+    expect(root.classes()).toContain('rounded-card')
+    expect(root.classes()).toContain('bg-surface')
+    expect(root.classes()).not.toContain('border-b')
+  })
+
   it('schreibt den Tag deutsch und haelt das ISO-Datum maschinenlesbar', () => {
     // Bewusst ohne Date und ohne toLocaleDateString: die Seite rendert
     // serverseitig, und ein Server mit anderer Standardsprache oder

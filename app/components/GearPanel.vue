@@ -155,9 +155,9 @@ function dropped(next: ChainStation[]): void {
 
 function tabClass(selected: boolean): string {
   return [
-    '-mb-px border-b-2 px-[.15rem] pb-[.55rem] font-mono text-[.6875rem] uppercase tracking-[.1em] transition-colors',
+    'rounded-full px-3 py-1 font-mono text-[.6875rem] uppercase tracking-[.1em] transition-colors',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-    selected ? 'border-accent text-ink' : 'border-transparent text-muted hover:text-ink',
+    selected ? 'bg-accent-wash text-accent' : 'bg-surface-2 text-muted hover:text-ink',
   ].join(' ')
 }
 
@@ -169,7 +169,7 @@ const dangerClass = 'text-danger'
 
 <template>
   <div class="flex flex-col gap-4">
-    <div role="tablist" :aria-label="t.profile.tabsLabel" class="flex gap-5 border-b border-line-soft">
+    <div role="tablist" :aria-label="t.profile.tabsLabel" class="flex gap-2">
       <button
         id="gear-panel-tab-equipment"
         ref="equipmentTab"
@@ -247,11 +247,11 @@ const dangerClass = 'text-danger'
             item-key="id"
             :group="{ name: 'chain', pull: true, put: true }"
             ghost-class="opacity-40"
-            class="grid min-h-[6.5rem] place-items-center rounded-sm border border-dashed border-line px-4 py-6 text-center text-sm text-muted"
+            class="grid min-h-[6.5rem] place-items-center rounded-card border border-dashed border-line px-4 py-6 text-center text-sm text-muted"
             @update:model-value="dropped"
           >
             <template #item="{ element }">
-              <span class="font-display text-[.9375rem] font-semibold" :class="rarityNameClass(element.rarity)">
+              <span class="display text-[.9375rem] font-semibold" :class="rarityNameClass(element.rarity)">
                 {{ element.label }}
               </span>
             </template>
@@ -275,7 +275,7 @@ const dangerClass = 'text-danger'
           <button
             v-if="editing"
             type="button"
-            class="rounded-sm border border-line px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-ink transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             @click="emit('done')"
           >
             {{ t.profile.chainDone }}
@@ -283,7 +283,7 @@ const dangerClass = 'text-danger'
           <button
             v-else
             type="button"
-            class="rounded-sm border border-line px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             @click="emit('edit')"
           >
             {{ t.profile.chainEdit }}
@@ -296,7 +296,7 @@ const dangerClass = 'text-danger'
       v-if="showSaveState"
       role="status"
       aria-live="polite"
-      class="flex flex-wrap items-center gap-2 border-t border-line-soft pt-3 text-[.8125rem]"
+      class="flex flex-wrap items-center gap-2 border-t border-line pt-3 text-[.8125rem]"
       :class="saveStatus === 'error' ? dangerClass : 'text-muted'"
     >
       <span v-if="saveStatus === 'pending'">{{ t.profile.chainSaving }}</span>
@@ -305,7 +305,7 @@ const dangerClass = 'text-danger'
         <span>{{ saveErrorText }}</span>
         <button
           type="button"
-          class="rounded-sm border border-current px-2 py-[.15rem] font-mono text-[.6875rem] uppercase tracking-[.1em] transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          class="rounded-btn border border-current px-2 py-[.15rem] font-mono text-[.6875rem] uppercase tracking-[.1em] transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           @click="emit('retry')"
         >
           {{ t.profile.chainRetry }}

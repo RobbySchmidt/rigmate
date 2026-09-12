@@ -324,6 +324,12 @@ const specialCount = computed(
 // einen Stelle statt viermal im Template - dasselbe Vorgehen wie in
 // GearPanel.vue und ProfileHeader.vue.
 const dangerClass = 'text-danger'
+
+// Kein Kartenrahmen um die Feed-Liste: jeder FeedItem-Eintrag ist bereits
+// selbst eine Karte (bg-surface, siehe FeedItem.vue). Eine zweite Karte
+// darum waere dieselbe Flaeche in derselben Flaeche - eine Ebene zu viel.
+// Der Abstand zwischen den Karten steht deshalb hier, nicht die Flaeche.
+const feedListClass = 'flex flex-col gap-2'
 </script>
 
 <template>
@@ -353,7 +359,7 @@ const dangerClass = 'text-danger'
       <!-- Das Panel bekommt den Ladefehler als eigene Prop: eine leere
            Kette, ein leeres Rig und ein gescheiterter Request sind drei
            Zustaende und muessen drei bleiben (Abschnitt 7). -->
-      <div class="flex min-w-0 flex-col gap-3">
+      <div class="flex min-w-0 flex-col gap-3 rounded-card bg-surface p-f-6">
         <GearPanel
           :groups="gearGroups"
           :stations="stations"
@@ -401,12 +407,14 @@ const dangerClass = 'text-danger'
              "Noch nichts passiert" durchgehen. -->
         <p v-if="rigError" class="text-sm" :class="dangerClass">{{ t.profile.feedError }}</p>
         <p v-else-if="rigEvents.length === 0" class="text-sm text-muted">{{ t.profile.feedEmpty }}</p>
-        <FeedItem
-          v-for="event in rigEvents"
-          :key="event.day"
-          :event="event"
-          :display-name="profile.display_name"
-        />
+        <div :class="feedListClass">
+          <FeedItem
+            v-for="event in rigEvents"
+            :key="event.day"
+            :event="event"
+            :display-name="profile.display_name"
+          />
+        </div>
       </div>
     </div>
   </div>

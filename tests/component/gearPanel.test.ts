@@ -142,6 +142,25 @@ describe('GearPanel', () => {
     expect(wrapper.findAll('[data-count]').length).toBeGreaterThan(0)
   })
 
+  it('zeigt den aktiven Reiter als Pille mit Akzentflaeche', () => {
+    const wrapper = mountPanel()
+
+    const found = tabs(wrapper)
+    expect(found.length).toBe(2)
+
+    const active = found.find((tab) => tab.attributes('aria-selected') === 'true')
+    expect(active).toBeTruthy()
+    // Positive Zusicherung: die Pille IST eine Akzentflaeche.
+    expect(active!.classes()).toContain('rounded-full')
+    expect(active!.classes()).toContain('bg-accent-wash')
+
+    const inactive = found.find((tab) => tab.attributes('aria-selected') !== 'true')
+    expect(inactive!.classes()).toContain('bg-surface-2')
+    // Der Unterstrich unter der Reiterzeile ist weg (P3): eine Pille, die
+    // durch ihre Flaeche aktiv ist, braucht keine zweite Auszeichnung.
+    expect(wrapper.get('[role="tablist"]').classes()).not.toContain('border-b')
+  })
+
   it('verdrahtet Reiter und Panel ueber ARIA', () => {
     const wrapper = mountPanel()
     expect(wrapper.find('[role="tablist"]').attributes('aria-label')).toBe(de.profile.tabsLabel)

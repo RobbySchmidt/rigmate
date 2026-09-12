@@ -114,23 +114,23 @@ const statClass =
   'flex flex-col-reverse gap-[.15rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted'
 
 const actionClass =
-  'rounded-sm border border-line px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] transition-colors'
+  'rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] transition-colors'
 </script>
 
 <template>
-  <header class="flex flex-col gap-f-6 border-b border-line-soft pb-f-6">
+  <header class="flex flex-col gap-f-6 rounded-card bg-surface p-f-6">
     <div class="flex flex-wrap items-start gap-5">
       <img
         v-if="avatarUrl"
         :src="avatarUrl"
         :alt="displayName"
-        class="size-20 shrink-0 rounded-full border border-line object-cover"
+        class="size-20 shrink-0 rounded-full object-cover"
       />
       <span
         v-else
         data-initials
         aria-hidden="true"
-        class="grid size-20 shrink-0 place-items-center rounded-full border border-line bg-surface-2 font-display text-f-2xl font-semibold text-muted"
+        class="grid size-20 shrink-0 place-items-center rounded-full bg-accent-wash display text-f-2xl font-semibold text-accent"
       >
         {{ initials }}
       </span>
@@ -175,7 +175,7 @@ const actionClass =
           v-if="isOwn"
           data-action="edit"
           to="/settings"
-          class="text-ink no-underline hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          class="text-ink no-underline hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           :class="actionClass"
         >
           {{ t.profile.editCta }}
@@ -208,15 +208,15 @@ const actionClass =
     <dl class="flex flex-wrap gap-x-8 gap-y-3">
       <div data-stat="devices" :class="statClass">
         <dt data-label>{{ t.profile.statDevices }}</dt>
-        <dd data-value class="font-display text-f-2xl font-semibold tabular-nums text-ink">{{ deviceCount }}</dd>
+        <dd data-value class="display text-f-2xl font-semibold text-ink">{{ deviceCount }}</dd>
       </div>
       <div data-stat="rarities" :class="statClass">
         <dt data-label>{{ t.profile.statRarities }}</dt>
-        <dd data-value class="font-display text-f-2xl font-semibold tabular-nums text-rare">{{ rarityCount }}</dd>
+        <dd data-value class="display text-f-2xl font-semibold text-rare">{{ rarityCount }}</dd>
       </div>
       <div data-stat="specials" :class="statClass">
         <dt data-label>{{ t.profile.statSpecials }}</dt>
-        <dd data-value class="font-display text-f-2xl font-semibold tabular-nums text-special">{{ specialCount }}</dd>
+        <dd data-value class="display text-f-2xl font-semibold text-special">{{ specialCount }}</dd>
       </div>
       <div
         data-stat="mates"
@@ -227,7 +227,7 @@ const actionClass =
         <dt data-label>{{ t.profile.statMates }}</dt>
         <dd
           data-value
-          class="font-display text-f-2xl font-semibold tabular-nums"
+          class="display text-f-2xl font-semibold"
           :class="mateState === 'error' ? dangerClass : 'text-ink'"
         >
           {{ mateValue }}

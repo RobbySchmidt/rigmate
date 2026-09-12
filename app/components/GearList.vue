@@ -61,7 +61,7 @@ function entryNameClass(rarity: RarityBase | null): string {
   <div class="flex flex-col gap-[1.15rem]">
     <div v-for="group in filled" :key="group.key" class="flex flex-col gap-1">
       <div
-        class="flex items-baseline justify-between border-b border-line-soft pb-1 font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted"
+        class="flex items-baseline justify-between border-b border-line pb-1 font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted"
       >
         <span>{{ group.label }}</span>
         <span data-count class="tabular-nums opacity-70">{{ group.entries.length }}</span>
@@ -90,7 +90,7 @@ function entryNameClass(rarity: RarityBase | null): string {
 
     <div
       v-if="hasMarked"
-      class="flex flex-wrap gap-3 border-t border-line-soft pt-[.9rem] font-mono text-[.6875rem] text-muted"
+      class="flex flex-wrap gap-3 border-t border-line pt-[.9rem] font-mono text-[.6875rem] text-muted"
     >
       <span class="inline-flex items-center gap-[.3rem]">
         <RarityPip rarity="rare" /> {{ t.rarity.rare }}
