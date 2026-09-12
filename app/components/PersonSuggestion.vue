@@ -11,7 +11,7 @@ const text = computed(() => useRecommendationReason(props.reason, props.matchCou
 </script>
 
 <template>
-  <NuxtLink :to="`/profile/${userId}`" class="flex flex-col gap-1 rounded border border-line p-4">
+  <NuxtLink :to="`/profile/${userId}`" class="flex flex-col gap-1 rounded-card bg-surface p-4 transition-colors hover:bg-surface-2">
     <span class="text-f-lg font-medium">{{ displayName }}</span>
     <span class="text-sm text-muted">{{ text }}</span>
     <span v-if="!reason" data-fallback class="text-xs text-muted opacity-70">{{ t.suggestions.fallbackBadge }}</span>

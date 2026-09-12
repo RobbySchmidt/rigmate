@@ -22,10 +22,13 @@ const recommendationsError = computed(() => !!error.value)
     <template v-else>
       <!-- Die Leere erklaeren statt kaschieren: der leere Zustand bringt der
            App ihr eigenes Prinzip bei. -->
-      <div v-if="data?.fallback" class="rounded border border-dashed border-line p-4">
+      <div v-if="data?.fallback" class="rounded-card border border-dashed border-line p-4">
         <p class="mb-2 font-medium">{{ t.suggestions.emptyTitle }}</p>
         <p class="mb-4 text-muted">{{ t.suggestions.emptyBody }}</p>
-        <NuxtLink to="/onboarding" class="rounded bg-accent px-4 py-2 text-accent-ink">
+        <NuxtLink
+          to="/onboarding"
+          class="rounded-btn bg-accent px-4 py-2 text-accent-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
           {{ t.suggestions.emptyCta }}
         </NuxtLink>
       </div>

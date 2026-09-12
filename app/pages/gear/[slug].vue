@@ -70,9 +70,14 @@ const rarityClass = computed(() => rarityNameClass(data.value?.item.rarityBase ?
 
     <section v-if="data.variants.length > 0">
       <h2 class="mb-3 text-f-2xl font-semibold">{{ t.gearPage.variants }}</h2>
-      <ul class="divide-y divide-line-soft rounded border border-line">
-        <li v-for="variant in data.variants" :key="variant.id" class="px-3 py-2">
-          <NuxtLink :to="`/gear/${variant.slug}`" class="text-accent underline">{{ variant.name }}</NuxtLink>
+      <ul class="flex flex-col gap-2">
+        <li v-for="variant in data.variants" :key="variant.id">
+          <NuxtLink
+            :to="`/gear/${variant.slug}`"
+            class="block rounded-card bg-surface px-4 py-3 text-accent transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {{ variant.name }}
+          </NuxtLink>
         </li>
       </ul>
     </section>
@@ -81,8 +86,8 @@ const rarityClass = computed(() => rarityNameClass(data.value?.item.rarityBase ?
       <h2 class="mb-3 text-f-2xl font-semibold">{{ t.gearPage.players }}</h2>
       <p v-if="!user" class="text-muted">{{ t.gearPage.signInToSeePlayers }}</p>
       <p v-else-if="data.players.length === 0" class="text-muted">{{ t.gearPage.noPlayers }}</p>
-      <ul v-else class="divide-y divide-line-soft rounded border border-line">
-        <li v-for="player in data.players" :key="player.userId" class="flex gap-2 px-3 py-2">
+      <ul v-else class="flex flex-col gap-2">
+        <li v-for="player in data.players" :key="player.userId" class="flex gap-2 rounded-card bg-surface px-4 py-3">
           <NuxtLink :to="`/profile/${player.userId}`" class="text-accent underline">{{ player.displayName }}</NuxtLink>
           <span v-if="player.year" class="text-sm text-muted">{{ player.year }}</span>
           <span v-if="player.finish" class="text-sm text-muted">{{ player.finish }}</span>

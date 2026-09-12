@@ -85,6 +85,42 @@ describe('search.vue - angemeldet', () => {
   })
 })
 
+describe('search.vue - Kartendesign', () => {
+  // Beide Trefferlisten (Equipment und Personen) muessen als Karten mit
+  // Abstand erscheinen, nicht als Tabelle mit Trennlinien - und zwar beide
+  // <ul> auf der Seite, nicht nur die erste. wrapper.get('ul') traefe sonst
+  // ausschliesslich die Equipment-Liste und liesse die Personen-Liste
+  // unbeobachtet durchrutschen.
+  it('zeigt Treffer als Karten mit Abstand, nicht als Tabelle mit Linien', async () => {
+    const wrapper = await mountSearchPage(
+      fakeSearchResponse({ people: [{ userId: 'zappa-1', displayName: 'Zappa Zweitname' }] }),
+      'zappa-1',
+    )
+
+    const lists = wrapper.findAll('ul')
+    // Equipment-Liste und Personen-Liste - beide muessen ueberhaupt da sein,
+    // sonst prueft die Schleife unten nichts.
+    expect(lists.length).toBe(2)
+    for (const list of lists) {
+      expect(list.classes()).toContain('gap-2')
+      expect(list.classes()).not.toContain('divide-y')
+      expect(list.classes()).not.toContain('divide-line-soft')
+      expect(list.classes()).not.toContain('border-line')
+    }
+
+    const items = wrapper.findAll('li')
+    expect(items.length).toBeGreaterThan(0)
+    // Der Link IST hier die Karte (Navigationsziel, siehe Task-Brief) - der
+    // Radius sitzt also auf dem <a>, nicht auf dem <li> selbst. Wieder alle
+    // Eintraege pruefen, nicht nur den ersten.
+    const offenses = items
+      .map((item) => item.find('a'))
+      .filter((link) => !link.exists() || !link.classes().includes('rounded-card'))
+      .map((link) => (link.exists() ? link.html() : '(kein Link im Eintrag)').slice(0, 60))
+    expect(offenses, offenses.join('\n')).toEqual([])
+  })
+})
+
 describe('search.vue - Fehlerfall', () => {
   // Fix-Runde 1: ein fehlgeschlagenes $fetch setzte data still auf leere
   // Listen zurueck - ununterscheidbar von einer echten Null-Treffer-Antwort.

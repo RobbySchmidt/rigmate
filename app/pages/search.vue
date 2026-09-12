@@ -98,7 +98,7 @@ watch(term, (value) => {
       v-model="term"
       type="search"
       :placeholder="t.search.placeholder"
-      class="w-full rounded border border-line px-3 py-2"
+      class="w-full rounded-field bg-surface-2 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent"
     />
 
     <!-- Ein Fehlschlag ersetzt die Ergebnisflaeche vollstaendig statt in
@@ -110,9 +110,12 @@ watch(term, (value) => {
     <template v-else>
       <section v-if="(data?.catalog ?? []).length > 0">
         <h2 class="mb-3 text-f-2xl font-semibold">{{ t.search.gearHeading }}</h2>
-        <ul class="divide-y divide-line-soft rounded border border-line">
-          <li v-for="hit in data.catalog" :key="hit.id" class="px-3 py-2">
-            <NuxtLink :to="`/gear/${hit.slug}`" class="underline">
+        <ul class="flex flex-col gap-2">
+          <li v-for="hit in data.catalog" :key="hit.id">
+            <NuxtLink
+              :to="`/gear/${hit.slug}`"
+              class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
+            >
               {{ hit.brandName }} {{ hit.name }}
             </NuxtLink>
           </li>
@@ -122,9 +125,14 @@ watch(term, (value) => {
       <section>
         <h2 class="mb-3 text-f-2xl font-semibold">{{ t.search.peopleHeading }}</h2>
         <p v-if="!user" class="text-muted">{{ t.search.peopleLoginHint }}</p>
-        <ul v-else-if="(data?.people ?? []).length > 0" class="divide-y divide-line-soft rounded border border-line">
-          <li v-for="hit in data.people" :key="hit.userId" class="px-3 py-2">
-            <NuxtLink :to="`/profile/${hit.userId}`" class="underline">{{ hit.displayName }}</NuxtLink>
+        <ul v-else-if="(data?.people ?? []).length > 0" class="flex flex-col gap-2">
+          <li v-for="hit in data.people" :key="hit.userId">
+            <NuxtLink
+              :to="`/profile/${hit.userId}`"
+              class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              {{ hit.displayName }}
+            </NuxtLink>
           </li>
         </ul>
         <p v-else class="text-muted">{{ t.search.noResults }}</p>
