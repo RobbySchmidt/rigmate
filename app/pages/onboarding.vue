@@ -80,7 +80,9 @@ const countLabel = computed(() =>
       <NuxtLink v-if="added.length > 0" to="/" class="rounded-btn bg-accent px-4 py-2 text-accent-ink">
         {{ t.onboarding.done }}
       </NuxtLink>
-      <NuxtLink to="/" class="rounded-btn bg-surface-2 px-4 py-2">{{ t.onboarding.skip }}</NuxtLink>
+      <NuxtLink to="/" class="rounded-btn bg-surface-2 px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent">
+        {{ t.onboarding.skip }}
+      </NuxtLink>
     </div>
   </div>
 </template>

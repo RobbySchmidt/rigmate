@@ -126,7 +126,7 @@ const categoryEntries = computed(() =>
     />
 
     <ul v-if="results.length > 0" class="mt-1 rounded-field bg-surface">
-      <li v-for="result in results" :key="result.id" class="px-3 py-2">
+      <li v-for="result in results" :key="result.id">
         <button type="button" class="flex w-full items-baseline gap-2 px-3 py-2 text-left hover:bg-surface-2 focus-visible:bg-surface-2" @click="choose(result)">
           <span class="font-medium">{{ result.brandName }} {{ result.name }}</span>
           <!-- Beide Katalogebenen nebeneinander: der Gelegenheitsnutzer
