@@ -246,8 +246,8 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
           <h3 class="text-f-sm font-semibold uppercase tracking-wide text-muted">
             {{ group.label }}
           </h3>
-          <ul class="divide-y divide-line-soft rounded border border-line">
-            <li v-for="row in group.rows" :key="row.key" class="flex items-center gap-2 px-3 py-2">
+          <ul class="flex flex-col gap-2">
+            <li v-for="row in group.rows" :key="row.key" class="flex items-center gap-2 rounded-card bg-surface px-4 py-3">
               <span>{{ row.label }}</span>
               <span v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</span>
               <button type="button" class="ml-auto text-sm underline" @click="removeRow(row.table, row.id)">
@@ -265,8 +265,8 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       <p v-if="wishlistError" class="text-sm text-danger">{{ wishlistError }}</p>
       <p v-if="wishlistLoadError" class="text-sm text-danger">{{ t.rig.loadError }}</p>
       <p v-else-if="(wishlist ?? []).length === 0" class="text-muted">{{ t.rig.emptyWishlist }}</p>
-      <ul v-else class="divide-y divide-line-soft rounded border border-line">
-        <li v-for="row in wishlist" :key="row.id" class="flex items-center px-3 py-2">
+      <ul v-else class="flex flex-col gap-2">
+        <li v-for="row in wishlist" :key="row.id" class="flex items-center rounded-card bg-surface px-4 py-3">
           <span>{{ label(row) }}</span>
           <button type="button" class="ml-auto text-sm underline" @click="removeRow('wishlist_items', row.id)">
             {{ t.rig.remove }}

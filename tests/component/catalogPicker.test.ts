@@ -168,3 +168,18 @@ describe('CatalogPicker - neu anlegen', () => {
     expect(wrapper.find('form').exists()).toBe(false)
   })
 })
+
+describe('CatalogPicker - Designsprache', () => {
+  it('gibt dem Eingabefeld eine gefuellte Mulde und einen Fokusring', () => {
+    const wrapper = mountPicker()
+
+    const input = wrapper.get('input')
+    expect(input.classes()).toContain('rounded-field')
+    expect(input.classes()).toContain('bg-surface-2')
+    // Ohne Ruherahmen traegt der Fokusring allein die Tastaturbedienung.
+    // Ein Feld ohne ihn ist mit der Tastatur unbenutzbar, und zwar
+    // lautlos - genau die Art Fehlschlag, die hier oefter vorkam.
+    expect(input.classes()).toContain('focus-visible:ring-accent')
+    expect(input.classes()).not.toContain('border-line')
+  })
+})

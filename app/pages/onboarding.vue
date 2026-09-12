@@ -70,17 +70,17 @@ const countLabel = computed(() =>
 
     <div v-if="added.length > 0" class="flex flex-col gap-2">
       <p class="text-sm text-muted">{{ countLabel }}</p>
-      <ul class="divide-y divide-line-soft rounded border border-line">
-        <li v-for="(item, index) in added" :key="index" class="px-3 py-2">{{ item }}</li>
+      <ul class="flex flex-col gap-2">
+        <li v-for="(item, index) in added" :key="index" class="rounded-card bg-surface px-4 py-3">{{ item }}</li>
       </ul>
       <p class="text-sm text-muted">{{ t.onboarding.keepGoing }}</p>
     </div>
 
     <div class="flex gap-3">
-      <NuxtLink v-if="added.length > 0" to="/" class="rounded bg-accent px-4 py-2 text-accent-ink">
+      <NuxtLink v-if="added.length > 0" to="/" class="rounded-btn bg-accent px-4 py-2 text-accent-ink">
         {{ t.onboarding.done }}
       </NuxtLink>
-      <NuxtLink to="/" class="rounded border border-line px-4 py-2">{{ t.onboarding.skip }}</NuxtLink>
+      <NuxtLink to="/" class="rounded-btn bg-surface-2 px-4 py-2">{{ t.onboarding.skip }}</NuxtLink>
     </div>
   </div>
 </template>
