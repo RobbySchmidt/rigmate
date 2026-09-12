@@ -1585,7 +1585,7 @@ suchmaschinen-auffindbar — sie muss auch ohne Anmeldung gut aussehen.
 | `search.vue:113`, `:125` | `divide-y divide-line-soft rounded border border-line`, `<li class="px-3 py-2">` mit `<NuxtLink class="underline">` darin | **Navigationsziel — der Link IST die Karte.** `<ul>` → `flex flex-col gap-2`, `<li>` ohne Klassen, `<NuxtLink>` → `block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent`, **ohne `underline`** |
 | `gear/[slug].vue:73` (Ausführungen) | dito | **Navigationsziel**, dieselbe Behandlung wie `search.vue`. Das `text-accent` am Link **bleibt** — auf dieser öffentlichen Seite ist der Akzent die Orientierung |
 | `gear/[slug].vue:84` (Spielerliste) | `<li class="flex gap-2 px-3 py-2">` mit `<NuxtLink>` **plus** zwei Metadaten-Spans (Baujahr, Finish) | **Datenzeile, kein Navigationsziel.** Die `<li>` wird die Karte: `flex gap-2 rounded-card bg-surface px-4 py-3`. Der Link bleibt ein Link **mit** `underline` und `text-accent` — er muss sich von den Spans daneben unterscheiden. Die Karte darf **nicht** anklickbar aussehen, denn sie ist es nicht |
-| `PersonSuggestion.vue:14` | `flex flex-col gap-1 rounded border border-line p-4` | `flex flex-col gap-1 rounded-card bg-surface p-4 transition-colors hover:bg-surface-2` |
+| `PersonSuggestion.vue:14` | `flex flex-col gap-1 rounded border border-line p-4` | `flex flex-col gap-1 rounded-card bg-surface p-4 transition-colors hover:bg-surface-2`. **Der Fokusring fehlt hier bewusst** und wird in Task 9b nachgetragen — dort werden alle Fokusbilder der App auf eines gebracht, und diese Stelle ist dort namentlich eingetragen |
 
 `PersonSuggestion` ist ein `NuxtLink` und damit anklickbar — der Hover-Wechsel auf `surface-2` ersetzt den
 Rahmen als Hinweis darauf. Ohne ihn sähe die Karte aus wie ein Textblock.
@@ -1605,12 +1605,16 @@ In `tests/component/search.test.ts` ergänzen:
     expect(list.classes()).not.toContain('divide-y')
     expect(list.classes()).not.toContain('border-line')
 
-    const items = wrapper.findAll('li')
-    expect(items.length).toBeGreaterThan(0)
+    // Der Radius sitzt bei einem Navigationsziel am LINK, nicht an der
+    // <li>: die <li> traegt nach der Drei-Faelle-Regel keine Klassen. Ein
+    // Test auf die <li> waere nach KORREKTER Umsetzung rot geblieben -
+    // dieser Entwurf stammt aus der Zeit vor der Regel und ist korrigiert.
+    const links = wrapper.findAll('li a')
+    expect(links.length).toBeGreaterThan(0)
     // Wieder alle, nicht nur das erste.
-    const offenses = items
-      .filter((item) => !item.classes().includes('rounded-card'))
-      .map((item) => item.html().slice(0, 60))
+    const offenses = links
+      .filter((link) => !link.classes().includes('rounded-card'))
+      .map((link) => link.html().slice(0, 60))
     expect(offenses, offenses.join('\n')).toEqual([])
   })
 ```
@@ -2187,11 +2191,22 @@ zweite Test ist grün.
 
 **Wenn der erste Test grün ist, greift der Wächter nicht — melden, nicht anpassen.**
 
+**Eine Lücke dieses Wächters, bewusst offen:** er meldet **falsche** Fokusmuster, aber kein
+**fehlendes**. Ein `<NuxtLink>` ganz ohne Fokusklasse rutscht durch. Das zu schließen bräuchte einen
+AST-Lauf über jedes Template, der Elemente ihren Klassenattributen zuordnet — komplizierter als die drei
+vorhandenen Wächter zusammen. Stattdessen trägt die **Nachher-Zählung in Schritt 6** die Last. Wer sich
+auf den Wächter allein verlässt, hat die Hälfte geprüft.
+
 - [ ] **Schritt 4: Umstellen**
 
 Jede gemeldete Stelle auf das Muster bringen. Und aus der Zählung von Schritt 1: **jedes interaktive
 Element ohne jedes Fokusbild bekommt eines.** Das sind vor allem die Textknöpfe, die nie einen Rahmen
 trugen und deshalb bisher aus der Regel fielen.
+
+**Namentlich, damit sie nicht untergeht:** `app/components/PersonSuggestion.vue` ist in Task 8 zu einem
+Karten-Link geworden, hat dabei seinen `border border-line` verloren und **keinen Ring bekommen** — die
+Urteilstabelle dort gab ihn nicht her, und der Implementierende hat gemeldet statt stillschweigend zu
+glätten. Diese Stelle gehört hierher.
 
 **Bei `<a>`- und `<NuxtLink>`-Elementen, die mitten im Fließtext stehen**, ist ein Ring um eine Textzeile
 unschön. Dort trotzdem den Ring nehmen, mit `rounded-btn`, damit er eine Form hat. Das ist die Stelle,
