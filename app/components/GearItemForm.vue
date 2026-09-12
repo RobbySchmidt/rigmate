@@ -41,7 +41,7 @@ function submit() {
     <!-- Der Hinweis erscheint erst nach der Auswahl und ist nie ein Pflichtfeld. -->
     <p v-if="showPrecisionHint && !hintDismissed" class="rounded-card bg-surface-2 p-2 text-sm">
       {{ t.precisionHint.text }}
-      <button type="button" class="ml-2 underline" @click="hintDismissed = true">
+      <button type="button" class="ml-2 rounded-btn underline outline-none focus-visible:ring-2 focus-visible:ring-accent" @click="hintDismissed = true">
         {{ t.precisionHint.dismiss }}
       </button>
     </p>

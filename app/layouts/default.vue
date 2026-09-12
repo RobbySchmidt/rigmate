@@ -19,16 +19,16 @@ async function logout() {
     <div class="mx-auto max-w-5xl px-f-6 pt-4">
       <header class="rounded-card bg-surface">
         <nav class="flex flex-wrap items-center gap-f-6 px-f-6 py-4">
-          <NuxtLink to="/" class="display text-f-xl font-semibold">{{ t.app.name }}</NuxtLink>
-          <NuxtLink to="/search" class="text-sm">{{ t.nav.search }}</NuxtLink>
+          <NuxtLink to="/" class="display rounded-btn text-f-xl font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.app.name }}</NuxtLink>
+          <NuxtLink to="/search" class="rounded-btn text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.nav.search }}</NuxtLink>
           <template v-if="user">
-            <NuxtLink v-if="userId" :to="`/profile/${userId}`" class="text-sm">{{ t.nav.profile }}</NuxtLink>
-            <NuxtLink to="/rig" class="text-sm">{{ t.nav.rig }}</NuxtLink>
-            <NuxtLink to="/settings" class="text-sm">{{ t.nav.settings }}</NuxtLink>
-            <button type="button" class="ml-auto text-sm" @click="logout">{{ t.nav.logout }}</button>
+            <NuxtLink v-if="userId" :to="`/profile/${userId}`" class="rounded-btn text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.nav.profile }}</NuxtLink>
+            <NuxtLink to="/rig" class="rounded-btn text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.nav.rig }}</NuxtLink>
+            <NuxtLink to="/settings" class="rounded-btn text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.nav.settings }}</NuxtLink>
+            <button type="button" class="ml-auto rounded-btn text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent" @click="logout">{{ t.nav.logout }}</button>
           </template>
           <template v-else>
-            <NuxtLink to="/login" class="ml-auto text-sm">{{ t.nav.login }}</NuxtLink>
+            <NuxtLink to="/login" class="ml-auto rounded-btn text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.nav.login }}</NuxtLink>
           </template>
         </nav>
       </header>

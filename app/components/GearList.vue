@@ -78,7 +78,7 @@ function entryNameClass(rarity: RarityBase | null): string {
           <RarityPip :rarity="entry.rarity" />
           <NuxtLink
             :to="`/gear/${entry.slug}`"
-            class="border-b border-transparent text-[.9rem] leading-snug no-underline hover:border-current hover:text-accent"
+            class="rounded-btn border-b border-transparent text-[.9rem] leading-snug no-underline outline-none hover:border-current hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
             :class="entryNameClass(entry.rarity)"
           >
             {{ entry.label }}

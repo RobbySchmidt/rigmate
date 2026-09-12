@@ -175,7 +175,7 @@ const actionClass =
           v-if="isOwn"
           data-action="edit"
           to="/settings"
-          class="text-ink no-underline hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          class="text-ink no-underline outline-none hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
           :class="actionClass"
         >
           {{ t.profile.editCta }}
@@ -186,7 +186,7 @@ const actionClass =
             type="button"
             disabled
             :title="t.profile.stageTwoHint"
-            class="cursor-not-allowed text-muted opacity-60"
+            class="cursor-not-allowed text-muted opacity-60 outline-none focus-visible:ring-2 focus-visible:ring-accent"
             :class="actionClass"
           >
             {{ t.profile.follow }}
@@ -196,7 +196,7 @@ const actionClass =
             type="button"
             disabled
             :title="t.profile.stageTwoHint"
-            class="cursor-not-allowed text-muted opacity-60"
+            class="cursor-not-allowed text-muted opacity-60 outline-none focus-visible:ring-2 focus-visible:ring-accent"
             :class="actionClass"
           >
             {{ t.profile.message }}

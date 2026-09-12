@@ -56,7 +56,7 @@ const t = useText()
           </span>
           <NuxtLink
             :to="`/gear/${station.slug}`"
-            class="inline-block border-b border-transparent display text-[.9375rem] font-semibold leading-tight no-underline hover:border-current hover:text-accent"
+            class="inline-block rounded-btn border-b border-transparent display text-[.9375rem] font-semibold leading-tight no-underline outline-none hover:border-current hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
             :class="rarityNameClass(station.rarity)"
           >
             {{ station.label }}

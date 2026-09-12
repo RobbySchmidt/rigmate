@@ -155,8 +155,8 @@ function dropped(next: ChainStation[]): void {
 
 function tabClass(selected: boolean): string {
   return [
-    'rounded-full px-3 py-1 font-mono text-[.6875rem] uppercase tracking-[.1em] transition-colors',
-    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+    'rounded-full px-3 py-1 font-mono text-[.6875rem] uppercase tracking-[.1em] outline-none transition-colors',
+    'focus-visible:ring-2 focus-visible:ring-accent',
     selected ? 'bg-accent-wash text-accent' : 'bg-surface-2 text-muted hover:text-ink',
   ].join(' ')
 }
@@ -275,7 +275,7 @@ const dangerClass = 'text-danger'
           <button
             v-if="editing"
             type="button"
-            class="rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-ink transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-ink outline-none transition-colors hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
             @click="emit('done')"
           >
             {{ t.profile.chainDone }}
@@ -283,7 +283,7 @@ const dangerClass = 'text-danger'
           <button
             v-else
             type="button"
-            class="rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="rounded-btn bg-surface-2 px-3 py-[.35rem] font-mono text-[.6875rem] uppercase tracking-[.1em] text-muted outline-none transition-colors hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
             @click="emit('edit')"
           >
             {{ t.profile.chainEdit }}
@@ -305,7 +305,7 @@ const dangerClass = 'text-danger'
         <span>{{ saveErrorText }}</span>
         <button
           type="button"
-          class="rounded-btn border border-current px-2 py-[.15rem] font-mono text-[.6875rem] uppercase tracking-[.1em] transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          class="rounded-btn border border-current px-2 py-[.15rem] font-mono text-[.6875rem] uppercase tracking-[.1em] outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-accent"
           @click="emit('retry')"
         >
           {{ t.profile.chainRetry }}

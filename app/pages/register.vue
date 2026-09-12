@@ -39,7 +39,7 @@ async function submit() {
     <h1 class="mb-f-6 text-f-3xl font-semibold">{{ t.auth.registerTitle }}</h1>
     <template v-if="sent">
       <p class="text-f-lg">{{ t.auth.confirmSent }}</p>
-      <NuxtLink to="/login" class="mt-4 block text-sm underline">{{ t.auth.confirmSentLoginHint }}</NuxtLink>
+      <NuxtLink to="/login" class="mt-4 block rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.auth.confirmSentLoginHint }}</NuxtLink>
     </template>
     <template v-else>
       <form class="flex flex-col gap-4 rounded-card bg-surface p-f-6" @submit.prevent="submit">
@@ -61,7 +61,7 @@ async function submit() {
           {{ t.auth.submitRegister }}
         </button>
       </form>
-      <NuxtLink to="/login" class="mt-4 block text-sm underline">{{ t.auth.toLogin }}</NuxtLink>
+      <NuxtLink to="/login" class="mt-4 block rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.auth.toLogin }}</NuxtLink>
     </template>
   </div>
 </template>

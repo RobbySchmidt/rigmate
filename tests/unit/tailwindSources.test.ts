@@ -17,7 +17,13 @@ function walk(dir: string): string[] {
   }
   return entries.flatMap((name) => {
     const full = join(dir, name)
-    return statSync(full).isDirectory() ? walk(full) : [full]
+    try {
+      return statSync(full).isDirectory() ? walk(full) : [full]
+    } catch {
+      // Ein kaputter Symlink soll einen Befund ergeben koennen, nicht den
+      // ganzen Lauf abbrechen.
+      return []
+    }
   })
 }
 

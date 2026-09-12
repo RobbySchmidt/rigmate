@@ -114,7 +114,7 @@ watch(term, (value) => {
           <li v-for="hit in data.catalog" :key="hit.id">
             <NuxtLink
               :to="`/gear/${hit.slug}`"
-              class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
+              class="block rounded-card bg-surface px-4 py-3 outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
             >
               {{ hit.brandName }} {{ hit.name }}
             </NuxtLink>
@@ -129,7 +129,7 @@ watch(term, (value) => {
           <li v-for="hit in data.people" :key="hit.userId">
             <NuxtLink
               :to="`/profile/${hit.userId}`"
-              class="block rounded-card bg-surface px-4 py-3 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
+              class="block rounded-card bg-surface px-4 py-3 outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
             >
               {{ hit.displayName }}
             </NuxtLink>

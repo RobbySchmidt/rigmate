@@ -193,7 +193,7 @@ async function uploadAvatar(event: Event) {
           :alt="t.settings.avatar"
           class="h-16 w-16 rounded-full object-cover"
         />
-        <input type="file" accept="image/*" @change="uploadAvatar" />
+        <input type="file" accept="image/*" class="rounded-btn outline-none focus-visible:ring-2 focus-visible:ring-accent" @change="uploadAvatar" />
       </label>
       <p v-if="avatarError" class="text-sm text-danger">{{ avatarError }}</p>
       <p v-if="saveError" class="text-sm text-danger">{{ saveError }}</p>

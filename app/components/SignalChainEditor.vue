@@ -85,9 +85,9 @@ function remove(index: number): void {
 // deaktivierte Zustand nimmt die Zeigerereignisse mit weg, damit ein Klick am
 // Rand der Kette nicht doch noch irgendwo landet.
 const buttonClass =
-  'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted transition-colors ' +
-  'hover:bg-surface hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-1 ' +
-  'focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-30'
+  'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted outline-none transition-colors ' +
+  'hover:bg-surface hover:text-accent focus-visible:ring-2 focus-visible:ring-accent ' +
+  'disabled:pointer-events-none disabled:opacity-30'
 
 // ZUM #item-SLOT UNTEN - und warum der Hinweis hier steht statt dort:
 //

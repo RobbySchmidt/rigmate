@@ -127,7 +127,7 @@ const categoryEntries = computed(() =>
 
     <ul v-if="results.length > 0" class="mt-1 rounded-field bg-surface">
       <li v-for="result in results" :key="result.id">
-        <button type="button" class="flex w-full items-baseline gap-2 px-3 py-2 text-left hover:bg-surface-2 focus-visible:bg-surface-2" @click="choose(result)">
+        <button type="button" class="flex w-full items-baseline gap-2 px-3 py-2 text-left outline-none hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent" @click="choose(result)">
           <span class="font-medium">{{ result.brandName }} {{ result.name }}</span>
           <!-- Beide Katalogebenen nebeneinander: der Gelegenheitsnutzer
                klickt oben, der Kenner sieht daneben seine genaue
@@ -149,7 +149,7 @@ const categoryEntries = computed(() =>
     <button
       v-if="term.trim() !== '' && !showCreate"
       type="button"
-      class="mt-2 text-sm underline"
+      class="mt-2 rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent"
       @click="showCreate = true"
     >
       {{ t.picker.createHint }}

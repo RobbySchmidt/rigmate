@@ -48,9 +48,8 @@ function append(id: string): void {
 //    gelockert wird, und prevent-on-filter="false" stellt sicher, dass der
 //    Klick selbst nicht durch ein internes preventDefault() verschluckt wird.
 const appendButtonClass =
-  'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted transition-colors ' +
-  'hover:bg-surface hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-1 ' +
-  'focus-visible:outline-accent'
+  'grid size-[1.5rem] shrink-0 place-items-center rounded-btn text-muted outline-none transition-colors ' +
+  'hover:bg-surface hover:text-accent focus-visible:ring-2 focus-visible:ring-accent'
 </script>
 
 <template>

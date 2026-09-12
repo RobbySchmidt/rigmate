@@ -41,6 +41,6 @@ async function submit() {
         {{ t.auth.submitLogin }}
       </button>
     </form>
-    <NuxtLink to="/register" class="mt-4 block text-sm underline">{{ t.auth.toRegister }}</NuxtLink>
+    <NuxtLink to="/register" class="mt-4 block rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent">{{ t.auth.toRegister }}</NuxtLink>
   </div>
 </template>

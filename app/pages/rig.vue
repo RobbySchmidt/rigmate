@@ -250,7 +250,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
             <li v-for="row in group.rows" :key="row.key" class="flex items-center gap-2 rounded-card bg-surface px-4 py-3">
               <span>{{ row.label }}</span>
               <span v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</span>
-              <button type="button" class="ml-auto text-sm underline" @click="removeRow(row.table, row.id)">
+              <button type="button" class="ml-auto rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent" @click="removeRow(row.table, row.id)">
                 {{ t.rig.remove }}
               </button>
             </li>
@@ -268,7 +268,7 @@ async function removeRow(table: 'gear_items' | 'preferences' | 'wishlist_items',
       <ul v-else class="flex flex-col gap-2">
         <li v-for="row in wishlist" :key="row.id" class="flex items-center rounded-card bg-surface px-4 py-3">
           <span>{{ label(row) }}</span>
-          <button type="button" class="ml-auto text-sm underline" @click="removeRow('wishlist_items', row.id)">
+          <button type="button" class="ml-auto rounded-btn text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-accent" @click="removeRow('wishlist_items', row.id)">
             {{ t.rig.remove }}
           </button>
         </li>

@@ -52,7 +52,7 @@ const ALLOWED_RADII = new Set(['rounded-card', 'rounded-field', 'rounded-btn', '
    Gegenprobe, die die Logik nachbaut statt sie zu benutzen, beweist nur,
    dass ein Regex dieser Bauart greift - nicht dass der benutzte greift. --- */
 
-export function paletteOffenses(file: string, content: string): string[] {
+function paletteOffenses(file: string, content: string): string[] {
   const families = new RegExp(
     `\\b(?:${COLOR_PREFIXES.join('|')})-(?:${TAILWIND_FAMILIES.join('|')})(?:-\\d{2,3})?\\b`,
     'g',
@@ -64,7 +64,7 @@ export function paletteOffenses(file: string, content: string): string[] {
   ].map((hit) => `${file}: ${hit} - Farben kommen aus den Tokens in main.css`)
 }
 
-export function radiusOffenses(file: string, content: string): string[] {
+function radiusOffenses(file: string, content: string): string[] {
   // JEDE rounded-Schreibweise einsammeln und gegen die Erlaubnisliste
   // halten - nicht die verbotenen aufzaehlen. Eine Aufzaehlung waere
   // lueckenhaft: sie uebersieht rounded-t-lg, rounded-l-sm und
@@ -80,7 +80,7 @@ export function radiusOffenses(file: string, content: string): string[] {
     )
 }
 
-export function legacyOffenses(file: string, content: string): string[] {
+function legacyOffenses(file: string, content: string): string[] {
   const out: string[] = []
   for (const m of content.matchAll(/\b(?:border|divide|bg|text|ring)-line-soft\b/g)) {
     out.push(`${file}: ${m[0]} - es gibt nur noch --rm-line`)
